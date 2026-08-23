@@ -1,0 +1,745 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		040000000000000000000001 /* WatchCarRacerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000001 /* WatchCarRacerApp.swift */; };
+		040000000000000000000002 /* GameRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000002 /* GameRootView.swift */; };
+		040000000000000000000003 /* ControllerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000003 /* ControllerMessages.swift */; };
+		040000000000000000000004 /* WatchCarRacerWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000004 /* WatchCarRacerWatchApp.swift */; };
+		040000000000000000000005 /* SteeringControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000005 /* SteeringControlView.swift */; };
+		040000000000000000000006 /* ControllerMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000003 /* ControllerMessages.swift */; };
+		040000000000000000000007 /* ControllerMessagesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000006 /* ControllerMessagesTests.swift */; };
+		040000000000000000000008 /* WatchAppSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000007 /* WatchAppSmokeTests.swift */; };
+		040000000000000000000009 /* WatchCarRacerWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 0300000000000000000000F2 /* WatchCarRacerWatchApp.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		04000000000000000000000A /* MotionSteeringEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000008 /* MotionSteeringEngine.swift */; };
+		04000000000000000000000B /* WatchControllerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000009 /* WatchControllerSession.swift */; };
+		04000000000000000000000C /* PhoneWatchSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000000A /* PhoneWatchSession.swift */; };
+		04000000000000000000000D /* MotionSteeringEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000000B /* MotionSteeringEngineTests.swift */; };
+		04000000000000000000000E /* PhoneWatchSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000000C /* PhoneWatchSessionTests.swift */; };
+		04000000000000000000000F /* GameSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000000D /* GameSimulation.swift */; };
+		040000000000000000000010 /* GameSimulationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000000E /* GameSimulationTests.swift */; };
+		040000000000000000000011 /* RoadProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000011 /* RoadProjection.swift */; };
+		040000000000000000000012 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000012 /* GameScene.swift */; };
+		040000000000000000000013 /* GameSessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000000F /* GameSessionController.swift */; };
+		040000000000000000000014 /* TouchSteeringState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000010 /* TouchSteeringState.swift */; };
+		040000000000000000000015 /* RoadProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000013 /* RoadProjectionTests.swift */; };
+		040000000000000000000016 /* TouchSteeringStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000014 /* TouchSteeringStateTests.swift */; };
+		040000000000000000000017 /* GameSessionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000015 /* GameSessionControllerTests.swift */; };
+		040000000000000000000018 /* SteeringInputRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000016 /* SteeringInputRouter.swift */; };
+		040000000000000000000019 /* SteeringInputRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000017 /* SteeringInputRouterTests.swift */; };
+		04000000000000000000001A /* PhoneFeedbackPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000018 /* PhoneFeedbackPlayer.swift */; };
+		04000000000000000000001B /* WatchHapticPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000019 /* WatchHapticPlayer.swift */; };
+		04000000000000000000001C /* FeedbackCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000001A /* FeedbackCoordinatorTests.swift */; };
+		04000000000000000000001D /* WatchFeedbackReceiverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000001B /* WatchFeedbackReceiverTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		090000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 010000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 060000000000000000000002;
+			remoteInfo = WatchCarRacerWatchApp;
+		};
+		090000000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 010000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 060000000000000000000001;
+			remoteInfo = WatchCarRacer;
+		};
+		090000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 010000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 060000000000000000000002;
+			remoteInfo = WatchCarRacerWatchApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		050000000000000000000004 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				040000000000000000000009 /* WatchCarRacerWatchApp.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		030000000000000000000001 /* WatchCarRacerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCarRacerApp.swift; sourceTree = "<group>"; };
+		030000000000000000000002 /* GameRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRootView.swift; sourceTree = "<group>"; };
+		030000000000000000000003 /* ControllerMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerMessages.swift; sourceTree = "<group>"; };
+		030000000000000000000004 /* WatchCarRacerWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchCarRacerWatchApp.swift; sourceTree = "<group>"; };
+		030000000000000000000005 /* SteeringControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteeringControlView.swift; sourceTree = "<group>"; };
+		030000000000000000000006 /* ControllerMessagesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerMessagesTests.swift; sourceTree = "<group>"; };
+		030000000000000000000007 /* WatchAppSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAppSmokeTests.swift; sourceTree = "<group>"; };
+		030000000000000000000008 /* MotionSteeringEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionSteeringEngine.swift; sourceTree = "<group>"; };
+		030000000000000000000009 /* WatchControllerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchControllerSession.swift; sourceTree = "<group>"; };
+		03000000000000000000000A /* PhoneWatchSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneWatchSession.swift; sourceTree = "<group>"; };
+		03000000000000000000000B /* MotionSteeringEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionSteeringEngineTests.swift; sourceTree = "<group>"; };
+		03000000000000000000000C /* PhoneWatchSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneWatchSessionTests.swift; sourceTree = "<group>"; };
+		03000000000000000000000D /* GameSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSimulation.swift; sourceTree = "<group>"; };
+		03000000000000000000000E /* GameSimulationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSimulationTests.swift; sourceTree = "<group>"; };
+		03000000000000000000000F /* GameSessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionController.swift; sourceTree = "<group>"; };
+		030000000000000000000010 /* TouchSteeringState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchSteeringState.swift; sourceTree = "<group>"; };
+		030000000000000000000011 /* RoadProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadProjection.swift; sourceTree = "<group>"; };
+		030000000000000000000012 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		030000000000000000000013 /* RoadProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadProjectionTests.swift; sourceTree = "<group>"; };
+		030000000000000000000014 /* TouchSteeringStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchSteeringStateTests.swift; sourceTree = "<group>"; };
+		030000000000000000000015 /* GameSessionControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionControllerTests.swift; sourceTree = "<group>"; };
+		030000000000000000000016 /* SteeringInputRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteeringInputRouter.swift; sourceTree = "<group>"; };
+		030000000000000000000017 /* SteeringInputRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteeringInputRouterTests.swift; sourceTree = "<group>"; };
+		030000000000000000000018 /* PhoneFeedbackPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneFeedbackPlayer.swift; sourceTree = "<group>"; };
+		030000000000000000000019 /* WatchHapticPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHapticPlayer.swift; sourceTree = "<group>"; };
+		03000000000000000000001A /* FeedbackCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackCoordinatorTests.swift; sourceTree = "<group>"; };
+		03000000000000000000001B /* WatchFeedbackReceiverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchFeedbackReceiverTests.swift; sourceTree = "<group>"; };
+		0300000000000000000000F1 /* WatchCarRacer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0300000000000000000000F2 /* WatchCarRacerWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacerWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0300000000000000000000F3 /* WatchCarRacerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WatchCarRacerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0300000000000000000000F4 /* WatchCarRacerWatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WatchCarRacerWatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		050000000000000000000002 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000012 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000022 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000032 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		020000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				020000000000000000000002 /* WatchCarRacer */,
+				020000000000000000000008 /* WatchCarRacerTests */,
+				020000000000000000000009 /* WatchCarRacerWatchTests */,
+				02000000000000000000000A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		020000000000000000000002 /* WatchCarRacer */ = {
+			isa = PBXGroup;
+			children = (
+				020000000000000000000003 /* Shared */,
+				020000000000000000000004 /* iOS */,
+				020000000000000000000006 /* Watch */,
+			);
+			path = WatchCarRacer;
+			sourceTree = "<group>";
+		};
+		020000000000000000000003 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000003 /* ControllerMessages.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		020000000000000000000004 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				020000000000000000000005 /* App */,
+				02000000000000000000000B /* Input */,
+				02000000000000000000000E /* Game */,
+				02000000000000000000000F /* Feedback */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
+		020000000000000000000005 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000001 /* WatchCarRacerApp.swift */,
+				030000000000000000000002 /* GameRootView.swift */,
+				03000000000000000000000F /* GameSessionController.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		020000000000000000000006 /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				020000000000000000000007 /* App */,
+				02000000000000000000000C /* Motion */,
+				02000000000000000000000D /* Connectivity */,
+				020000000000000000000010 /* Feedback */,
+			);
+			path = Watch;
+			sourceTree = "<group>";
+		};
+		020000000000000000000007 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000004 /* WatchCarRacerWatchApp.swift */,
+				030000000000000000000005 /* SteeringControlView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		020000000000000000000008 /* WatchCarRacerTests */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000006 /* ControllerMessagesTests.swift */,
+				03000000000000000000000C /* PhoneWatchSessionTests.swift */,
+				03000000000000000000000E /* GameSimulationTests.swift */,
+				030000000000000000000013 /* RoadProjectionTests.swift */,
+				030000000000000000000014 /* TouchSteeringStateTests.swift */,
+				030000000000000000000015 /* GameSessionControllerTests.swift */,
+				030000000000000000000017 /* SteeringInputRouterTests.swift */,
+				03000000000000000000001A /* FeedbackCoordinatorTests.swift */,
+			);
+			path = WatchCarRacerTests;
+			sourceTree = "<group>";
+		};
+		020000000000000000000009 /* WatchCarRacerWatchTests */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000007 /* WatchAppSmokeTests.swift */,
+				03000000000000000000000B /* MotionSteeringEngineTests.swift */,
+				03000000000000000000001B /* WatchFeedbackReceiverTests.swift */,
+			);
+			path = WatchCarRacerWatchTests;
+			sourceTree = "<group>";
+		};
+		02000000000000000000000A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0300000000000000000000F1 /* WatchCarRacer.app */,
+				0300000000000000000000F2 /* WatchCarRacerWatchApp.app */,
+				0300000000000000000000F3 /* WatchCarRacerTests.xctest */,
+				0300000000000000000000F4 /* WatchCarRacerWatchTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		02000000000000000000000B /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				03000000000000000000000A /* PhoneWatchSession.swift */,
+				030000000000000000000010 /* TouchSteeringState.swift */,
+				030000000000000000000016 /* SteeringInputRouter.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
+		02000000000000000000000C /* Motion */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000008 /* MotionSteeringEngine.swift */,
+			);
+			path = Motion;
+			sourceTree = "<group>";
+		};
+		02000000000000000000000D /* Connectivity */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000009 /* WatchControllerSession.swift */,
+			);
+			path = Connectivity;
+			sourceTree = "<group>";
+		};
+		02000000000000000000000E /* Game */ = {
+			isa = PBXGroup;
+			children = (
+				03000000000000000000000D /* GameSimulation.swift */,
+				030000000000000000000011 /* RoadProjection.swift */,
+				030000000000000000000012 /* GameScene.swift */,
+			);
+			path = Game;
+			sourceTree = "<group>";
+		};
+		02000000000000000000000F /* Feedback */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000018 /* PhoneFeedbackPlayer.swift */,
+			);
+			path = Feedback;
+			sourceTree = "<group>";
+		};
+		020000000000000000000010 /* Feedback */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000019 /* WatchHapticPlayer.swift */,
+			);
+			path = Feedback;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		060000000000000000000001 /* WatchCarRacer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 080000000000000000000002 /* Build configuration list for PBXNativeTarget "WatchCarRacer" */;
+			buildPhases = (
+				050000000000000000000001 /* Sources */,
+				050000000000000000000002 /* Frameworks */,
+				050000000000000000000003 /* Resources */,
+				050000000000000000000004 /* Embed Watch Content */,
+			);
+			buildRules = ();
+			dependencies = (
+				0A0000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = WatchCarRacer;
+			productName = WatchCarRacer;
+			productReference = 0300000000000000000000F1 /* WatchCarRacer.app */;
+			productType = "com.apple.product-type.application";
+		};
+		060000000000000000000002 /* WatchCarRacerWatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 080000000000000000000003 /* Build configuration list for PBXNativeTarget "WatchCarRacerWatchApp" */;
+			buildPhases = (
+				050000000000000000000011 /* Sources */,
+				050000000000000000000012 /* Frameworks */,
+				050000000000000000000013 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = WatchCarRacerWatchApp;
+			productName = WatchCarRacerWatchApp;
+			productReference = 0300000000000000000000F2 /* WatchCarRacerWatchApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		060000000000000000000003 /* WatchCarRacerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 080000000000000000000004 /* Build configuration list for PBXNativeTarget "WatchCarRacerTests" */;
+			buildPhases = (
+				050000000000000000000021 /* Sources */,
+				050000000000000000000022 /* Frameworks */,
+				050000000000000000000023 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = (
+				0A0000000000000000000002 /* PBXTargetDependency */,
+			);
+			name = WatchCarRacerTests;
+			productName = WatchCarRacerTests;
+			productReference = 0300000000000000000000F3 /* WatchCarRacerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		060000000000000000000004 /* WatchCarRacerWatchTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 080000000000000000000005 /* Build configuration list for PBXNativeTarget "WatchCarRacerWatchTests" */;
+			buildPhases = (
+				050000000000000000000031 /* Sources */,
+				050000000000000000000032 /* Frameworks */,
+				050000000000000000000033 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = (
+				0A0000000000000000000003 /* PBXTargetDependency */,
+			);
+			name = WatchCarRacerWatchTests;
+			productName = WatchCarRacerWatchTests;
+			productReference = 0300000000000000000000F4 /* WatchCarRacerWatchTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		010000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2640;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					060000000000000000000001 = {CreatedOnToolsVersion = 26.4; };
+					060000000000000000000002 = {CreatedOnToolsVersion = 26.4; };
+					060000000000000000000003 = {CreatedOnToolsVersion = 26.4; TestTargetID = 060000000000000000000001; };
+					060000000000000000000004 = {CreatedOnToolsVersion = 26.4; TestTargetID = 060000000000000000000002; };
+				};
+			};
+			buildConfigurationList = 080000000000000000000001 /* Build configuration list for PBXProject "WatchCarRacer" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base, );
+			mainGroup = 020000000000000000000001;
+			productRefGroup = 02000000000000000000000A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				060000000000000000000001 /* WatchCarRacer */,
+				060000000000000000000002 /* WatchCarRacerWatchApp */,
+				060000000000000000000003 /* WatchCarRacerTests */,
+				060000000000000000000004 /* WatchCarRacerWatchTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		050000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000013 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000023 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000033 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		050000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				040000000000000000000001 /* WatchCarRacerApp.swift in Sources */,
+				040000000000000000000002 /* GameRootView.swift in Sources */,
+				040000000000000000000003 /* ControllerMessages.swift in Sources */,
+				04000000000000000000000C /* PhoneWatchSession.swift in Sources */,
+				04000000000000000000000F /* GameSimulation.swift in Sources */,
+				040000000000000000000011 /* RoadProjection.swift in Sources */,
+				040000000000000000000012 /* GameScene.swift in Sources */,
+				040000000000000000000013 /* GameSessionController.swift in Sources */,
+				040000000000000000000014 /* TouchSteeringState.swift in Sources */,
+				040000000000000000000018 /* SteeringInputRouter.swift in Sources */,
+				04000000000000000000001A /* PhoneFeedbackPlayer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		050000000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				040000000000000000000004 /* WatchCarRacerWatchApp.swift in Sources */,
+				040000000000000000000005 /* SteeringControlView.swift in Sources */,
+				040000000000000000000006 /* ControllerMessages.swift in Sources */,
+				04000000000000000000000A /* MotionSteeringEngine.swift in Sources */,
+				04000000000000000000000B /* WatchControllerSession.swift in Sources */,
+				04000000000000000000001B /* WatchHapticPlayer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		050000000000000000000021 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				040000000000000000000007 /* ControllerMessagesTests.swift in Sources */,
+				04000000000000000000000E /* PhoneWatchSessionTests.swift in Sources */,
+				040000000000000000000010 /* GameSimulationTests.swift in Sources */,
+				040000000000000000000015 /* RoadProjectionTests.swift in Sources */,
+				040000000000000000000016 /* TouchSteeringStateTests.swift in Sources */,
+				040000000000000000000017 /* GameSessionControllerTests.swift in Sources */,
+				040000000000000000000019 /* SteeringInputRouterTests.swift in Sources */,
+				04000000000000000000001C /* FeedbackCoordinatorTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		050000000000000000000031 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				040000000000000000000008 /* WatchAppSmokeTests.swift in Sources */,
+				04000000000000000000000D /* MotionSteeringEngineTests.swift in Sources */,
+				04000000000000000000001D /* WatchFeedbackReceiverTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0A0000000000000000000001 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 060000000000000000000002 /* WatchCarRacerWatchApp */; targetProxy = 090000000000000000000001 /* PBXContainerItemProxy */; };
+		0A0000000000000000000002 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 060000000000000000000001 /* WatchCarRacer */; targetProxy = 090000000000000000000002 /* PBXContainerItemProxy */; };
+		0A0000000000000000000003 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 060000000000000000000002 /* WatchCarRacerWatchApp */; targetProxy = 090000000000000000000003 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		070000000000000000000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)", );
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		070000000000000000000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		070000000000000000000021 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Watch Car Racer";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", );
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		070000000000000000000022 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Watch Car Racer";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", );
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		070000000000000000000031 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Watch Car Racer";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Watch motion controls steering during a race.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.woohyuk.WatchCarRacer;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", );
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacer.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Debug;
+		};
+		070000000000000000000032 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Watch Car Racer";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Watch motion controls steering during a race.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.woohyuk.WatchCarRacer;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", );
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacer.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Release;
+		};
+		070000000000000000000041 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WatchCarRacer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WatchCarRacer";
+			};
+			name = Debug;
+		};
+		070000000000000000000042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WatchCarRacer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WatchCarRacer";
+			};
+			name = Release;
+		};
+		070000000000000000000051 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacerWatchTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WatchCarRacerWatchApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WatchCarRacerWatchApp";
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Debug;
+		};
+		070000000000000000000052 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacerWatchTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WatchCarRacerWatchApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WatchCarRacerWatchApp";
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		080000000000000000000001 /* Build configuration list for PBXProject "WatchCarRacer" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000011 /* Debug */, 070000000000000000000012 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		080000000000000000000002 /* Build configuration list for PBXNativeTarget "WatchCarRacer" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000021 /* Debug */, 070000000000000000000022 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		080000000000000000000003 /* Build configuration list for PBXNativeTarget "WatchCarRacerWatchApp" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000031 /* Debug */, 070000000000000000000032 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		080000000000000000000004 /* Build configuration list for PBXNativeTarget "WatchCarRacerTests" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000041 /* Debug */, 070000000000000000000042 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		080000000000000000000005 /* Build configuration list for PBXNativeTarget "WatchCarRacerWatchTests" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000051 /* Debug */, 070000000000000000000052 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = 010000000000000000000001 /* Project object */;
+}
