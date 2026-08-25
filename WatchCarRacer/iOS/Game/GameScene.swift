@@ -10,8 +10,9 @@ final class GameScene: SKScene {
 
     static let fixedStep: TimeInterval = 1.0 / 60.0
     static let maximumStepsPerFrame = 5
+    static let skyAuthoredHorizonFraction: CGFloat = 0.10
 #if DEBUG
-    static let frameRateReportingInterval: TimeInterval = 0.5
+    static let frameRateReportingInterval: TimeInterval = 1
 #endif
 
     var steeringProvider: SteeringProvider = { _ in 0 }
@@ -21,8 +22,11 @@ final class GameScene: SKScene {
 #endif
 
     private(set) var currentSnapshot: GameSnapshot
+    let appearance: VehicleAppearance
+    let assetLibrary: GameAssetLibrary
 
     private var simulation: GameSimulation
+    private let obstacleSpriteFactory: ObstacleSpriteFactory
     private var previousUpdateTime: TimeInterval?
     private var accumulatedTime: TimeInterval = 0
     private var didBuildScene = false
@@ -32,35 +36,87 @@ final class GameScene: SKScene {
 #endif
 
     private let worldNode = SKNode()
+    private let skyNode: SKSpriteNode
     private let roadShadowNode = SKShapeNode()
     private let roadNode = SKShapeNode()
-    private let horizonNode = SKShapeNode()
-    private let sunNode = SKShapeNode(circleOfRadius: 42)
+    private let roadDecalContainer = SKNode()
     private let laneContainer = SKNode()
     private let roadsideContainer = SKNode()
     private let obstacleContainer = SKNode()
-    private let playerNode = SKNode()
+    private let playerNode: VehicleSpriteNode
     private let impactContainer = SKNode()
     private let scorePopContainer = SKNode()
     private let flashNode = SKShapeNode()
-    private var laneMarks: [(node: SKShapeNode, separatorX: Double, index: Int)] = []
+    private let mapTextures: MapTextures
+    private var roadDecals: [RoadDecal] = []
+    private var laneMarks: [(node: SKSpriteNode, separatorX: Double, index: Int)] = []
     private var roadsideProps: [RoadsideProp] = []
     private var obstacleNodes: [UInt64: SKNode] = [:]
     private var presentedFeedbackIDs: Set<UUID> = []
 
     private(set) var presentedFeedback: [GameFeedback] = []
 
+    @MainActor
+    private struct MapTextures {
+        static let skyName = "sky_horizon"
+        static let asphaltName = "asphalt"
+        static let laneName = "lane_worn"
+        static let roadDecalName = "road_decal_chevrons"
+        static let roadsideNames = [
+            "roadside_light",
+            "roadside_palm",
+            "roadside_marker",
+        ]
+
+        let sky: SKTexture
+        let asphalt: SKTexture
+        let lane: SKTexture
+        let roadDecal: SKTexture
+        let roadside: [SKTexture]
+
+        init(assetLibrary: GameAssetLibrary) throws {
+            sky = try assetLibrary.texture(named: Self.skyName)
+            asphalt = try assetLibrary.texture(named: Self.asphaltName)
+            lane = try assetLibrary.texture(named: Self.laneName)
+            roadDecal = try assetLibrary.texture(named: Self.roadDecalName)
+            roadside = try Self.roadsideNames.map { name in
+                try assetLibrary.texture(named: name)
+            }
+        }
+    }
+
+    private struct RoadDecal {
+        let node: SKSpriteNode
+        let baseDistance: Double
+        let lateralFactor: Double
+    }
+
     private struct RoadsideProp {
-        let node: SKNode
+        let node: SKSpriteNode
         let baseDistance: Double
         let side: Double
         let lateralOffset: Double
         let parallax: Double
     }
 
-    init(seed: UInt64, configuration: GameSimulation.Configuration = .init()) {
+    init(
+        seed: UInt64,
+        configuration: GameSimulation.Configuration = .init(),
+        appearance: VehicleAppearance,
+        assetLibrary: GameAssetLibrary
+    ) throws {
         let simulation = GameSimulation(seed: seed, configuration: configuration)
+        let mapTextures = try MapTextures(assetLibrary: assetLibrary)
         self.simulation = simulation
+        self.appearance = appearance
+        self.assetLibrary = assetLibrary
+        self.mapTextures = mapTextures
+        skyNode = SKSpriteNode(texture: mapTextures.sky)
+        playerNode = try VehicleSpriteNode(
+            appearance: appearance,
+            assetLibrary: assetLibrary
+        )
+        obstacleSpriteFactory = try ObstacleSpriteFactory(assetLibrary: assetLibrary)
         currentSnapshot = simulation.snapshot
         super.init(size: CGSize(width: 844, height: 390))
         scaleMode = .resizeFill
@@ -183,37 +239,42 @@ final class GameScene: SKScene {
             return
         }
         didBuildScene = true
-        backgroundColor = UIColor(red: 0.035, green: 0.025, blue: 0.09, alpha: 1)
+        backgroundColor = UIColor(red: 0.12, green: 0.10, blue: 0.41, alpha: 1)
 
         worldNode.zPosition = 0
         addChild(worldNode)
 
-        sunNode.fillColor = UIColor(red: 0.98, green: 0.39, blue: 0.54, alpha: 0.72)
-        sunNode.strokeColor = UIColor(red: 1.0, green: 0.69, blue: 0.37, alpha: 0.82)
-        sunNode.lineWidth = 4
-        sunNode.zPosition = -3
-        worldNode.addChild(sunNode)
+        skyNode.name = "map.sky.sky_horizon"
+        skyNode.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        skyNode.color = .white
+        skyNode.colorBlendFactor = 0
+        skyNode.zPosition = -3
+        worldNode.addChild(skyNode)
 
         roadShadowNode.fillColor = UIColor(red: 0.01, green: 0.015, blue: 0.04, alpha: 0.72)
         roadShadowNode.strokeColor = .clear
         roadShadowNode.zPosition = -2
         worldNode.addChild(roadShadowNode)
 
-        roadNode.fillColor = UIColor(red: 0.075, green: 0.09, blue: 0.16, alpha: 1)
+        roadNode.name = "map.road.asphalt"
+        roadNode.fillColor = .white
+        roadNode.fillTexture = mapTextures.asphalt
         roadNode.strokeColor = UIColor(red: 0.37, green: 0.91, blue: 0.80, alpha: 0.82)
         roadNode.lineWidth = 3
         roadNode.zPosition = 0
         worldNode.addChild(roadNode)
 
-        horizonNode.strokeColor = UIColor(red: 0.65, green: 0.48, blue: 0.96, alpha: 0.72)
-        horizonNode.lineWidth = 2
-        horizonNode.zPosition = 1
-        worldNode.addChild(horizonNode)
+        roadDecalContainer.name = "map.roadDecals"
+        roadDecalContainer.zPosition = 1
+        worldNode.addChild(roadDecalContainer)
+        buildRoadDecals()
 
+        laneContainer.name = "map.lanes"
         laneContainer.zPosition = 2
         worldNode.addChild(laneContainer)
         buildLaneMarks()
 
+        roadsideContainer.name = "map.roadside"
         roadsideContainer.zPosition = 5
         worldNode.addChild(roadsideContainer)
         buildRoadsideProps()
@@ -221,7 +282,6 @@ final class GameScene: SKScene {
         obstacleContainer.zPosition = 10
         worldNode.addChild(obstacleContainer)
 
-        buildPlayerCar()
         playerNode.zPosition = 100
         worldNode.addChild(playerNode)
 
@@ -240,7 +300,16 @@ final class GameScene: SKScene {
 
     private func updateStaticGeometry() {
         let projection = makeProjection(for: currentSnapshot)
-        sunNode.position = CGPoint(x: size.width * 0.77, y: projection.horizonY + 38)
+
+        let skyAspectRatio = mapTextures.sky.size().width / mapTextures.sky.size().height
+        let skyWidth = ceil(size.width) + 2
+        let skyHeight = skyWidth / skyAspectRatio
+        skyNode.size = CGSize(width: skyWidth, height: skyHeight)
+        skyNode.position = CGPoint(
+            x: size.width / 2,
+            y: projection.horizonY
+                + (0.5 - Self.skyAuthoredHorizonFraction) * skyHeight
+        )
 
         let shadowOffset = CGPoint(x: 7, y: -5)
         let roadShadowPath = CGMutablePath()
@@ -276,21 +345,43 @@ final class GameScene: SKScene {
         roadPath.closeSubpath()
         roadNode.path = roadPath
 
-        let horizonPath = CGMutablePath()
-        horizonPath.move(to: CGPoint(x: 0, y: projection.horizonY))
-        horizonPath.addLine(to: CGPoint(x: size.width, y: projection.horizonY))
-        horizonNode.path = horizonPath
-
         flashNode.path = CGPath(rect: CGRect(origin: .zero, size: size), transform: nil)
+    }
+
+    private func buildRoadDecals() {
+        for index in 0..<4 {
+            let node = SKSpriteNode(
+                texture: mapTextures.roadDecal,
+                size: CGSize(width: 38, height: 38)
+            )
+            node.name = "map.decal.road_decal_chevrons.\(index)"
+            node.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            node.color = .white
+            node.colorBlendFactor = 0
+            node.alpha = 0.42
+            roadDecalContainer.addChild(node)
+            roadDecals.append(
+                RoadDecal(
+                    node: node,
+                    baseDistance: 12 + Double(index) * 16,
+                    lateralFactor: index.isMultiple(of: 2) ? -0.72 : 0.72
+                )
+            )
+        }
     }
 
     private func buildLaneMarks() {
         let markCount = 12
-        for separatorX in [-0.5, 0.5] {
+        for (separatorIndex, separatorX) in [-0.5, 0.5].enumerated() {
             for index in 0..<markCount {
-                let node = SKShapeNode(rectOf: CGSize(width: 5, height: 40), cornerRadius: 2)
-                node.fillColor = UIColor(red: 0.96, green: 0.83, blue: 0.34, alpha: 0.84)
-                node.strokeColor = .clear
+                let node = SKSpriteNode(
+                    texture: mapTextures.lane,
+                    size: CGSize(width: 5, height: 40)
+                )
+                node.name = "map.lane.lane_worn.\(separatorIndex).\(index)"
+                node.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                node.color = .white
+                node.colorBlendFactor = 0
                 laneContainer.addChild(node)
                 laneMarks.append((node, separatorX, index))
             }
@@ -299,7 +390,8 @@ final class GameScene: SKScene {
 
     private func buildRoadsideProps() {
         for index in 0..<24 {
-            let node = makeRoadsideProp(style: index % 3)
+            let style = index % MapTextures.roadsideNames.count
+            let node = makeRoadsideProp(style: style, index: index)
             roadsideContainer.addChild(node)
             roadsideProps.append(
                 RoadsideProp(
@@ -313,144 +405,22 @@ final class GameScene: SKScene {
         }
     }
 
-    private func makeRoadsideProp(style: Int) -> SKNode {
-        let node = SKNode()
-        switch style {
-        case 0:
-            addBlock(
-                to: node,
-                size: CGSize(width: 11, height: 38),
-                position: CGPoint(x: 4, y: 17),
-                color: UIColor.black.withAlphaComponent(0.34),
-                cornerRadius: 2
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 8, height: 36),
-                position: CGPoint(x: 0, y: 20),
-                color: UIColor(red: 0.31, green: 0.83, blue: 0.78, alpha: 1),
-                cornerRadius: 2
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 20, height: 12),
-                position: CGPoint(x: 0, y: 42),
-                color: UIColor(red: 0.98, green: 0.38, blue: 0.53, alpha: 1),
-                cornerRadius: 3
-            )
-        case 1:
-            addBlock(
-                to: node,
-                size: CGSize(width: 34, height: 34),
-                position: CGPoint(x: 5, y: 19),
-                color: UIColor.black.withAlphaComponent(0.30),
-                cornerRadius: 5,
-                rotation: .pi / 4
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 30, height: 30),
-                position: CGPoint(x: 0, y: 24),
-                color: UIColor(red: 0.55, green: 0.35, blue: 0.91, alpha: 1),
-                cornerRadius: 4,
-                rotation: .pi / 4
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 9, height: 22),
-                position: CGPoint(x: 0, y: 2),
-                color: UIColor(red: 0.25, green: 0.17, blue: 0.34, alpha: 1),
-                cornerRadius: 2
-            )
-        default:
-            addBlock(
-                to: node,
-                size: CGSize(width: 46, height: 10),
-                position: CGPoint(x: 5, y: 5),
-                color: UIColor.black.withAlphaComponent(0.32),
-                cornerRadius: 3
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 42, height: 8),
-                position: CGPoint(x: 0, y: 9),
-                color: UIColor(red: 0.97, green: 0.70, blue: 0.24, alpha: 1),
-                cornerRadius: 2
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 8, height: 30),
-                position: CGPoint(x: -15, y: 25),
-                color: UIColor(red: 0.93, green: 0.31, blue: 0.44, alpha: 1),
-                cornerRadius: 2
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 8, height: 30),
-                position: CGPoint(x: 15, y: 25),
-                color: UIColor(red: 0.93, green: 0.31, blue: 0.44, alpha: 1),
-                cornerRadius: 2
-            )
-        }
+    private func makeRoadsideProp(style: Int, index: Int) -> SKSpriteNode {
+        let textureName = MapTextures.roadsideNames[style]
+        let logicalSizes = [
+            CGSize(width: 28, height: 56),
+            CGSize(width: 48, height: 64),
+            CGSize(width: 48, height: 64),
+        ]
+        let node = SKSpriteNode(
+            texture: mapTextures.roadside[style],
+            size: logicalSizes[style]
+        )
+        node.name = "map.roadside.\(textureName).\(index)"
+        node.anchorPoint = CGPoint(x: 0.5, y: 0)
+        node.color = .white
+        node.colorBlendFactor = 0
         return node
-    }
-
-    private func buildPlayerCar() {
-        addBlock(
-            to: playerNode,
-            size: CGSize(width: 50, height: 72),
-            position: CGPoint(x: 6, y: -5),
-            color: UIColor.black.withAlphaComponent(0.45),
-            cornerRadius: 8
-        )
-        addBlock(
-            to: playerNode,
-            size: CGSize(width: 44, height: 70),
-            position: .zero,
-            color: UIColor(red: 0.20, green: 0.88, blue: 0.74, alpha: 1),
-            cornerRadius: 7
-        )
-        addBlock(
-            to: playerNode,
-            size: CGSize(width: 36, height: 18),
-            position: CGPoint(x: 0, y: -25),
-            color: UIColor(red: 0.11, green: 0.55, blue: 0.57, alpha: 1),
-            cornerRadius: 5
-        )
-        addBlock(
-            to: playerNode,
-            size: CGSize(width: 32, height: 30),
-            position: CGPoint(x: 0, y: 10),
-            color: UIColor(red: 0.12, green: 0.20, blue: 0.38, alpha: 1),
-            cornerRadius: 5
-        )
-        addBlock(
-            to: playerNode,
-            size: CGSize(width: 7, height: 56),
-            position: CGPoint(x: 0, y: -1),
-            color: UIColor(red: 0.98, green: 0.72, blue: 0.25, alpha: 0.95),
-            cornerRadius: 2
-        )
-        for x in [-14.0, 14.0] {
-            addBlock(
-                to: playerNode,
-                size: CGSize(width: 9, height: 7),
-                position: CGPoint(x: x, y: 30),
-                color: UIColor(red: 1.0, green: 0.92, blue: 0.60, alpha: 1),
-                cornerRadius: 2
-            )
-        }
-        for x in [-24.0, 24.0] {
-            for y in [-20.0, 20.0] {
-                addBlock(
-                    to: playerNode,
-                    size: CGSize(width: 8, height: 16),
-                    position: CGPoint(x: x, y: y),
-                    color: UIColor(white: 0.04, alpha: 1),
-                    cornerRadius: 2
-                )
-            }
-        }
     }
 
     private func render(_ snapshot: GameSnapshot) {
@@ -458,6 +428,7 @@ final class GameScene: SKScene {
             return
         }
         let projection = makeProjection(for: snapshot)
+        renderRoadDecals(snapshot: snapshot, projection: projection)
         renderLaneMarks(snapshot: snapshot, projection: projection)
         renderRoadsideProps(snapshot: snapshot, projection: projection)
 
@@ -483,6 +454,26 @@ final class GameScene: SKScene {
             node.setScale(projected.scale)
             node.zPosition = 1 - projected.normalizedDepth
             node.isHidden = obstacle.distance < -3 || obstacle.distance > projection.maximumDistance + 2
+        }
+    }
+
+    private func renderRoadDecals(snapshot: GameSnapshot, projection: RoadProjection) {
+        let cycleLength = projection.maximumDistance + 20
+        let travel = snapshot.distance.truncatingRemainder(dividingBy: cycleLength)
+        for decal in roadDecals {
+            var distance = decal.baseDistance - travel
+            while distance < 1.2 {
+                distance += cycleLength
+            }
+
+            let projected = projection.project(
+                lateral: decal.lateralFactor * snapshot.roadHalfWidth,
+                distance: distance
+            )
+            decal.node.position = projected.point
+            decal.node.setScale(projected.scale)
+            decal.node.zPosition = 1 - projected.normalizedDepth
+            decal.node.isHidden = distance > projection.maximumDistance
         }
     }
 
@@ -549,93 +540,7 @@ final class GameScene: SKScene {
     }
 
     private func makeObstacleNode(for obstacle: ObstacleSnapshot) -> SKNode {
-        let node = SKNode()
-        switch obstacle.kind {
-        case .barrier:
-            addBlock(
-                to: node,
-                size: CGSize(width: 70, height: 31),
-                position: CGPoint(x: 6, y: -6),
-                color: UIColor.black.withAlphaComponent(0.43),
-                cornerRadius: 4
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 68, height: 30),
-                position: .zero,
-                color: UIColor(red: 0.97, green: 0.52, blue: 0.22, alpha: 1),
-                cornerRadius: 4
-            )
-            for x in [-25.0, -8.5, 8.5, 25.0] {
-                addBlock(
-                    to: node,
-                    size: CGSize(width: 9, height: 23),
-                    position: CGPoint(x: x, y: 1),
-                    color: UIColor(red: 1.0, green: 0.86, blue: 0.35, alpha: 1),
-                    cornerRadius: 2,
-                    rotation: -.pi / 10
-                )
-            }
-            for x in [-24.0, 24.0] {
-                addBlock(
-                    to: node,
-                    size: CGSize(width: 9, height: 14),
-                    position: CGPoint(x: x, y: -21),
-                    color: UIColor(red: 0.25, green: 0.16, blue: 0.30, alpha: 1),
-                    cornerRadius: 2
-                )
-            }
-        case .trafficCar:
-            addBlock(
-                to: node,
-                size: CGSize(width: 54, height: 76),
-                position: CGPoint(x: 6, y: -5),
-                color: UIColor.black.withAlphaComponent(0.43),
-                cornerRadius: 8
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 48, height: 74),
-                position: .zero,
-                color: UIColor(red: 0.90, green: 0.28, blue: 0.51, alpha: 1),
-                cornerRadius: 7
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 37, height: 29),
-                position: CGPoint(x: 0, y: 11),
-                color: UIColor(red: 0.20, green: 0.18, blue: 0.42, alpha: 1),
-                cornerRadius: 5
-            )
-            addBlock(
-                to: node,
-                size: CGSize(width: 38, height: 9),
-                position: CGPoint(x: 0, y: -29),
-                color: UIColor(red: 0.58, green: 0.20, blue: 0.42, alpha: 1),
-                cornerRadius: 3
-            )
-            for x in [-15.0, 15.0] {
-                addBlock(
-                    to: node,
-                    size: CGSize(width: 9, height: 7),
-                    position: CGPoint(x: x, y: -33),
-                    color: UIColor(red: 1.0, green: 0.58, blue: 0.30, alpha: 1),
-                    cornerRadius: 2
-                )
-            }
-            for x in [-27.0, 27.0] {
-                for y in [-21.0, 21.0] {
-                    addBlock(
-                        to: node,
-                        size: CGSize(width: 8, height: 16),
-                        position: CGPoint(x: x, y: y),
-                        color: UIColor(red: 0.035, green: 0.025, blue: 0.075, alpha: 1),
-                        cornerRadius: 2
-                    )
-                }
-            }
-        }
-        return node
+        obstacleSpriteFactory.makeNode(for: obstacle)
     }
 
     private func runNearMissFeedback(bonus: Int) {
@@ -739,19 +644,4 @@ final class GameScene: SKScene {
         }
     }
 
-    private func addBlock(
-        to parent: SKNode,
-        size: CGSize,
-        position: CGPoint,
-        color: UIColor,
-        cornerRadius: CGFloat,
-        rotation: CGFloat = 0
-    ) {
-        let block = SKShapeNode(rectOf: size, cornerRadius: cornerRadius)
-        block.position = position
-        block.zRotation = rotation
-        block.fillColor = color
-        block.strokeColor = .clear
-        parent.addChild(block)
-    }
 }

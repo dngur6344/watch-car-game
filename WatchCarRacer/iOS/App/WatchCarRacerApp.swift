@@ -2,18 +2,41 @@ import SwiftUI
 
 @main
 struct WatchCarRacerApp: App {
-    @State private var watchSession: PhoneWatchSession
-    @State private var gameSession: GameSessionController
+    private let watchSession: PhoneWatchSession
+    private let selectionStore: UserDefaultsVehicleSelectionStore
+    private let assetLibrary: GameAssetLibrary
+    @State private var flow: AppFlowController
+#if DEBUG
+    private let acceptanceCoordinator: SG6AcceptanceCoordinator?
+#endif
 
     init() {
         let watchSession = PhoneWatchSession.shared
-        _watchSession = State(initialValue: watchSession)
-        _gameSession = State(initialValue: GameSessionController(watchInput: watchSession))
+        let selectionStore = UserDefaultsVehicleSelectionStore()
+        let assetLibrary: GameAssetLibrary
+        do {
+            assetLibrary = try GameAssetLibrary()
+        } catch {
+            preconditionFailure("Required garage assets could not be initialized: \(error)")
+        }
+
+        self.watchSession = watchSession
+        self.selectionStore = selectionStore
+        self.assetLibrary = assetLibrary
+        let flow = AppFlowController(
+            selectionStore: selectionStore,
+            assetLibrary: assetLibrary,
+            watchInput: watchSession
+        )
+        _flow = State(initialValue: flow)
+#if DEBUG
+        acceptanceCoordinator = SG6AcceptanceCoordinator.makeIfRequested(flow: flow)
+#endif
     }
 
     var body: some Scene {
         WindowGroup {
-            GameRootView(gameSession: gameSession, watchSession: watchSession)
+            AppRootView(flow: flow, watchSession: watchSession)
         }
     }
 }

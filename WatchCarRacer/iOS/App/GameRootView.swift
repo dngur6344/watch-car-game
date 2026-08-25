@@ -2,8 +2,12 @@ import SpriteKit
 import SwiftUI
 
 struct GameRootView: View {
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+
     let gameSession: GameSessionController
     let watchSession: PhoneWatchSession
+    let onRetry: () -> Void
+    let onGarage: () -> Void
 
     var body: some View {
         GeometryReader { proxy in
@@ -43,7 +47,10 @@ struct GameRootView: View {
                     .allowsHitTesting(false)
                 }
             }
-            .animation(.easeOut(duration: 0.20), value: gameSession.phase)
+            .animation(
+                accessibilityReduceMotion ? nil : .easeOut(duration: 0.20),
+                value: gameSession.phase
+            )
         }
         .background(Color(red: 0.025, green: 0.035, blue: 0.065))
         .preferredColorScheme(.dark)
@@ -137,15 +144,27 @@ struct GameRootView: View {
             Text("Score \(gameSession.score)")
                 .font(.headline.monospacedDigit())
                 .foregroundStyle(.white.opacity(0.82))
-            Button("RETRY") {
-                gameSession.retry()
+            HStack(spacing: 10) {
+                Button("RETRY") {
+                    onRetry()
+                }
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
+                .tint(.orange)
+                .font(.headline.bold())
+                .controlSize(.large)
+                .accessibilityIdentifier("game.retry")
+
+                Button("GARAGE") {
+                    onGarage()
+                }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
+                .tint(.white)
+                .font(.headline.bold())
+                .controlSize(.large)
+                .accessibilityIdentifier("game.garage")
             }
-            .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.capsule)
-            .tint(.orange)
-            .font(.headline.bold())
-            .controlSize(.large)
-            .accessibilityIdentifier("game.retry")
         }
         .padding(.vertical, 24)
         .padding(.horizontal, 40)

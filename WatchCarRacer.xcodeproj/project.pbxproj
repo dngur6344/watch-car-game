@@ -36,6 +36,26 @@
 		04000000000000000000001B /* WatchHapticPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000019 /* WatchHapticPlayer.swift */; };
 		04000000000000000000001C /* FeedbackCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000001A /* FeedbackCoordinatorTests.swift */; };
 		04000000000000000000001D /* WatchFeedbackReceiverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000001B /* WatchFeedbackReceiverTests.swift */; };
+		04000000000000000000001E /* VehicleCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000001C /* VehicleCatalog.swift */; };
+		04000000000000000000001F /* GameAssetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000001D /* GameAssetLibrary.swift */; };
+		040000000000000000000020 /* GameAssetLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000001E /* GameAssetLibraryTests.swift */; };
+		040000000000000000000021 /* Vehicles.atlas in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000001F /* Vehicles.atlas */; };
+		040000000000000000000022 /* Obstacles.atlas in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000020 /* Obstacles.atlas */; };
+		040000000000000000000023 /* Environment.atlas in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000021 /* Environment.atlas */; };
+		040000000000000000000024 /* sky_horizon.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000022 /* sky_horizon.png */; };
+		040000000000000000000025 /* asphalt.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000023 /* asphalt.png */; };
+		040000000000000000000026 /* AssetManifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000024 /* AssetManifest.json */; };
+		040000000000000000000027 /* VehicleSelectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000025 /* VehicleSelectionStore.swift */; };
+		040000000000000000000028 /* VehicleCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000026 /* VehicleCatalogTests.swift */; };
+		040000000000000000000029 /* VehicleSelectionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000027 /* VehicleSelectionStoreTests.swift */; };
+		04000000000000000000002A /* VehicleSpriteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000028 /* VehicleSpriteNode.swift */; };
+		04000000000000000000002B /* VehicleSpriteNodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000029 /* VehicleSpriteNodeTests.swift */; };
+		04000000000000000000002C /* AppFlowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002A /* AppFlowController.swift */; };
+		04000000000000000000002D /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002B /* AppRootView.swift */; };
+		04000000000000000000002E /* GarageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002C /* GarageView.swift */; };
+		04000000000000000000002F /* AppFlowControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002D /* AppFlowControllerTests.swift */; };
+		040000000000000000000030 /* GameSceneMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002E /* GameSceneMapTests.swift */; };
+		040000000000000000000031 /* SG6AcceptanceCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002F /* SG6AcceptanceCoordinator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,6 +124,26 @@
 		030000000000000000000019 /* WatchHapticPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHapticPlayer.swift; sourceTree = "<group>"; };
 		03000000000000000000001A /* FeedbackCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackCoordinatorTests.swift; sourceTree = "<group>"; };
 		03000000000000000000001B /* WatchFeedbackReceiverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchFeedbackReceiverTests.swift; sourceTree = "<group>"; };
+		03000000000000000000001C /* VehicleCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleCatalog.swift; sourceTree = "<group>"; };
+		03000000000000000000001D /* GameAssetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAssetLibrary.swift; sourceTree = "<group>"; };
+		03000000000000000000001E /* GameAssetLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAssetLibraryTests.swift; sourceTree = "<group>"; };
+		03000000000000000000001F /* Vehicles.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Vehicles.atlas; sourceTree = "<group>"; };
+		030000000000000000000020 /* Obstacles.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Obstacles.atlas; sourceTree = "<group>"; };
+		030000000000000000000021 /* Environment.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Environment.atlas; sourceTree = "<group>"; };
+		030000000000000000000022 /* sky_horizon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sky_horizon.png; sourceTree = "<group>"; };
+		030000000000000000000023 /* asphalt.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = asphalt.png; sourceTree = "<group>"; };
+		030000000000000000000024 /* AssetManifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = AssetManifest.json; sourceTree = "<group>"; };
+		030000000000000000000025 /* VehicleSelectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleSelectionStore.swift; sourceTree = "<group>"; };
+		030000000000000000000026 /* VehicleCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleCatalogTests.swift; sourceTree = "<group>"; };
+		030000000000000000000027 /* VehicleSelectionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleSelectionStoreTests.swift; sourceTree = "<group>"; };
+		030000000000000000000028 /* VehicleSpriteNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleSpriteNode.swift; sourceTree = "<group>"; };
+		030000000000000000000029 /* VehicleSpriteNodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleSpriteNodeTests.swift; sourceTree = "<group>"; };
+		03000000000000000000002A /* AppFlowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFlowController.swift; sourceTree = "<group>"; };
+		03000000000000000000002B /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
+		03000000000000000000002C /* GarageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarageView.swift; sourceTree = "<group>"; };
+		03000000000000000000002D /* AppFlowControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFlowControllerTests.swift; sourceTree = "<group>"; };
+		03000000000000000000002E /* GameSceneMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSceneMapTests.swift; sourceTree = "<group>"; };
+		03000000000000000000002F /* SG6AcceptanceCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SG6AcceptanceCoordinator.swift; sourceTree = "<group>"; };
 		0300000000000000000000F1 /* WatchCarRacer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F2 /* WatchCarRacerWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacerWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F3 /* WatchCarRacerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WatchCarRacerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -150,9 +190,11 @@
 			isa = PBXGroup;
 			children = (
 				020000000000000000000005 /* App */,
+				020000000000000000000011 /* Customization */,
 				02000000000000000000000B /* Input */,
 				02000000000000000000000E /* Game */,
 				02000000000000000000000F /* Feedback */,
+				020000000000000000000012 /* Resources */,
 			);
 			path = iOS;
 			sourceTree = "<group>";
@@ -161,8 +203,12 @@
 			isa = PBXGroup;
 			children = (
 				030000000000000000000001 /* WatchCarRacerApp.swift */,
+				03000000000000000000002A /* AppFlowController.swift */,
+				03000000000000000000002B /* AppRootView.swift */,
+				03000000000000000000002C /* GarageView.swift */,
 				030000000000000000000002 /* GameRootView.swift */,
 				03000000000000000000000F /* GameSessionController.swift */,
+				03000000000000000000002F /* SG6AcceptanceCoordinator.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -198,6 +244,12 @@
 				030000000000000000000015 /* GameSessionControllerTests.swift */,
 				030000000000000000000017 /* SteeringInputRouterTests.swift */,
 				03000000000000000000001A /* FeedbackCoordinatorTests.swift */,
+				03000000000000000000001E /* GameAssetLibraryTests.swift */,
+				030000000000000000000026 /* VehicleCatalogTests.swift */,
+				030000000000000000000027 /* VehicleSelectionStoreTests.swift */,
+				030000000000000000000029 /* VehicleSpriteNodeTests.swift */,
+				03000000000000000000002D /* AppFlowControllerTests.swift */,
+				03000000000000000000002E /* GameSceneMapTests.swift */,
 			);
 			path = WatchCarRacerTests;
 			sourceTree = "<group>";
@@ -255,6 +307,8 @@
 				03000000000000000000000D /* GameSimulation.swift */,
 				030000000000000000000011 /* RoadProjection.swift */,
 				030000000000000000000012 /* GameScene.swift */,
+				03000000000000000000001D /* GameAssetLibrary.swift */,
+				030000000000000000000028 /* VehicleSpriteNode.swift */,
 			);
 			path = Game;
 			sourceTree = "<group>";
@@ -273,6 +327,36 @@
 				030000000000000000000019 /* WatchHapticPlayer.swift */,
 			);
 			path = Feedback;
+			sourceTree = "<group>";
+		};
+		020000000000000000000011 /* Customization */ = {
+			isa = PBXGroup;
+			children = (
+				03000000000000000000001C /* VehicleCatalog.swift */,
+				030000000000000000000025 /* VehicleSelectionStore.swift */,
+			);
+			path = Customization;
+			sourceTree = "<group>";
+		};
+		020000000000000000000012 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				03000000000000000000001F /* Vehicles.atlas */,
+				030000000000000000000020 /* Obstacles.atlas */,
+				030000000000000000000021 /* Environment.atlas */,
+				020000000000000000000013 /* Backgrounds */,
+				030000000000000000000024 /* AssetManifest.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		020000000000000000000013 /* Backgrounds */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000022 /* sky_horizon.png */,
+				030000000000000000000023 /* asphalt.png */,
+			);
+			path = Backgrounds;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -380,7 +464,19 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		050000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				040000000000000000000021 /* Vehicles.atlas in Resources */,
+				040000000000000000000022 /* Obstacles.atlas in Resources */,
+				040000000000000000000023 /* Environment.atlas in Resources */,
+				040000000000000000000024 /* sky_horizon.png in Resources */,
+				040000000000000000000025 /* asphalt.png in Resources */,
+				040000000000000000000026 /* AssetManifest.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		050000000000000000000013 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		050000000000000000000023 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		050000000000000000000033 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
@@ -402,6 +498,14 @@
 				040000000000000000000014 /* TouchSteeringState.swift in Sources */,
 				040000000000000000000018 /* SteeringInputRouter.swift in Sources */,
 				04000000000000000000001A /* PhoneFeedbackPlayer.swift in Sources */,
+				04000000000000000000001E /* VehicleCatalog.swift in Sources */,
+				04000000000000000000001F /* GameAssetLibrary.swift in Sources */,
+				040000000000000000000027 /* VehicleSelectionStore.swift in Sources */,
+				04000000000000000000002A /* VehicleSpriteNode.swift in Sources */,
+				04000000000000000000002C /* AppFlowController.swift in Sources */,
+				04000000000000000000002D /* AppRootView.swift in Sources */,
+				04000000000000000000002E /* GarageView.swift in Sources */,
+				040000000000000000000031 /* SG6AcceptanceCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,6 +534,12 @@
 				040000000000000000000017 /* GameSessionControllerTests.swift in Sources */,
 				040000000000000000000019 /* SteeringInputRouterTests.swift in Sources */,
 				04000000000000000000001C /* FeedbackCoordinatorTests.swift in Sources */,
+				040000000000000000000020 /* GameAssetLibraryTests.swift in Sources */,
+				040000000000000000000028 /* VehicleCatalogTests.swift in Sources */,
+				040000000000000000000029 /* VehicleSelectionStoreTests.swift in Sources */,
+				04000000000000000000002B /* VehicleSpriteNodeTests.swift in Sources */,
+				04000000000000000000002F /* AppFlowControllerTests.swift in Sources */,
+				040000000000000000000030 /* GameSceneMapTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

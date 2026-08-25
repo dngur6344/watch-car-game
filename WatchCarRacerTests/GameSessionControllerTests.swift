@@ -39,10 +39,10 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertFalse(controller.touchSteering.isDragging)
     }
 
-    func testSceneCapsLargeFrameGapToFiveFixedSteps() {
+    func testSceneCapsLargeFrameGapToFiveFixedSteps() throws {
         var configuration = GameSimulation.Configuration()
         configuration.spawnDistance = 10_000
-        let scene = GameScene(seed: 1, configuration: configuration)
+        let scene = try makeScene(seed: 1, configuration: configuration)
         var steeringReads = 0
         scene.steeringProvider = { _ in
             steeringReads += 1
@@ -61,22 +61,37 @@ final class GameSessionControllerTests: XCTestCase {
     }
 
 #if DEBUG
-    func testSceneReportsRollingFrameRateWithoutChangingSimulationTiming() {
+    func testSceneReportsRollingFrameRateWithoutChangingSimulationTiming() throws {
         var configuration = GameSimulation.Configuration()
         configuration.spawnDistance = 10_000
-        let scene = GameScene(seed: 1, configuration: configuration)
+        let scene = try makeScene(seed: 1, configuration: configuration)
         var samples: [Double] = []
         scene.frameRateHandler = { samples.append($0) }
 
         scene.update(0)
-        for frame in 1...120 {
+        for frame in 1...180 {
             scene.update(Double(frame) / 60)
         }
 
-        XCTAssertEqual(scene.currentSnapshot.elapsedTime, 2, accuracy: 0.000_001)
-        XCTAssertGreaterThanOrEqual(samples.count, 3)
-        XCTAssertLessThanOrEqual(samples.count, 4)
+        XCTAssertEqual(scene.currentSnapshot.elapsedTime, 3, accuracy: 0.000_001)
+        XCTAssertGreaterThanOrEqual(samples.count, 2)
+        XCTAssertLessThanOrEqual(samples.count, 3)
         XCTAssertTrue(samples.allSatisfy { abs($0 - 60) < 0.000_001 })
+    }
+
+    func testControllerTracksOneSecondFrameRateAcceptanceSamples() {
+        let controller = GameSessionController(seed: 1)
+
+        controller.scene.update(0)
+        for frame in 1...180 {
+            controller.scene.update(Double(frame) / 60)
+        }
+
+        XCTAssertEqual(controller.frameRateSamples.count, controller.frameRateSampleCount)
+        XCTAssertGreaterThanOrEqual(controller.frameRateSamples.count, 2)
+        XCTAssertTrue(controller.frameRateSamples.allSatisfy { abs($0 - 60) < 0.000_001 })
+        XCTAssertEqual(controller.maximumConsecutiveFrameRateSamplesBelow50, 0)
+        XCTAssertNotNil(controller.firstObstacleFrameRateSample)
     }
 #endif
 
@@ -137,6 +152,31 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertEqual(controller.steeringSnapshot.value, 0)
     }
 
+    func testSelectedAppearanceAndSharedAssetLibraryReachSceneAndSurviveRetry() throws {
+        let appearance = try XCTUnwrap(
+            VehicleCatalog.resolve(VehicleSelection(vehicleID: .angular, colorID: .emberGold))
+        )
+        let assetLibrary = try GameAssetLibrary()
+        let controller = try GameSessionController(
+            seed: 912,
+            appearance: appearance,
+            assetLibrary: assetLibrary
+        )
+
+        XCTAssertEqual(controller.appearance, appearance)
+        XCTAssertEqual(controller.scene.appearance, appearance)
+        XCTAssertTrue(controller.assetLibrary === assetLibrary)
+        XCTAssertTrue(controller.scene.assetLibrary === assetLibrary)
+
+        controller.retry()
+
+        XCTAssertEqual(controller.runSeed, 912)
+        XCTAssertEqual(controller.appearance, appearance)
+        XCTAssertEqual(controller.scene.appearance, appearance)
+        XCTAssertTrue(controller.assetLibrary === assetLibrary)
+        XCTAssertTrue(controller.scene.assetLibrary === assetLibrary)
+    }
+
     private func snapshot(
         from snapshot: GameSnapshot,
         phase: GamePhase,
@@ -170,6 +210,21 @@ final class GameSessionControllerTests: XCTestCase {
                 streamID: UUID(uuidString: "99999999-8888-7777-6666-555555555555")!,
                 sequence: sequence
             )
+        )
+    }
+
+    private func makeScene(
+        seed: UInt64,
+        configuration: GameSimulation.Configuration
+    ) throws -> GameScene {
+        let appearance = try XCTUnwrap(
+            VehicleCatalog.resolve(VehicleCatalog.defaultSelection)
+        )
+        return try GameScene(
+            seed: seed,
+            configuration: configuration,
+            appearance: appearance,
+            assetLibrary: GameAssetLibrary()
         )
     }
 }

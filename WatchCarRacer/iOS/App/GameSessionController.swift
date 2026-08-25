@@ -21,9 +21,14 @@ final class GameSessionController {
     private(set) var averageFramesPerSecond: Double?
     private(set) var minimumFramesPerSecond: Double?
     private(set) var frameRateSampleCount = 0
+    private(set) var frameRateSamples: [Double] = []
+    private(set) var maximumConsecutiveFrameRateSamplesBelow50 = 0
+    private(set) var firstObstacleFrameRateSample: Double?
 #endif
 
     let runSeed: UInt64
+    let appearance: VehicleAppearance
+    let assetLibrary: GameAssetLibrary
     let scene: GameScene
 
     @ObservationIgnored private let watchInput: (any WatchSteeringReadingProviding)?
@@ -36,11 +41,16 @@ final class GameSessionController {
     @ObservationIgnored private var lastFallbackReason: WatchSteeringAvailability?
 #if DEBUG
     @ObservationIgnored private var frameRateSum = 0.0
+    @ObservationIgnored private var consecutiveFrameRateSamplesBelow50 = 0
+    @ObservationIgnored private var didObserveFirstObstacle = false
+    @ObservationIgnored private var isAwaitingFirstObstacleFrameRateSample = false
 #endif
 
     init(
         seed: UInt64 = 0,
         configuration: GameSimulation.Configuration = .init(),
+        appearance: VehicleAppearance,
+        assetLibrary: GameAssetLibrary,
         watchInput: (any WatchSteeringReadingProviding)? = nil,
         feedbackPlayer: (any PhoneFeedbackPlaying)? = nil,
         watchFeedbackSender: (any WatchFeedbackSending)? = nil,
@@ -48,9 +58,16 @@ final class GameSessionController {
         currentTime: @escaping @MainActor () -> TimeInterval = {
             ProcessInfo.processInfo.systemUptime
         }
-    ) {
+    ) throws {
         runSeed = seed
-        scene = GameScene(seed: seed, configuration: configuration)
+        self.appearance = appearance
+        self.assetLibrary = assetLibrary
+        scene = try GameScene(
+            seed: seed,
+            configuration: configuration,
+            appearance: appearance,
+            assetLibrary: assetLibrary
+        )
         self.watchInput = watchInput
         let inferredWatchFeedbackSender = watchInput as? any WatchFeedbackSending
         self.feedbackPlayer = feedbackPlayer
@@ -74,6 +91,39 @@ final class GameSessionController {
         }
 #endif
         receive(snapshot: scene.currentSnapshot, events: [])
+    }
+
+    convenience init(
+        seed: UInt64 = 0,
+        configuration: GameSimulation.Configuration = .init(),
+        watchInput: (any WatchSteeringReadingProviding)? = nil,
+        feedbackPlayer: (any PhoneFeedbackPlaying)? = nil,
+        watchFeedbackSender: (any WatchFeedbackSending)? = nil,
+        makeFeedbackEventID: @escaping () -> UUID = UUID.init,
+        currentTime: @escaping @MainActor () -> TimeInterval = {
+            ProcessInfo.processInfo.systemUptime
+        }
+    ) {
+        guard let appearance = VehicleCatalog.resolve(VehicleCatalog.defaultSelection) else {
+            preconditionFailure("The default vehicle appearance is invalid.")
+        }
+
+        do {
+            let assetLibrary = try GameAssetLibrary()
+            try self.init(
+                seed: seed,
+                configuration: configuration,
+                appearance: appearance,
+                assetLibrary: assetLibrary,
+                watchInput: watchInput,
+                feedbackPlayer: feedbackPlayer,
+                watchFeedbackSender: watchFeedbackSender,
+                makeFeedbackEventID: makeFeedbackEventID,
+                currentTime: currentTime
+            )
+        } catch {
+            preconditionFailure("Required game assets could not be loaded: \(error)")
+        }
     }
 
     func updateTouch(horizontalPosition: Double, width: Double) {
@@ -118,6 +168,13 @@ final class GameSessionController {
     }
 
     func receive(snapshot: GameSnapshot, events: [GameEvent]) {
+#if DEBUG
+        if !didObserveFirstObstacle, !snapshot.obstacles.isEmpty {
+            didObserveFirstObstacle = true
+            isAwaitingFirstObstacleFrameRateSample = true
+            print("SG6_FIRST_OBSTACLE observedAtSample=\(frameRateSampleCount)")
+        }
+#endif
         let displayedSpeed = Int((snapshot.speed * 3.6).rounded())
         if score != snapshot.score {
             score = snapshot.score
@@ -204,15 +261,30 @@ final class GameSessionController {
         framesPerSecond = value
         frameRateSampleCount += 1
         frameRateSum += value
+        frameRateSamples.append(value)
         averageFramesPerSecond = frameRateSum / Double(frameRateSampleCount)
         minimumFramesPerSecond = min(minimumFramesPerSecond ?? value, value)
+        if value < 50 {
+            consecutiveFrameRateSamplesBelow50 += 1
+            maximumConsecutiveFrameRateSamplesBelow50 = max(
+                maximumConsecutiveFrameRateSamplesBelow50,
+                consecutiveFrameRateSamplesBelow50
+            )
+        } else {
+            consecutiveFrameRateSamplesBelow50 = 0
+        }
+        if isAwaitingFirstObstacleFrameRateSample {
+            firstObstacleFrameRateSample = value
+            isAwaitingFirstObstacleFrameRateSample = false
+        }
 
         let sample = value.formatted(.number.precision(.fractionLength(1)))
         let average = averageFramesPerSecond?.formatted(.number.precision(.fractionLength(1))) ?? "—"
         let minimum = minimumFramesPerSecond?.formatted(.number.precision(.fractionLength(1))) ?? "—"
         print(
-            "SG7_FPS sample=\(sample) average=\(average) minimum=\(minimum) "
-                + "count=\(frameRateSampleCount) phase=\(phase) score=\(score)"
+            "SG6_FPS_SAMPLE sample=\(sample) average=\(average) minimum=\(minimum) "
+                + "count=\(frameRateSampleCount) consecutiveBelow50="
+                + "\(consecutiveFrameRateSamplesBelow50) phase=\(phase) score=\(score)"
         )
     }
 #endif
