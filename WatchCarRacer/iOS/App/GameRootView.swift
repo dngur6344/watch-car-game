@@ -2,12 +2,18 @@ import SpriteKit
 import SwiftUI
 
 struct GameRootView: View {
+    private enum PresentationAccessibilityFocus: Hashable {
+        case countdown
+        case result
+    }
+
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @AccessibilityFocusState private var presentationFocus: PresentationAccessibilityFocus?
 
     let gameSession: GameSessionController
     let watchSession: PhoneWatchSession
     let onRetry: () -> Void
-    let onGarage: () -> Void
+    let onMainHub: () -> Void
 
     var body: some View {
         GeometryReader { proxy in
@@ -27,9 +33,23 @@ struct GameRootView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
 
-                if gameSession.phase == .crashed {
-                    crashOverlay
-                        .transition(.scale(scale: 0.90).combined(with: .opacity))
+                switch gameSession.presentationPhase {
+                case let .countdown(value):
+                    countdownOverlay(value: value)
+                        .transition(
+                            accessibilityReduceMotion
+                                ? .opacity
+                                : .scale(scale: 0.90).combined(with: .opacity)
+                        )
+                case .racing:
+                    EmptyView()
+                case let .result(result):
+                    resultOverlay(result)
+                        .transition(
+                            accessibilityReduceMotion
+                                ? .opacity
+                                : .scale(scale: 0.90).combined(with: .opacity)
+                        )
                 }
 
                 if let fallbackBannerText = gameSession.fallbackBannerText {
@@ -49,8 +69,21 @@ struct GameRootView: View {
             }
             .animation(
                 accessibilityReduceMotion ? nil : .easeOut(duration: 0.20),
-                value: gameSession.phase
+                value: gameSession.presentationPhase
             )
+        }
+        .onChange(of: accessibilityReduceMotion, initial: true) { _, reduceMotion in
+            gameSession.scene.setReduceMotionEnabled(reduceMotion)
+        }
+        .onChange(of: gameSession.presentationPhase, initial: true) { _, phase in
+            switch phase {
+            case .countdown:
+                presentationFocus = .countdown
+            case .racing:
+                presentationFocus = nil
+            case .result:
+                presentationFocus = .result
+            }
         }
         .background(Color(red: 0.025, green: 0.035, blue: 0.065))
         .preferredColorScheme(.dark)
@@ -70,9 +103,11 @@ struct GameRootView: View {
             hudCard(title: "SPEED", value: "\(gameSession.speed) km/h")
 
             VStack(alignment: .trailing, spacing: 3) {
-                Text(gameSession.phase == .running ? "RUNNING" : "CRASHED")
+                Text(presentationStatus)
                     .font(.caption.bold())
-                    .foregroundStyle(gameSession.phase == .running ? .mint : .orange)
+                    .foregroundStyle(
+                        gameSession.presentationPhase == .racing ? .mint : .orange
+                    )
                     .accessibilityIdentifier("game.phase")
                 Text("INPUT · \(gameSession.inputSourceDescription)")
                     .font(.caption2.monospaced())
@@ -133,17 +168,61 @@ struct GameRootView: View {
             .accessibilityAddTraits(.allowsDirectInteraction)
         }
         .frame(height: height)
-        .allowsHitTesting(gameSession.phase == .running)
+        .opacity(gameSession.acceptsTouchInput ? 1 : 0.48)
+        .allowsHitTesting(gameSession.acceptsTouchInput)
     }
 
-    private var crashOverlay: some View {
+    private func countdownOverlay(value: Int) -> some View {
+        VStack(spacing: 6) {
+            Text("GET READY")
+                .font(.caption.bold())
+                .foregroundStyle(.white.opacity(0.76))
+            CountdownNumberView(
+                value: value,
+                reduceMotion: accessibilityReduceMotion
+            )
+            .id(value)
+        }
+        .padding(.vertical, 20)
+        .padding(.horizontal, 42)
+        .background(.black.opacity(0.76), in: RoundedRectangle(cornerRadius: 22))
+        .overlay {
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(.white.opacity(0.32), lineWidth: 1)
+        }
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Race countdown")
+        .accessibilityValue(String(value))
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("game.countdown")
+        .accessibilityFocused($presentationFocus, equals: .countdown)
+    }
+
+    private func resultOverlay(_ result: RunResult) -> some View {
         VStack(spacing: 12) {
             Text("CRASHED")
                 .font(.system(size: 34, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
-            Text("Score \(gameSession.score)")
-                .font(.headline.monospacedDigit())
-                .foregroundStyle(.white.opacity(0.82))
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityFocused($presentationFocus, equals: .result)
+
+            if result.isNewBest {
+                Label("NEW LOCAL BEST", systemImage: "trophy.fill")
+                    .font(.caption.bold())
+                    .foregroundStyle(.yellow)
+                    .accessibilityIdentifier("game.newBest")
+            }
+
+            HStack(spacing: 24) {
+                resultMetric(title: "FINAL SCORE", value: result.score)
+                resultMetric(title: "LOCAL BEST", value: result.localBest)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Run result")
+            .accessibilityValue(resultAccessibilityValue(result))
+            .accessibilityIdentifier("game.resultSummary")
+
             HStack(spacing: 10) {
                 Button("RETRY") {
                     onRetry()
@@ -155,15 +234,15 @@ struct GameRootView: View {
                 .controlSize(.large)
                 .accessibilityIdentifier("game.retry")
 
-                Button("GARAGE") {
-                    onGarage()
+                Button("MAIN HUB") {
+                    onMainHub()
                 }
                 .buttonStyle(.bordered)
                 .buttonBorderShape(.capsule)
                 .tint(.white)
                 .font(.headline.bold())
                 .controlSize(.large)
-                .accessibilityIdentifier("game.garage")
+                .accessibilityIdentifier("game.mainHub")
             }
         }
         .padding(.vertical, 24)
@@ -172,6 +251,35 @@ struct GameRootView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 20)
                 .stroke(.orange.opacity(0.8), lineWidth: 2)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("game.result")
+    }
+
+    private func resultMetric(title: String, value: Int) -> some View {
+        VStack(spacing: 2) {
+            Text(title)
+                .font(.caption2.bold())
+                .foregroundStyle(.white.opacity(0.62))
+            Text(value, format: .number)
+                .font(.title3.monospacedDigit().bold())
+                .foregroundStyle(.white)
+        }
+    }
+
+    private func resultAccessibilityValue(_ result: RunResult) -> String {
+        let newBest = result.isNewBest ? ", new local best" : ""
+        return "Final score \(result.score), local best \(result.localBest)\(newBest)"
+    }
+
+    private var presentationStatus: String {
+        switch gameSession.presentationPhase {
+        case .countdown:
+            return "COUNTDOWN"
+        case .racing:
+            return "RACING"
+        case .result:
+            return "RESULT"
         }
     }
 
@@ -254,4 +362,31 @@ struct GameRootView: View {
         return value.formatted(.number.precision(.fractionLength(1)))
     }
 #endif
+}
+
+private struct CountdownNumberView: View {
+    let value: Int
+    let reduceMotion: Bool
+
+    @State private var scale: CGFloat = 0.72
+
+    var body: some View {
+        Text(value, format: .number)
+            .font(.system(size: 72, weight: .black, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(.white)
+            .scaleEffect(reduceMotion ? 1 : scale)
+            .onAppear {
+#if DEBUG
+                SG6AcceptanceProbe.recordCountdownRendered(value)
+#endif
+                guard !reduceMotion else {
+                    scale = 1
+                    return
+                }
+                withAnimation(.easeOut(duration: 0.55)) {
+                    scale = 1.08
+                }
+            }
+    }
 }

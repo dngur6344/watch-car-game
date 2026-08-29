@@ -87,7 +87,7 @@ final class GameAssetLibraryTests: XCTestCase {
         let declaredFiles = Set(manifest.assets.map(\.file))
         let productionFiles = try Set(
             FileManager.default.subpathsOfDirectory(atPath: resources.path)
-                .filter { $0.hasSuffix(".png") }
+                .filter { $0.hasSuffix(".png") && !$0.hasPrefix("Presentation/") }
         )
         XCTAssertEqual(declaredFiles, productionFiles)
 

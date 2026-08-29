@@ -53,3 +53,64 @@ The family-specific prompt requests were:
 | `Vehicles.atlas/rally_shadow.png` | vehicle.rally.shadow | P-RALLY | same as above | 384×576 aligned subdued source-alpha shadow; 8/12px safety inset | `204f476d221bb6a03d5a7b068cc335e84b18649efe86567b1b799f98a4914332` |
 
 The selected source files remain in the built-in tool's generated-image store for audit. Every runtime-referenced final PNG is copied into `WatchCarRacer/iOS/Resources`; the application never references the generated-image store.
+
+## Presentation kit (2026-08-28)
+
+The eight presentation resources were created with Codex's built-in `image_gen` tool and deterministic Apple CoreGraphics/ImageIO processing. The three supplied screenshots in `.woohyuk/design-references` were used only as mood, hierarchy, and composition references; they were not edit targets and no pixels were copied from them. No stock image, external asset pack, logo, trademark, real vehicle reference, or third-party runtime dependency was used.
+
+### Built-in prompts and selected sources
+
+`P-PRESENTATION-HUB`:
+
+> Create an original cinematic neon-sunset expressway leading toward a luminous abstract portal-like horizon for a premium iPhone landscape game hub. Use a wide road-first one-point perspective, wet-dark asphalt, subtle guardrail light strips, distant original skyline silhouettes and palms, with generous low-detail UI-safe margins. Use the inspected Expressway Portal screenshot only as a style/composition reference, not an edit target. Environment only: no vehicle, people, text, letters, numbers, UI, buttons, controls, icons, logos, brands, trademarks, recognizable products, watermark, border, frame, checkerboard, signature, start grid, text-like road markings, or baked interface shapes.
+
+- Selected built-in source: `/Users/woohyuk/.codex/generated_images/01a047d5-e63c-76c1-868b-402bcb745f50/exec-14d89caa-3dc8-45dd-9623-bf5a4ebae4c3.png`
+
+`P-PRESENTATION-MAINTENANCE`:
+
+> Create an original cinematic wet neon pit-lane workshop environment with a large empty central staging floor for an overlaid vehicle hero. Use an open-sided night workshop flowing into a rain-dark pit lane, charcoal concrete, brushed dark metal, restrained cyan work lights, magenta dusk/rain glow, and a soft distant original skyline. Use the inspected Pit Lane and Precision Workshop screenshots only as style/composition references, not edit targets. Preserve broad empty central space and UI-safe left/right margins. Environment only: no vehicle, lift, tool cart, people, text, letters, numbers, UI, controls, icons, logos, brands, trademarks, recognizable products, watermark, border, frame, checkerboard, signature, readable signs, or baked interface panels.
+
+- Selected built-in source: `/Users/woohyuk/.codex/generated_images/01a047d5-e63c-76c1-868b-402bcb745f50/exec-309bed0f-f7dc-46e2-ad6d-42ba983b0df3.png`
+
+`P-PRESENTATION-RALLY`:
+
+> Create one original brand-neutral compact Rally Hatch as a premium stylized-realistic 3D hero with neutral-white exterior paint: short wheelbase, playful wide bolt-free fenders, compact muscular stance, small centered roof intake, restrained integrated rear roof spoiler, practical five-door cabin, original slim angular lamps, and no resemblance to a real production vehicle. Use a fixed front three-quarter camera from slightly above, nose toward lower-left, body toward upper-right, whole vehicle plus soft authored ground shadow visible on a square canvas with at least 9% genuinely transparent padding. No environment, text, letters, numbers, logo, badge, emblem, grille mark, brand, trademark, livery, decal, watermark, border, frame, checkerboard, or signature.
+
+- Selected built-in source: `/Users/woohyuk/.codex/generated_images/01a047d5-e63c-76c1-868b-402bcb745f50/exec-bf629493-d6f7-4f5a-8037-5896dd5baf46.png`
+
+`P-PRESENTATION-GT`:
+
+> Create one original brand-neutral low GT Coupe as a premium stylized-realistic 3D hero with neutral-white exterior paint: elegant two-door grand tourer, long low hood, flowing teardrop cabin, broad rear shoulders, subtle endurance-inspired side aero channels, restrained integrated rear lip, original slim horizontal lamps, and no resemblance to a real production vehicle. Use the same fixed front three-quarter camera, alignment, square canvas, authored ground shadow, and genuinely transparent padding as the Rally hero. No environment, text, letters, numbers, logo, badge, emblem, grille mark, brand, trademark, livery, decal, watermark, border, frame, checkerboard, or signature.
+
+- Selected built-in source: `/Users/woohyuk/.codex/generated_images/01a047d5-e63c-76c1-868b-402bcb745f50/exec-04014b78-1197-4f52-bf49-46fdcb5698a7.png`
+
+`P-PRESENTATION-ANGULAR`:
+
+> Create one original brand-neutral Angular Performance vehicle as a premium stylized-realistic 3D hero with neutral-white exterior paint: compact futuristic wedge, crisp faceted body planes, low polygonal canopy, squared muscular rear haunches, sharply chamfered wheel arches, geometric triangular intake language, thin blade-like rear spoiler, original narrow blade lamps, and no resemblance to a real production vehicle. Use the same fixed front three-quarter camera, alignment, square canvas, authored ground shadow, and genuinely transparent padding as the other heroes. No environment, text, letters, numbers, logo, badge, emblem, grille mark, brand, trademark, livery, decal, watermark, border, frame, checkerboard, or signature.
+
+- Selected built-in source: `/Users/woohyuk/.codex/generated_images/01a047d5-e63c-76c1-868b-402bcb745f50/exec-47cb1da1-2713-4be3-8af3-5b2e860deeb0.png`
+
+Rejected built-in paint/details edits that baked checkerboard pixels were not copied, used for processing, or referenced by the application.
+
+### Deterministic processing
+
+`Scripts/process_presentation_assets.swift` accepts explicit source and output paths. Backgrounds are high-quality resized to 1672×941 and exported as opaque-pixel, 8-bit sRGB RGBA PNGs. Each accepted transparent vehicle master is high-quality resized to a 1024×1024 sRGB RGBA canvas before separation.
+
+For vehicle separation, pixels seed the paint classification only when source alpha is at least 0.55, luminance is at least 0.38, absolute RGB chroma is at most 0.30, and relative chroma is at most 0.44. Eight-connected components are retained when they contain at least 6,000 pixels, or contain at least 2,000 pixels with a width-to-height ratio of at least 4.0 so authored wide spoilers remain paint while isolated wheel highlights and ground-shadow strips remain fixed details. A two-pixel color-constrained fringe preserves antialiased paint edges. Selected paint pixels become white premultiplied RGB with their source alpha; the details/shadow layer receives the exact complementary source pixels. An eight-pixel safety border is cleared after separation. The paired layers therefore share the same canvas and pivot and never overlap in alpha.
+
+The same script composes the three aligned pairs with all eight catalog colors into `docs/assets/presentation-contact-sheet.png`. This 3×8 evidence confirms paint changes while glass, lights, tires, wheels, trim, interior details, and authored ground shadows remain unmodified.
+
+### Production files
+
+| Production PNG | Family | Prompt | Mechanical modification | SHA-256 |
+| --- | --- | --- | --- | --- |
+| `Presentation/hub_expressway_portal.png` | presentation.background.hub | P-PRESENTATION-HUB | 1672×941; 8-bit sRGB RGBA opaque export | `64257b974b1d07fb6a8ae2faefc0537b4fbff02570af8d4fdacda2ebe0436317` |
+| `Presentation/maintenance_pit_lane.png` | presentation.background.maintenance | P-PRESENTATION-MAINTENANCE | 1672×941; 8-bit sRGB RGBA opaque export | `fba45165b5a16f0968165474730c5cf1ff627c28080f8f2a44042407162354c5` |
+| `Presentation/rally_hero_paint.png` | presentation.vehicle.rally.paint-mask | P-PRESENTATION-RALLY | 1024×1024 aligned pure-white alpha paint split | `27830cc73213aaf048cbdfa968f6a2b95a3f0d0e00b8fcb8505cc2569447f930` |
+| `Presentation/rally_hero_details_shadow.png` | presentation.vehicle.rally.details-shadow | P-PRESENTATION-RALLY | 1024×1024 complementary fixed details/shadow split | `0bb9a59c950ce2097336c028fccae820811fd963d1f6217564f89956da01229d` |
+| `Presentation/gt_hero_paint.png` | presentation.vehicle.gt.paint-mask | P-PRESENTATION-GT | 1024×1024 aligned pure-white alpha paint split | `196a3aeff5f276517e0cc986b6d08c7d0ecd11e5b1903ef25c9681b31fbef144` |
+| `Presentation/gt_hero_details_shadow.png` | presentation.vehicle.gt.details-shadow | P-PRESENTATION-GT | 1024×1024 complementary fixed details/shadow split | `dc0ba9852d81b003f2afe847c0f688853e4a848133a3fe829b1ecfc4593c0f9f` |
+| `Presentation/angular_hero_paint.png` | presentation.vehicle.angular.paint-mask | P-PRESENTATION-ANGULAR | 1024×1024 aligned pure-white alpha paint split | `630fcc807fa702df9e763c0c707ff3493a793bafe67967077024672d50e9f473` |
+| `Presentation/angular_hero_details_shadow.png` | presentation.vehicle.angular.details-shadow | P-PRESENTATION-ANGULAR | 1024×1024 complementary fixed details/shadow split | `aa710880cde0ebafeedb8caa6e1c4649ef1baaa674e735b08cca774a0925714c` |
+
+Contact-sheet evidence SHA-256: `749ad4d843e3d0e0ace9eee101db51436f21aeebf30bc364bc3b84c6bda8a1f4`.

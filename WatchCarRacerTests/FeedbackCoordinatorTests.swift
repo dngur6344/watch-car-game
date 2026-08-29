@@ -1,3 +1,4 @@
+import SpriteKit
 import XCTest
 @testable import WatchCarRacer
 
@@ -129,6 +130,66 @@ final class FeedbackIntegrationTests: XCTestCase {
         XCTAssertEqual(player.feedback.count, 2)
         XCTAssertEqual(watch.packets.count, 2)
         XCTAssertNotEqual(player.feedback[0].eventID, player.feedback[1].eventID)
+    }
+
+    func testReduceMotionSuppressesWorldShakeButKeepsCollisionPresentationAndDelivery() throws {
+        let player = RecordingPhoneFeedbackPlayer()
+        let watch = RecordingWatchFeedbackSender()
+        let controller = GameSessionController(
+            seed: 3,
+            feedbackPlayer: player,
+            watchFeedbackSender: watch,
+            countdownSleeper: {}
+        )
+        controller.scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: controller.scene.size)))
+        controller.scene.setReduceMotionEnabled(true)
+        let running = controller.scene.currentSnapshot
+
+        controller.receive(
+            snapshot: running,
+            events: [.nearMiss(obstacleID: 2, kind: .trafficCar, bonus: 100)]
+        )
+        let crashed = GameSnapshot(
+            phase: .crashed,
+            playerX: running.playerX,
+            playerWidth: running.playerWidth,
+            playerLength: running.playerLength,
+            roadHalfWidth: running.roadHalfWidth,
+            laneWidth: running.laneWidth,
+            obstacles: running.obstacles,
+            score: 140,
+            speed: running.speed,
+            elapsedTime: running.elapsedTime,
+            distance: running.distance,
+            spawnInterval: running.spawnInterval
+        )
+        controller.receive(
+            snapshot: crashed,
+            events: [.collision(obstacleID: 4, kind: .barrier)]
+        )
+
+        let world = try XCTUnwrap(controller.scene.childNode(withName: "//feedback.world"))
+        let flash = try XCTUnwrap(controller.scene.childNode(withName: "//feedback.flash"))
+        let impact = try XCTUnwrap(controller.scene.childNode(withName: "//feedback.impact"))
+        let scorePop = try XCTUnwrap(controller.scene.childNode(withName: "//feedback.scorePop"))
+
+        XCTAssertTrue(controller.scene.reduceMotionEnabled)
+        XCTAssertNil(world.action(forKey: "feedbackMotion"))
+        XCTAssertEqual(world.position, .zero)
+        XCTAssertNotNil(flash.action(forKey: "feedbackFlash"))
+        XCTAssertGreaterThan(flash.alpha, 0)
+        XCTAssertEqual(impact.children.count, 18)
+        XCTAssertFalse(scorePop.children.isEmpty)
+        XCTAssertEqual(controller.scene.presentedFeedback.count, 2)
+        XCTAssertEqual(player.feedback.count, 2)
+        XCTAssertEqual(watch.packets.map(\.kind), [.nearMiss, .collision])
+        XCTAssertFalse(controller.scene.isPaused, "Initial result must allow SpriteKit actions to run")
+        XCTAssertNotNil(result(from: controller.presentationPhase))
+    }
+
+    private func result(from phase: RunPresentationPhase) -> RunResult? {
+        guard case let .result(result) = phase else { return nil }
+        return result
     }
 }
 

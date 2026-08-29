@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "name": "hub_expressway_portal",
+      "file": "Presentation/hub_expressway_portal.png",
+      "family": "presentation.background.hub",
+      "kind": "background",
+      "route": "hub",
+      "pixelSize": { "width": 1672, "height": 941 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "opaque-rgba"
+    },
+    {
+      "name": "maintenance_pit_lane",
+      "file": "Presentation/maintenance_pit_lane.png",
+      "family": "presentation.background.maintenance",
+      "kind": "background",
+      "route": "maintenance",
+      "pixelSize": { "width": 1672, "height": 941 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "opaque-rgba"
+    },
+    {
+      "name": "rally_hero_paint",
+      "file": "Presentation/rally_hero_paint.png",
+      "family": "presentation.vehicle.rally.paint-mask",
+      "kind": "paint-mask",
+      "vehicleID": "rally",
+      "pixelSize": { "width": 1024, "height": 1024 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "straight-white-mask"
+    },
+    {
+      "name": "rally_hero_details_shadow",
+      "file": "Presentation/rally_hero_details_shadow.png",
+      "family": "presentation.vehicle.rally.details-shadow",
+      "kind": "details-shadow",
+      "vehicleID": "rally",
+      "pixelSize": { "width": 1024, "height": 1024 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "straight"
+    },
+    {
+      "name": "gt_hero_paint",
+      "file": "Presentation/gt_hero_paint.png",
+      "family": "presentation.vehicle.gt.paint-mask",
+      "kind": "paint-mask",
+      "vehicleID": "gt",
+      "pixelSize": { "width": 1024, "height": 1024 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "straight-white-mask"
+    },
+    {
+      "name": "gt_hero_details_shadow",
+      "file": "Presentation/gt_hero_details_shadow.png",
+      "family": "presentation.vehicle.gt.details-shadow",
+      "kind": "details-shadow",
+      "vehicleID": "gt",
+      "pixelSize": { "width": 1024, "height": 1024 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "straight"
+    },
+    {
+      "name": "angular_hero_paint",
+      "file": "Presentation/angular_hero_paint.png",
+      "family": "presentation.vehicle.angular.paint-mask",
+      "kind": "paint-mask",
+      "vehicleID": "angular",
+      "pixelSize": { "width": 1024, "height": 1024 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "straight-white-mask"
+    },
+    {
+      "name": "angular_hero_details_shadow",
+      "file": "Presentation/angular_hero_details_shadow.png",
+      "family": "presentation.vehicle.angular.details-shadow",
+      "kind": "details-shadow",
+      "vehicleID": "angular",
+      "pixelSize": { "width": 1024, "height": 1024 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "straight"
+    }
+  ]
+}

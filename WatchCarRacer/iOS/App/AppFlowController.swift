@@ -5,7 +5,8 @@ import Observation
 @Observable
 final class AppFlowController {
     enum Route: Equatable {
-        case garage
+        case hub
+        case maintenance
         case playing
     }
 
@@ -21,16 +22,20 @@ final class AppFlowController {
     typealias GameSessionFactory = @MainActor (
         _ seed: UInt64,
         _ appearance: VehicleAppearance,
-        _ assetLibrary: GameAssetLibrary
+        _ assetLibrary: GameAssetLibrary,
+        _ controlRoute: SessionControlRoute
     ) throws -> GameSessionController
 
-    private(set) var route: Route = .garage
+    private(set) var route: Route = .hub
+    private(set) var committedSelection: VehicleSelection
     private(set) var draftSelection: VehicleSelection
     private(set) var assetReadiness: AssetReadiness = .idle
     private(set) var gameSession: GameSessionController?
     private(set) var errorMessage: String?
+    private(set) var lifecyclePhase: GameSessionLifecyclePhase = .active
 
     let assetLibrary: GameAssetLibrary
+    let localBestScoreStore: any LocalBestScoreStoring
 
     @ObservationIgnored private let selectionStore: any VehicleSelectionStoring
     @ObservationIgnored private let prepareAssetsOperation: AssetPreparation
@@ -39,6 +44,7 @@ final class AppFlowController {
 
     init(
         selectionStore: any VehicleSelectionStoring,
+        localBestScoreStore: any LocalBestScoreStoring,
         assetLibrary: GameAssetLibrary,
         watchInput: (any WatchSteeringReadingProviding)? = nil,
         prepareAssets: AssetPreparation? = nil,
@@ -48,18 +54,33 @@ final class AppFlowController {
         gameSessionFactory: GameSessionFactory? = nil
     ) {
         self.selectionStore = selectionStore
+        self.localBestScoreStore = localBestScoreStore
         self.assetLibrary = assetLibrary
-        draftSelection = selectionStore.load()
+        let committedSelection = selectionStore.load()
+        self.committedSelection = committedSelection
+        draftSelection = committedSelection
         prepareAssetsOperation = prepareAssets ?? {
             try await assetLibrary.preloadAll()
         }
         self.seedProvider = seedProvider
-        self.gameSessionFactory = gameSessionFactory ?? { seed, appearance, library in
+        let resultStore = localBestScoreStore
+        self.gameSessionFactory = gameSessionFactory ?? { seed, appearance, library, controlRoute in
             try GameSessionController(
                 seed: seed,
                 appearance: appearance,
                 assetLibrary: library,
-                watchInput: watchInput
+                controlRoute: controlRoute,
+                watchInput: watchInput,
+                resultRecorder: { score in
+                    let previousBest = resultStore.load()
+                    let localBest = resultStore.record(score)
+                    return RunResult(
+                        score: score,
+                        previousBest: previousBest,
+                        localBest: localBest,
+                        isNewBest: score > previousBest && localBest == score
+                    )
+                }
             )
         }
     }
@@ -69,11 +90,21 @@ final class AppFlowController {
     }
 
     var canDrive: Bool {
-        route == .garage && assetReadiness == .ready && gameSession == nil
+        route == .hub && assetReadiness == .ready && gameSession == nil
+    }
+
+    func enterMaintenance() {
+        guard route == .hub, gameSession == nil else { return }
+        route = .maintenance
+    }
+
+    func exitMaintenance() {
+        guard route == .maintenance else { return }
+        route = .hub
     }
 
     func selectVehicle(_ vehicleID: VehicleID) {
-        guard route == .garage else { return }
+        guard route == .maintenance else { return }
         draftSelection = VehicleSelection(
             vehicleID: vehicleID,
             colorID: draftSelection.colorID
@@ -82,7 +113,7 @@ final class AppFlowController {
     }
 
     func selectColor(_ colorID: VehicleColorID) {
-        guard route == .garage else { return }
+        guard route == .maintenance else { return }
         draftSelection = VehicleSelection(
             vehicleID: draftSelection.vehicleID,
             colorID: colorID
@@ -112,22 +143,34 @@ final class AppFlowController {
         await prepareAssets()
     }
 
-    func drive() {
-        guard canDrive else { return }
+    @discardableResult
+    func drive(
+        controlRoute: SessionControlRoute = .adaptiveWatchPreferred
+    ) -> Bool {
+        guard canDrive else { return false }
         guard let appearance = draftAppearance else {
             errorMessage = "The selected vehicle is unavailable. Choose another vehicle."
-            return
+            return false
         }
 
         let seed = seedProvider()
         do {
-            let controller = try gameSessionFactory(seed, appearance, assetLibrary)
+            let controller = try gameSessionFactory(
+                seed,
+                appearance,
+                assetLibrary,
+                controlRoute
+            )
             selectionStore.save(draftSelection)
+            committedSelection = draftSelection
             gameSession = controller
+            controller.handleLifecycle(lifecyclePhase)
             errorMessage = nil
             route = .playing
+            return true
         } catch {
             errorMessage = "Unable to start the drive. \(error.localizedDescription)"
+            return false
         }
     }
 
@@ -136,12 +179,17 @@ final class AppFlowController {
         gameSession.retry()
     }
 
-    func returnToGarage() {
+    func handleLifecycle(_ phase: GameSessionLifecyclePhase) {
+        lifecyclePhase = phase
+        gameSession?.handleLifecycle(phase)
+    }
+
+    func returnToHub() {
         guard route == .playing else { return }
-        gameSession?.scene.isPaused = true
+        gameSession?.stop()
         gameSession = nil
         errorMessage = nil
-        route = .garage
+        route = .hub
     }
 
     private func clearControllerCreationErrorIfPossible() {

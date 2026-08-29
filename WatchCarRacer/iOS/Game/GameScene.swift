@@ -22,6 +22,7 @@ final class GameScene: SKScene {
 #endif
 
     private(set) var currentSnapshot: GameSnapshot
+    private(set) var reduceMotionEnabled = false
     let appearance: VehicleAppearance
     let assetLibrary: GameAssetLibrary
 
@@ -147,6 +148,11 @@ final class GameScene: SKScene {
         guard currentTime.isFinite else {
             return
         }
+        guard !isPaused else {
+            previousUpdateTime = nil
+            accumulatedTime = 0
+            return
+        }
         guard let previousUpdateTime else {
             self.previousUpdateTime = currentTime
             render(currentSnapshot)
@@ -200,6 +206,14 @@ final class GameScene: SKScene {
         frameHandler?(currentSnapshot, [])
     }
 
+    func setReduceMotionEnabled(_ enabled: Bool) {
+        reduceMotionEnabled = enabled
+        if enabled {
+            worldNode.removeAction(forKey: "feedbackMotion")
+            worldNode.position = .zero
+        }
+    }
+
 #if DEBUG
     private func updateFrameRateDiagnostic(elapsedFrameTime: TimeInterval) {
         guard elapsedFrameTime > 0 else {
@@ -242,6 +256,7 @@ final class GameScene: SKScene {
         backgroundColor = UIColor(red: 0.12, green: 0.10, blue: 0.41, alpha: 1)
 
         worldNode.zPosition = 0
+        worldNode.name = "feedback.world"
         addChild(worldNode)
 
         skyNode.name = "map.sky.sky_horizon"
@@ -286,15 +301,18 @@ final class GameScene: SKScene {
         worldNode.addChild(playerNode)
 
         impactContainer.zPosition = 220
+        impactContainer.name = "feedback.impact"
         worldNode.addChild(impactContainer)
 
         scorePopContainer.zPosition = 520
+        scorePopContainer.name = "feedback.scorePop"
         addChild(scorePopContainer)
 
         flashNode.fillColor = .white
         flashNode.strokeColor = .clear
         flashNode.alpha = 0
         flashNode.zPosition = 500
+        flashNode.name = "feedback.flash"
         addChild(flashNode)
     }
 
@@ -546,14 +564,16 @@ final class GameScene: SKScene {
     private func runNearMissFeedback(bonus: Int) {
         worldNode.removeAction(forKey: "feedbackMotion")
         worldNode.position = .zero
-        worldNode.run(
-            .sequence([
-                .moveBy(x: -5, y: -2, duration: 0.035),
-                .moveBy(x: 9, y: 3, duration: 0.045),
-                .moveBy(x: -4, y: -1, duration: 0.045)
-            ]),
-            withKey: "feedbackMotion"
-        )
+        if !reduceMotionEnabled {
+            worldNode.run(
+                .sequence([
+                    .moveBy(x: -5, y: -2, duration: 0.035),
+                    .moveBy(x: 9, y: 3, duration: 0.045),
+                    .moveBy(x: -4, y: -1, duration: 0.045)
+                ]),
+                withKey: "feedbackMotion"
+            )
+        }
 
         flashNode.removeAction(forKey: "feedbackFlash")
         flashNode.fillColor = UIColor(red: 0.34, green: 1.0, blue: 0.84, alpha: 1)
@@ -588,14 +608,16 @@ final class GameScene: SKScene {
     private func runCollisionFeedback() {
         worldNode.removeAction(forKey: "feedbackMotion")
         worldNode.position = .zero
-        let offsets: [(CGFloat, CGFloat)] = [
-            (-12, 5), (8, -8), (15, 10), (-18, -5),
-            (14, -9), (-9, 7), (5, -3), (-3, 3)
-        ]
-        worldNode.run(
-            .sequence(offsets.map { .moveBy(x: $0.0, y: $0.1, duration: 0.035) }),
-            withKey: "feedbackMotion"
-        )
+        if !reduceMotionEnabled {
+            let offsets: [(CGFloat, CGFloat)] = [
+                (-12, 5), (8, -8), (15, 10), (-18, -5),
+                (14, -9), (-9, 7), (5, -3), (-3, 3)
+            ]
+            worldNode.run(
+                .sequence(offsets.map { .moveBy(x: $0.0, y: $0.1, duration: 0.035) }),
+                withKey: "feedbackMotion"
+            )
+        }
 
         flashNode.removeAction(forKey: "feedbackFlash")
         flashNode.fillColor = UIColor(red: 1.0, green: 0.29, blue: 0.36, alpha: 1)

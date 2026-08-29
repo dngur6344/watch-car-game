@@ -12,6 +12,58 @@ enum PhoneSteeringReceiverError: Error, Equatable {
     case retiredStream(UUID)
 }
 
+enum WatchReadinessStatus: Equatable, Sendable {
+    case activating
+    case disconnected
+    case awaitingPacket
+    case needsCalibration
+    case motionUnavailable
+    case stale
+    case ready
+
+    var isReady: Bool {
+        self == .ready
+    }
+
+    var guidance: String {
+        switch self {
+        case .activating:
+            "Connecting to Apple Watch. Touch controls are available."
+        case .disconnected:
+            "Apple Watch is disconnected. Touch controls are available."
+        case .awaitingPacket:
+            "Open the Watch app to start steering, or use touch controls."
+        case .needsCalibration:
+            "Calibrate steering in the Watch app, or use touch controls."
+        case .motionUnavailable:
+            "Watch motion steering is unavailable. Use touch controls."
+        case .stale:
+            "Watch input was interrupted. Touch controls are active."
+        case .ready:
+            "Apple Watch steering is ready."
+        }
+    }
+
+    init(availability: WatchSteeringAvailability) {
+        switch availability {
+        case .active:
+            self = .ready
+        case .sessionInactive:
+            self = .activating
+        case .unreachable:
+            self = .disconnected
+        case .noPacket, .awaitingFreshPacket:
+            self = .awaitingPacket
+        case .needsCalibration:
+            self = .needsCalibration
+        case .motionUnavailable:
+            self = .motionUnavailable
+        case .stale:
+            self = .stale
+        }
+    }
+}
+
 struct PhoneSteeringReceiver {
     static let freshnessThreshold: TimeInterval = 0.25
     static let maximumInterarrivalSamples = 240
@@ -121,6 +173,20 @@ struct PhoneSteeringReceiver {
         )
     }
 
+    func readinessStatus(
+        activationState: WCSessionActivationState,
+        isReachable: Bool,
+        at now: TimeInterval
+    ) -> WatchReadinessStatus {
+        WatchReadinessStatus(
+            availability: routingReading(
+                isSessionActive: activationState == .activated,
+                isReachable: isReachable,
+                at: now
+            ).availability
+        )
+    }
+
     var interarrivalP95: TimeInterval? {
         guard !interarrivalSamples.isEmpty else {
             return nil
@@ -150,6 +216,7 @@ final class PhoneWatchSession: NSObject {
     private(set) var activationError: String?
     private(set) var watchFeedbackSendFailures = 0
     private(set) var lastWatchFeedbackError: String?
+    private(set) var readinessStatus: WatchReadinessStatus = .activating
 
     @ObservationIgnored private let session: WCSession
     @ObservationIgnored private var receiver = PhoneSteeringReceiver()
@@ -191,6 +258,14 @@ final class PhoneWatchSession: NSObject {
     func routingReading(at now: TimeInterval) -> WatchSteeringReading {
         receiver.routingReading(
             isSessionActive: activationState == .activated,
+            isReachable: isReachable,
+            at: now
+        )
+    }
+
+    func readinessStatus(at now: TimeInterval) -> WatchReadinessStatus {
+        receiver.readinessStatus(
+            activationState: activationState,
             isReachable: isReachable,
             at: now
         )
@@ -242,6 +317,15 @@ final class PhoneWatchSession: NSObject {
     private func refreshAge(now: TimeInterval) {
         packetAgeMilliseconds = receiver.packetAge(at: now).map { $0 * 1_000 }
         isStale = receiver.isStale(at: now)
+        refreshReadiness(now: now)
+    }
+
+    private func refreshReadiness(now: TimeInterval) {
+        let updatedStatus = readinessStatus(at: now)
+        guard updatedStatus != readinessStatus else {
+            return
+        }
+        readinessStatus = updatedStatus
     }
 }
 
@@ -257,16 +341,24 @@ extension PhoneWatchSession: WCSessionDelegate {
         let reachable = session.isReachable
         let errorMessage = error?.localizedDescription
         Task { @MainActor [weak self] in
-            self?.activationState = activationState
-            self?.isReachable = reachable
-            self?.activationError = errorMessage
+            guard let self else {
+                return
+            }
+            self.activationState = activationState
+            self.isReachable = reachable
+            self.activationError = errorMessage
+            self.refreshReadiness(now: ProcessInfo.processInfo.systemUptime)
         }
     }
 
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {
         Task { @MainActor [weak self] in
-            self?.activationState = .inactive
-            self?.isReachable = false
+            guard let self else {
+                return
+            }
+            self.activationState = .inactive
+            self.isReachable = false
+            self.refreshReadiness(now: ProcessInfo.processInfo.systemUptime)
         }
     }
 
@@ -277,6 +369,7 @@ extension PhoneWatchSession: WCSessionDelegate {
             }
             self.activationState = .notActivated
             self.isReachable = false
+            self.refreshReadiness(now: ProcessInfo.processInfo.systemUptime)
             self.session.activate()
         }
     }
@@ -284,7 +377,11 @@ extension PhoneWatchSession: WCSessionDelegate {
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         let reachable = session.isReachable
         Task { @MainActor [weak self] in
-            self?.isReachable = reachable
+            guard let self else {
+                return
+            }
+            self.isReachable = reachable
+            self.refreshReadiness(now: ProcessInfo.processInfo.systemUptime)
         }
     }
 

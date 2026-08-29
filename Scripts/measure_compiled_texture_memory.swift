@@ -6,6 +6,16 @@ import ImageIO
 private let allocationLimit = 64 * 1_024 * 1_024
 private let pageDimensionLimit = 2_048
 private let backgroundNames = Set(["sky_horizon.png", "asphalt.png"])
+private let presentationNames = Set([
+    "hub_expressway_portal.png",
+    "maintenance_pit_lane.png",
+    "rally_hero_paint.png",
+    "rally_hero_details_shadow.png",
+    "gt_hero_paint.png",
+    "gt_hero_details_shadow.png",
+    "angular_hero_paint.png",
+    "angular_hero_details_shadow.png",
+])
 private let metadataExtensions = Set(["plist", "json", "strings", "car"])
 
 struct Options {
@@ -107,6 +117,7 @@ guard let enumerator = FileManager.default.enumerator(
 
 var atlasCandidates: [URL] = []
 var backgroundCandidates: [URL] = []
+var presentationCandidates: [URL] = []
 for case let url as URL in enumerator {
     guard !isInsideEmbeddedWatchApp(url, appURL: options.appURL),
           (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else {
@@ -116,6 +127,8 @@ for case let url as URL in enumerator {
         atlasCandidates.append(url)
     } else if backgroundNames.contains(url.lastPathComponent) {
         backgroundCandidates.append(url)
+    } else if presentationNames.contains(url.lastPathComponent) {
+        presentationCandidates.append(url)
     }
 }
 
@@ -127,8 +140,14 @@ guard Set(backgroundCandidates.map(\.lastPathComponent)) == backgroundNames else
     fputs("FAIL: standalone sky_horizon.png and asphalt.png must both be present\n", stderr)
     exit(1)
 }
+guard Set(presentationCandidates.map(\.lastPathComponent)) == presentationNames else {
+    fputs("FAIL: all eight standalone presentation PNGs must be present exactly once\n", stderr)
+    exit(1)
+}
 
-let candidates = (atlasCandidates + backgroundCandidates).sorted { $0.path < $1.path }
+let candidates = (
+    atlasCandidates + backgroundCandidates + presentationCandidates
+).sorted { $0.path < $1.path }
 var decodedPages: [Page] = []
 var undecodablePages: [URL] = []
 for candidate in candidates {
@@ -184,6 +203,7 @@ let mib = Double(measuredAllocation) / 1_048_576.0
 print(
     "summary compiledAtlasPages=\(atlasCandidates.count) "
         + "standaloneBackgrounds=\(backgroundCandidates.count) "
+        + "standalonePresentation=\(presentationCandidates.count) "
         + "maxDimension=\(measuredMaximumDimension) "
         + "allocationBytes=\(measuredAllocation) "
         + String(format: "allocationMiB=%.2f", mib)

@@ -1,4 +1,5 @@
 import XCTest
+import WatchConnectivity
 @testable import WatchCarRacer
 
 final class PhoneWatchSessionTests: XCTestCase {
@@ -105,11 +106,173 @@ final class PhoneWatchSessionTests: XCTestCase {
         XCTAssertEqual(unavailableReading.value, 0)
     }
 
+    func testReadinessTableMatchesRoutingPriorityAndTouchFallback() throws {
+        struct ReadinessCase {
+            let name: String
+            let activationState: WCSessionActivationState
+            let isReachable: Bool
+            let packetState: SteeringState?
+            let now: TimeInterval
+            let expectedStatus: WatchReadinessStatus
+            let expectedAvailability: WatchSteeringAvailability
+        }
+
+        let receiptTime = 100.0
+        let cases = [
+            ReadinessCase(
+                name: "not activated precedes reachability and packet",
+                activationState: .notActivated,
+                isReachable: false,
+                packetState: .active,
+                now: receiptTime,
+                expectedStatus: .activating,
+                expectedAvailability: .sessionInactive
+            ),
+            ReadinessCase(
+                name: "inactive precedes packet",
+                activationState: .inactive,
+                isReachable: true,
+                packetState: .motionUnavailable,
+                now: receiptTime,
+                expectedStatus: .activating,
+                expectedAvailability: .sessionInactive
+            ),
+            ReadinessCase(
+                name: "unreachable precedes packet",
+                activationState: .activated,
+                isReachable: false,
+                packetState: .needsCalibration,
+                now: receiptTime,
+                expectedStatus: .disconnected,
+                expectedAvailability: .unreachable
+            ),
+            ReadinessCase(
+                name: "awaiting first packet",
+                activationState: .activated,
+                isReachable: true,
+                packetState: nil,
+                now: receiptTime,
+                expectedStatus: .awaitingPacket,
+                expectedAvailability: .noPacket
+            ),
+            ReadinessCase(
+                name: "needs calibration",
+                activationState: .activated,
+                isReachable: true,
+                packetState: .needsCalibration,
+                now: receiptTime + 10,
+                expectedStatus: .needsCalibration,
+                expectedAvailability: .needsCalibration
+            ),
+            ReadinessCase(
+                name: "motion unavailable",
+                activationState: .activated,
+                isReachable: true,
+                packetState: .motionUnavailable,
+                now: receiptTime + 10,
+                expectedStatus: .motionUnavailable,
+                expectedAvailability: .motionUnavailable
+            ),
+            ReadinessCase(
+                name: "active at exact freshness boundary",
+                activationState: .activated,
+                isReachable: true,
+                packetState: .active,
+                now: receiptTime + PhoneSteeringReceiver.freshnessThreshold,
+                expectedStatus: .ready,
+                expectedAvailability: .active
+            ),
+            ReadinessCase(
+                name: "active beyond freshness boundary",
+                activationState: .activated,
+                isReachable: true,
+                packetState: .active,
+                now: receiptTime + PhoneSteeringReceiver.freshnessThreshold + 0.001,
+                expectedStatus: .stale,
+                expectedAvailability: .stale
+            ),
+        ]
+
+        for testCase in cases {
+            var receiver = PhoneSteeringReceiver()
+            if let packetState = testCase.packetState {
+                try receiver.receive(
+                    data: packet(
+                        sequence: 1,
+                        value: 0.7,
+                        state: packetState
+                    ).encodedData(),
+                    at: receiptTime
+                )
+            }
+
+            let reading = receiver.routingReading(
+                isSessionActive: testCase.activationState == .activated,
+                isReachable: testCase.isReachable,
+                at: testCase.now
+            )
+            let status = receiver.readinessStatus(
+                activationState: testCase.activationState,
+                isReachable: testCase.isReachable,
+                at: testCase.now
+            )
+
+            XCTAssertEqual(status, testCase.expectedStatus, testCase.name)
+            XCTAssertEqual(reading.availability, testCase.expectedAvailability, testCase.name)
+            XCTAssertEqual(status.isReady, reading.availability == .active, testCase.name)
+            XCTAssertEqual(reading.value, status.isReady ? 0.7 : 0, testCase.name)
+
+            var router = SteeringInputRouter()
+            let snapshot = router.steeringSnapshot(
+                at: testCase.now,
+                watch: reading,
+                touchValue: -0.35,
+                isTouchDragging: false
+            )
+            if status.isReady {
+                XCTAssertEqual(snapshot.source, .watch, testCase.name)
+                XCTAssertEqual(snapshot.value, 0.7, testCase.name)
+                XCTAssertEqual(snapshot.availability, .available, testCase.name)
+            } else {
+                XCTAssertEqual(snapshot.source, .touch, testCase.name)
+                XCTAssertEqual(snapshot.value, -0.35, testCase.name)
+                XCTAssertEqual(
+                    snapshot.availability,
+                    .fallback(testCase.expectedAvailability),
+                    testCase.name
+                )
+            }
+        }
+    }
+
+    func testReadinessPresentationSeamHasGuidanceAndOnlyReadyIsReady() {
+        let statuses: [WatchReadinessStatus] = [
+            .activating,
+            .disconnected,
+            .awaitingPacket,
+            .needsCalibration,
+            .motionUnavailable,
+            .stale,
+            .ready,
+        ]
+
+        for status in statuses {
+            XCTAssertFalse(status.guidance.isEmpty, "Missing guidance for \(status)")
+            XCTAssertEqual(status.isReady, status == .ready)
+        }
+
+        XCTAssertEqual(
+            WatchReadinessStatus.needsCalibration.guidance,
+            "Calibrate steering in the Watch app, or use touch controls."
+        )
+    }
+
     private func packet(
         streamID: UUID = UUID(uuidString: "ABABABAB-1111-2222-3333-444444444444")!,
         sequence: UInt64,
-        value: Double = 0.25
+        value: Double = 0.25,
+        state: SteeringState = .active
     ) -> SteeringPacket {
-        SteeringPacket(streamID: streamID, sequence: sequence, state: .active, value: value)
+        SteeringPacket(streamID: streamID, sequence: sequence, state: state, value: value)
     }
 }

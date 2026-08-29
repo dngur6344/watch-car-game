@@ -52,10 +52,30 @@
 		04000000000000000000002B /* VehicleSpriteNodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000029 /* VehicleSpriteNodeTests.swift */; };
 		04000000000000000000002C /* AppFlowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002A /* AppFlowController.swift */; };
 		04000000000000000000002D /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002B /* AppRootView.swift */; };
-		04000000000000000000002E /* GarageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002C /* GarageView.swift */; };
+		04000000000000000000002E /* MainHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002C /* MainHubView.swift */; };
 		04000000000000000000002F /* AppFlowControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002D /* AppFlowControllerTests.swift */; };
 		040000000000000000000030 /* GameSceneMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002E /* GameSceneMapTests.swift */; };
 		040000000000000000000031 /* SG6AcceptanceCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000002F /* SG6AcceptanceCoordinator.swift */; };
+		040000000000000000000032 /* LocalBestScoreStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000032 /* LocalBestScoreStore.swift */; };
+		040000000000000000000033 /* RunResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000033 /* RunResult.swift */; };
+		040000000000000000000034 /* LocalBestScoreStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000034 /* LocalBestScoreStoreTests.swift */; };
+		040000000000000000000035 /* RunResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000035 /* RunResultTests.swift */; };
+		040000000000000000000036 /* PresentationAssetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000036 /* PresentationAssetLibrary.swift */; };
+		040000000000000000000037 /* PresentationAssetManifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000037 /* PresentationAssetManifest.json */; };
+		040000000000000000000038 /* hub_expressway_portal.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000038 /* hub_expressway_portal.png */; };
+		040000000000000000000039 /* maintenance_pit_lane.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000039 /* maintenance_pit_lane.png */; };
+		04000000000000000000003A /* rally_hero_paint.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000003A /* rally_hero_paint.png */; };
+		04000000000000000000003B /* rally_hero_details_shadow.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000003B /* rally_hero_details_shadow.png */; };
+		04000000000000000000003C /* gt_hero_paint.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000003C /* gt_hero_paint.png */; };
+		04000000000000000000003D /* gt_hero_details_shadow.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000003D /* gt_hero_details_shadow.png */; };
+		04000000000000000000003E /* angular_hero_paint.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000003E /* angular_hero_paint.png */; };
+		04000000000000000000003F /* angular_hero_details_shadow.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000003F /* angular_hero_details_shadow.png */; };
+		040000000000000000000040 /* PresentationAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000040 /* PresentationAssetTests.swift */; };
+		040000000000000000000041 /* VehicleMaintenanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000041 /* VehicleMaintenanceView.swift */; };
+		040000000000000000000042 /* VehiclePresentationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000042 /* VehiclePresentationView.swift */; };
+		040000000000000000000043 /* WatchReadinessSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000043 /* WatchReadinessSheet.swift */; };
+		040000000000000000000044 /* HubDriveIntentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000044 /* HubDriveIntentController.swift */; };
+		040000000000000000000045 /* HubDriveIntentControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000045 /* HubDriveIntentControllerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -140,10 +160,30 @@
 		030000000000000000000029 /* VehicleSpriteNodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleSpriteNodeTests.swift; sourceTree = "<group>"; };
 		03000000000000000000002A /* AppFlowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFlowController.swift; sourceTree = "<group>"; };
 		03000000000000000000002B /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
-		03000000000000000000002C /* GarageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarageView.swift; sourceTree = "<group>"; };
+		03000000000000000000002C /* MainHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainHubView.swift; sourceTree = "<group>"; };
 		03000000000000000000002D /* AppFlowControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFlowControllerTests.swift; sourceTree = "<group>"; };
 		03000000000000000000002E /* GameSceneMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSceneMapTests.swift; sourceTree = "<group>"; };
 		03000000000000000000002F /* SG6AcceptanceCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SG6AcceptanceCoordinator.swift; sourceTree = "<group>"; };
+		030000000000000000000032 /* LocalBestScoreStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBestScoreStore.swift; sourceTree = "<group>"; };
+		030000000000000000000033 /* RunResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunResult.swift; sourceTree = "<group>"; };
+		030000000000000000000034 /* LocalBestScoreStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBestScoreStoreTests.swift; sourceTree = "<group>"; };
+		030000000000000000000035 /* RunResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunResultTests.swift; sourceTree = "<group>"; };
+		030000000000000000000036 /* PresentationAssetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentationAssetLibrary.swift; sourceTree = "<group>"; };
+		030000000000000000000037 /* PresentationAssetManifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = PresentationAssetManifest.json; sourceTree = "<group>"; };
+		030000000000000000000038 /* hub_expressway_portal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hub_expressway_portal.png; sourceTree = "<group>"; };
+		030000000000000000000039 /* maintenance_pit_lane.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = maintenance_pit_lane.png; sourceTree = "<group>"; };
+		03000000000000000000003A /* rally_hero_paint.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = rally_hero_paint.png; sourceTree = "<group>"; };
+		03000000000000000000003B /* rally_hero_details_shadow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = rally_hero_details_shadow.png; sourceTree = "<group>"; };
+		03000000000000000000003C /* gt_hero_paint.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gt_hero_paint.png; sourceTree = "<group>"; };
+		03000000000000000000003D /* gt_hero_details_shadow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gt_hero_details_shadow.png; sourceTree = "<group>"; };
+		03000000000000000000003E /* angular_hero_paint.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = angular_hero_paint.png; sourceTree = "<group>"; };
+		03000000000000000000003F /* angular_hero_details_shadow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = angular_hero_details_shadow.png; sourceTree = "<group>"; };
+		030000000000000000000040 /* PresentationAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentationAssetTests.swift; sourceTree = "<group>"; };
+		030000000000000000000041 /* VehicleMaintenanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleMaintenanceView.swift; sourceTree = "<group>"; };
+		030000000000000000000042 /* VehiclePresentationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehiclePresentationView.swift; sourceTree = "<group>"; };
+		030000000000000000000043 /* WatchReadinessSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchReadinessSheet.swift; sourceTree = "<group>"; };
+		030000000000000000000044 /* HubDriveIntentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubDriveIntentController.swift; sourceTree = "<group>"; };
+		030000000000000000000045 /* HubDriveIntentControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubDriveIntentControllerTests.swift; sourceTree = "<group>"; };
 		0300000000000000000000F1 /* WatchCarRacer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F2 /* WatchCarRacerWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacerWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F3 /* WatchCarRacerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WatchCarRacerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -190,6 +230,7 @@
 			isa = PBXGroup;
 			children = (
 				020000000000000000000005 /* App */,
+				020000000000000000000014 /* Presentation */,
 				020000000000000000000011 /* Customization */,
 				02000000000000000000000B /* Input */,
 				02000000000000000000000E /* Game */,
@@ -204,8 +245,14 @@
 			children = (
 				030000000000000000000001 /* WatchCarRacerApp.swift */,
 				03000000000000000000002A /* AppFlowController.swift */,
+				030000000000000000000032 /* LocalBestScoreStore.swift */,
+				030000000000000000000033 /* RunResult.swift */,
 				03000000000000000000002B /* AppRootView.swift */,
-				03000000000000000000002C /* GarageView.swift */,
+				03000000000000000000002C /* MainHubView.swift */,
+				030000000000000000000041 /* VehicleMaintenanceView.swift */,
+				030000000000000000000042 /* VehiclePresentationView.swift */,
+				030000000000000000000043 /* WatchReadinessSheet.swift */,
+				030000000000000000000044 /* HubDriveIntentController.swift */,
 				030000000000000000000002 /* GameRootView.swift */,
 				03000000000000000000000F /* GameSessionController.swift */,
 				03000000000000000000002F /* SG6AcceptanceCoordinator.swift */,
@@ -249,6 +296,10 @@
 				030000000000000000000027 /* VehicleSelectionStoreTests.swift */,
 				030000000000000000000029 /* VehicleSpriteNodeTests.swift */,
 				03000000000000000000002D /* AppFlowControllerTests.swift */,
+				030000000000000000000034 /* LocalBestScoreStoreTests.swift */,
+				030000000000000000000035 /* RunResultTests.swift */,
+				030000000000000000000040 /* PresentationAssetTests.swift */,
+				030000000000000000000045 /* HubDriveIntentControllerTests.swift */,
 				03000000000000000000002E /* GameSceneMapTests.swift */,
 			);
 			path = WatchCarRacerTests;
@@ -346,6 +397,8 @@
 				030000000000000000000021 /* Environment.atlas */,
 				020000000000000000000013 /* Backgrounds */,
 				030000000000000000000024 /* AssetManifest.json */,
+				030000000000000000000037 /* PresentationAssetManifest.json */,
+				020000000000000000000015 /* Presentation */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -357,6 +410,29 @@
 				030000000000000000000023 /* asphalt.png */,
 			);
 			path = Backgrounds;
+			sourceTree = "<group>";
+		};
+		020000000000000000000014 /* Presentation */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000036 /* PresentationAssetLibrary.swift */,
+			);
+			path = Presentation;
+			sourceTree = "<group>";
+		};
+		020000000000000000000015 /* Presentation */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000038 /* hub_expressway_portal.png */,
+				030000000000000000000039 /* maintenance_pit_lane.png */,
+				03000000000000000000003A /* rally_hero_paint.png */,
+				03000000000000000000003B /* rally_hero_details_shadow.png */,
+				03000000000000000000003C /* gt_hero_paint.png */,
+				03000000000000000000003D /* gt_hero_details_shadow.png */,
+				03000000000000000000003E /* angular_hero_paint.png */,
+				03000000000000000000003F /* angular_hero_details_shadow.png */,
+			);
+			path = Presentation;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -474,6 +550,15 @@
 				040000000000000000000024 /* sky_horizon.png in Resources */,
 				040000000000000000000025 /* asphalt.png in Resources */,
 				040000000000000000000026 /* AssetManifest.json in Resources */,
+				040000000000000000000037 /* PresentationAssetManifest.json in Resources */,
+				040000000000000000000038 /* hub_expressway_portal.png in Resources */,
+				040000000000000000000039 /* maintenance_pit_lane.png in Resources */,
+				04000000000000000000003A /* rally_hero_paint.png in Resources */,
+				04000000000000000000003B /* rally_hero_details_shadow.png in Resources */,
+				04000000000000000000003C /* gt_hero_paint.png in Resources */,
+				04000000000000000000003D /* gt_hero_details_shadow.png in Resources */,
+				04000000000000000000003E /* angular_hero_paint.png in Resources */,
+				04000000000000000000003F /* angular_hero_details_shadow.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -503,9 +588,16 @@
 				040000000000000000000027 /* VehicleSelectionStore.swift in Sources */,
 				04000000000000000000002A /* VehicleSpriteNode.swift in Sources */,
 				04000000000000000000002C /* AppFlowController.swift in Sources */,
+				040000000000000000000032 /* LocalBestScoreStore.swift in Sources */,
+				040000000000000000000033 /* RunResult.swift in Sources */,
 				04000000000000000000002D /* AppRootView.swift in Sources */,
-				04000000000000000000002E /* GarageView.swift in Sources */,
+				04000000000000000000002E /* MainHubView.swift in Sources */,
+				040000000000000000000041 /* VehicleMaintenanceView.swift in Sources */,
+				040000000000000000000042 /* VehiclePresentationView.swift in Sources */,
+				040000000000000000000043 /* WatchReadinessSheet.swift in Sources */,
+				040000000000000000000044 /* HubDriveIntentController.swift in Sources */,
 				040000000000000000000031 /* SG6AcceptanceCoordinator.swift in Sources */,
+				040000000000000000000036 /* PresentationAssetLibrary.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -539,7 +631,11 @@
 				040000000000000000000029 /* VehicleSelectionStoreTests.swift in Sources */,
 				04000000000000000000002B /* VehicleSpriteNodeTests.swift in Sources */,
 				04000000000000000000002F /* AppFlowControllerTests.swift in Sources */,
+				040000000000000000000034 /* LocalBestScoreStoreTests.swift in Sources */,
+				040000000000000000000035 /* RunResultTests.swift in Sources */,
 				040000000000000000000030 /* GameSceneMapTests.swift in Sources */,
+				040000000000000000000040 /* PresentationAssetTests.swift in Sources */,
+				040000000000000000000045 /* HubDriveIntentControllerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

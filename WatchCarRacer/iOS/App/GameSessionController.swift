@@ -1,12 +1,28 @@
 import Foundation
 import Observation
 
+enum RunPresentationPhase: Equatable, Sendable {
+    case countdown(Int)
+    case racing
+    case result(RunResult)
+}
+
+enum GameSessionLifecyclePhase: Equatable, Sendable {
+    case active
+    case inactive
+    case background
+}
+
 @MainActor
 @Observable
 final class GameSessionController {
+    typealias CountdownSleeper = @MainActor @Sendable () async throws -> Void
+    typealias ResultRecorder = @MainActor (Int) -> RunResult
+
     private(set) var score = 0
     private(set) var speed = 0
     private(set) var phase: GamePhase = .running
+    private(set) var presentationPhase: RunPresentationPhase = .countdown(3)
     private(set) var lastEvent: GameEvent?
     private(set) var touchSteering = TouchSteeringState()
     private(set) var steeringSnapshot = SteeringSnapshot(
@@ -29,16 +45,24 @@ final class GameSessionController {
     let runSeed: UInt64
     let appearance: VehicleAppearance
     let assetLibrary: GameAssetLibrary
+    let controlRoute: SessionControlRoute
     let scene: GameScene
 
     @ObservationIgnored private let watchInput: (any WatchSteeringReadingProviding)?
     @ObservationIgnored private let feedbackPlayer: (any PhoneFeedbackPlaying)?
     @ObservationIgnored private let watchFeedbackSender: (any WatchFeedbackSending)?
     @ObservationIgnored private let currentTime: @MainActor () -> TimeInterval
+    @ObservationIgnored private let countdownSleeper: CountdownSleeper
+    @ObservationIgnored private let resultRecorder: ResultRecorder
     @ObservationIgnored private var inputRouter = SteeringInputRouter()
     @ObservationIgnored private var feedbackCoordinator: GameFeedbackCoordinator
     @ObservationIgnored private var fallbackBannerExpiration: TimeInterval?
     @ObservationIgnored private var lastFallbackReason: WatchSteeringAvailability?
+    @ObservationIgnored private var lifecyclePhase: GameSessionLifecyclePhase = .active
+    @ObservationIgnored private var countdownGeneration: UInt64 = 0
+    @ObservationIgnored private var countdownTask: Task<Void, Never>?
+    @ObservationIgnored private var didRecordResult = false
+    @ObservationIgnored private var isStopped = false
 #if DEBUG
     @ObservationIgnored private var frameRateSum = 0.0
     @ObservationIgnored private var consecutiveFrameRateSamplesBelow50 = 0
@@ -51,17 +75,30 @@ final class GameSessionController {
         configuration: GameSimulation.Configuration = .init(),
         appearance: VehicleAppearance,
         assetLibrary: GameAssetLibrary,
+        controlRoute: SessionControlRoute = .adaptiveWatchPreferred,
         watchInput: (any WatchSteeringReadingProviding)? = nil,
         feedbackPlayer: (any PhoneFeedbackPlaying)? = nil,
         watchFeedbackSender: (any WatchFeedbackSending)? = nil,
         makeFeedbackEventID: @escaping () -> UUID = UUID.init,
         currentTime: @escaping @MainActor () -> TimeInterval = {
             ProcessInfo.processInfo.systemUptime
+        },
+        countdownSleeper: @escaping CountdownSleeper = {
+            try await Task.sleep(for: .seconds(1))
+        },
+        resultRecorder: @escaping ResultRecorder = { score in
+            RunResult(
+                score: score,
+                previousBest: 0,
+                localBest: max(score, 0),
+                isNewBest: score > 0
+            )
         }
     ) throws {
         runSeed = seed
         self.appearance = appearance
         self.assetLibrary = assetLibrary
+        self.controlRoute = controlRoute
         scene = try GameScene(
             seed: seed,
             configuration: configuration,
@@ -75,6 +112,16 @@ final class GameSessionController {
         self.watchFeedbackSender = watchFeedbackSender ?? inferredWatchFeedbackSender
         feedbackCoordinator = GameFeedbackCoordinator(makeEventID: makeFeedbackEventID)
         self.currentTime = currentTime
+        self.countdownSleeper = countdownSleeper
+        self.resultRecorder = resultRecorder
+
+        if controlRoute == .touchOnly {
+            steeringSnapshot = SteeringSnapshot(
+                value: 0,
+                source: .touch,
+                availability: .available
+            )
+        }
 
         scene.steeringProvider = { [weak self] deltaTime in
             guard let self else {
@@ -91,17 +138,31 @@ final class GameSessionController {
         }
 #endif
         receive(snapshot: scene.currentSnapshot, events: [])
+        scene.isPaused = true
+        beginCountdown()
     }
 
     convenience init(
         seed: UInt64 = 0,
         configuration: GameSimulation.Configuration = .init(),
+        controlRoute: SessionControlRoute = .adaptiveWatchPreferred,
         watchInput: (any WatchSteeringReadingProviding)? = nil,
         feedbackPlayer: (any PhoneFeedbackPlaying)? = nil,
         watchFeedbackSender: (any WatchFeedbackSending)? = nil,
         makeFeedbackEventID: @escaping () -> UUID = UUID.init,
         currentTime: @escaping @MainActor () -> TimeInterval = {
             ProcessInfo.processInfo.systemUptime
+        },
+        countdownSleeper: @escaping CountdownSleeper = {
+            try await Task.sleep(for: .seconds(1))
+        },
+        resultRecorder: @escaping ResultRecorder = { score in
+            RunResult(
+                score: score,
+                previousBest: 0,
+                localBest: max(score, 0),
+                isNewBest: score > 0
+            )
         }
     ) {
         guard let appearance = VehicleCatalog.resolve(VehicleCatalog.defaultSelection) else {
@@ -115,11 +176,14 @@ final class GameSessionController {
                 configuration: configuration,
                 appearance: appearance,
                 assetLibrary: assetLibrary,
+                controlRoute: controlRoute,
                 watchInput: watchInput,
                 feedbackPlayer: feedbackPlayer,
                 watchFeedbackSender: watchFeedbackSender,
                 makeFeedbackEventID: makeFeedbackEventID,
-                currentTime: currentTime
+                currentTime: currentTime,
+                countdownSleeper: countdownSleeper,
+                resultRecorder: resultRecorder
             )
         } catch {
             preconditionFailure("Required game assets could not be loaded: \(error)")
@@ -127,33 +191,88 @@ final class GameSessionController {
     }
 
     func updateTouch(horizontalPosition: Double, width: Double) {
+        guard acceptsTouchInput else { return }
         touchSteering.updateDrag(horizontalPosition: horizontalPosition, width: width)
     }
 
     func releaseTouch() {
+        guard acceptsTouchInput else { return }
         touchSteering.endDrag()
     }
 
     func retry() {
+        guard !isStopped else { return }
+        invalidateCountdown()
         touchSteering.reset()
-        let now = currentTime()
-        let watch = watchInput?.routingReading(at: now) ?? .noPacket
-        inputRouter.reset(retiring: watch)
-        steeringSnapshot = SteeringSnapshot(
-            value: 0,
-            source: .touch,
-            availability: .fallback(
-                watch.availability == .active ? .awaitingFreshPacket : watch.availability
+        switch controlRoute {
+        case .adaptiveWatchPreferred:
+            let now = currentTime()
+            let watch = watchInput?.routingReading(at: now) ?? .noPacket
+            inputRouter.reset(retiring: watch)
+            steeringSnapshot = SteeringSnapshot(
+                value: 0,
+                source: .touch,
+                availability: .fallback(
+                    watch.availability == .active ? .awaitingFreshPacket : watch.availability
+                )
             )
-        )
+        case .touchOnly:
+            inputRouter.reset(retiring: nil)
+            steeringSnapshot = SteeringSnapshot(
+                value: 0,
+                source: .touch,
+                availability: .available
+            )
+        }
         fallbackBannerText = nil
         fallbackBannerExpiration = nil
         lastFallbackReason = nil
         lastEvent = nil
         feedbackDeliveryFailures = 0
         feedbackCoordinator.reset()
+        didRecordResult = false
         // Retrying the same session intentionally reuses its seed for a reproducible run.
+        scene.isPaused = true
         scene.reset(seed: runSeed)
+        presentationPhase = .countdown(3)
+        if lifecyclePhase == .active {
+            beginCountdown()
+        }
+    }
+
+    var acceptsTouchInput: Bool {
+        !isStopped && lifecyclePhase == .active && presentationPhase == .racing
+    }
+
+    var hasActiveCountdownTask: Bool {
+        countdownTask != nil
+    }
+
+    func handleLifecycle(_ newPhase: GameSessionLifecyclePhase) {
+        guard !isStopped, lifecyclePhase != newPhase else { return }
+        lifecyclePhase = newPhase
+
+        switch newPhase {
+        case .inactive, .background:
+            invalidateCountdown()
+            touchSteering.reset()
+            scene.isPaused = true
+        case .active:
+            switch presentationPhase {
+            case .countdown, .racing:
+                beginCountdown()
+            case .result:
+                scene.isPaused = true
+            }
+        }
+    }
+
+    func stop() {
+        guard !isStopped else { return }
+        isStopped = true
+        invalidateCountdown()
+        touchSteering.reset()
+        scene.isPaused = true
     }
 
     var inputSourceDescription: String {
@@ -168,6 +287,7 @@ final class GameSessionController {
     }
 
     func receive(snapshot: GameSnapshot, events: [GameEvent]) {
+        let wasRunning = phase == .running
 #if DEBUG
         if !didObserveFirstObstacle, !snapshot.obstacles.isEmpty {
             didObserveFirstObstacle = true
@@ -199,10 +319,34 @@ final class GameSessionController {
                 feedbackDeliveryFailures += 1
             }
         }
+
+        if wasRunning, snapshot.phase == .crashed, !didRecordResult {
+            didRecordResult = true
+            let result = resultRecorder(snapshot.score)
+            presentationPhase = .result(result)
+            // The crashed simulation is inert, while the scene remains live long enough for
+            // collision flash and particle actions to finish. Lifecycle suspension pauses it.
+            scene.isPaused = false
+        }
     }
 
     private func routedSteering(deltaTime: TimeInterval) -> Double {
+        guard acceptsTouchInput else { return 0 }
         touchSteering.advance(by: deltaTime)
+
+        if controlRoute == .touchOnly {
+            let snapshot = SteeringSnapshot(
+                value: touchSteering.value,
+                source: .touch,
+                availability: .available
+            )
+            steeringSnapshot = snapshot
+            fallbackBannerText = nil
+            fallbackBannerExpiration = nil
+            lastFallbackReason = nil
+            return snapshot.value
+        }
+
         let now = currentTime()
         let watch = watchInput?.routingReading(at: now) ?? .noPacket
         let snapshot = inputRouter.steeringSnapshot(
@@ -214,6 +358,66 @@ final class GameSessionController {
         steeringSnapshot = snapshot
         updateFallbackBanner(for: snapshot, at: now)
         return snapshot.value
+    }
+
+    private func beginCountdown() {
+        invalidateCountdown()
+        presentationPhase = .countdown(3)
+        scene.isPaused = true
+        guard lifecyclePhase == .active, !isStopped else { return }
+
+        let generation = countdownGeneration
+        let sleeper = countdownSleeper
+        countdownTask = Task { [weak self] in
+            for nextValue in [2, 1] {
+                do {
+                    try await sleeper()
+                } catch {
+                    return
+                }
+                guard !Task.isCancelled,
+                      self?.advanceCountdown(to: nextValue, generation: generation) == true else {
+                    return
+                }
+            }
+
+            do {
+                try await sleeper()
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            self?.finishCountdown(generation: generation)
+        }
+    }
+
+    private func advanceCountdown(to value: Int, generation: UInt64) -> Bool {
+        guard !isStopped,
+              lifecyclePhase == .active,
+              countdownGeneration == generation,
+              case .countdown = presentationPhase else {
+            return false
+        }
+        presentationPhase = .countdown(value)
+        return true
+    }
+
+    private func finishCountdown(generation: UInt64) {
+        guard !isStopped,
+              lifecyclePhase == .active,
+              countdownGeneration == generation,
+              case .countdown = presentationPhase else {
+            return
+        }
+        countdownTask = nil
+        presentationPhase = .racing
+        scene.isPaused = false
+    }
+
+    private func invalidateCountdown() {
+        countdownGeneration &+= 1
+        countdownTask?.cancel()
+        countdownTask = nil
     }
 
     private func updateFallbackBanner(for snapshot: SteeringSnapshot, at now: TimeInterval) {
@@ -255,7 +459,7 @@ final class GameSessionController {
 
 #if DEBUG
     private func receiveFrameRate(_ value: Double) {
-        guard value.isFinite, value > 0 else {
+        guard presentationPhase == .racing, value.isFinite, value > 0 else {
             return
         }
         framesPerSecond = value
