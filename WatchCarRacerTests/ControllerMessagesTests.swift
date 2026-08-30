@@ -13,13 +13,36 @@ final class ControllerMessagesTests: XCTestCase {
         XCTAssertEqual(try SteeringPacket.decode(from: packet.encodedData()), packet)
     }
 
-    func testWatchFeedbackPacketRoundTrip() throws {
-        let packet = WatchFeedbackPacket(
-            eventID: UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!,
-            kind: .nearMiss
-        )
+    func testEveryWatchFeedbackKindRoundTripsWithoutChangingProtocolVersion() throws {
+        let kinds: [WatchFeedbackKind] = [
+            .countdownTick,
+            .go,
+            .nearMiss,
+            .nearMissStrong,
+            .collision,
+        ]
 
-        XCTAssertEqual(try WatchFeedbackPacket.decode(from: packet.encodedData()), packet)
+        for kind in kinds {
+            let packet = WatchFeedbackPacket(
+                eventID: UUID(),
+                kind: kind
+            )
+            XCTAssertEqual(packet.protocolVersion, 1)
+            XCTAssertEqual(try WatchFeedbackPacket.decode(from: packet.encodedData()), packet)
+        }
+        XCTAssertEqual(ControllerMessageProtocol.currentVersion, 1)
+    }
+
+    func testUnknownAndMalformedFeedbackCannotAffectSteeringPacketDecoding() throws {
+        let unknown = Data(
+            #"{"protocolVersion":1,"eventID":"AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE","kind":"futureCue"}"#.utf8
+        )
+        let malformed = Data([0xFF, 0x00, 0x7B])
+        XCTAssertThrowsError(try WatchFeedbackPacket.decode(from: unknown))
+        XCTAssertThrowsError(try WatchFeedbackPacket.decode(from: malformed))
+
+        let steering = makeSteeringPacket(sequence: 9, value: 0.25)
+        XCTAssertEqual(try SteeringPacket.decode(from: steering.encodedData()), steering)
     }
 
     func testUnsupportedWatchFeedbackVersionIsRejected() {

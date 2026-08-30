@@ -13,11 +13,16 @@ struct VehiclePresentationView: View {
     let appearance: VehicleAppearance
     let assetLibrary: PresentationAssetLibrary
     let reloadRequest: Int
+    var materialSweepTrigger = 0
+    var effectIntensity: SensoryEffectIntensity = .balanced
     @Binding var loadStatus: PresentationLoadStatus
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var routeAssets: PresentationRouteAssets?
     @State private var vehicleImage: UIImage?
+    @State private var lastMaterialSweepTrigger = 0
+    @State private var materialSweepProgress: CGFloat = -0.76
+    @State private var materialSweepOpacity = 0.0
 
     var body: some View {
         GeometryReader { proxy in
@@ -38,6 +43,8 @@ struct VehiclePresentationView: View {
                         .onAppear(perform: recordPresentationReadyIfDecoded)
 #endif
                 }
+
+                materialSweep(in: proxy.size)
             }
         }
         .accessibilityHidden(true)
@@ -93,8 +100,77 @@ struct VehiclePresentationView: View {
                 tint: appearance.color.uiColor
             )
             loadStatus = .ready
+            presentMaterialSweepIfNeeded()
         } catch {
             loadStatus = .failed(error.localizedDescription)
+        }
+    }
+
+    @ViewBuilder
+    private func materialSweep(in size: CGSize) -> some View {
+        if let vehicleImage, materialSweepOpacity > 0 {
+            let style = SensoryMicroInteractionStyle(
+                effectIntensity: effectIntensity,
+                reduceMotion: reduceMotion
+            )
+            Group {
+                if style.usesMotion {
+                    LinearGradient(
+                        colors: [
+                            .clear,
+                            .white.opacity(0.64),
+                            .mint.opacity(0.92),
+                            .white.opacity(0.70),
+                            .clear,
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: heroWidth(in: size) * 0.30)
+                    .offset(x: materialSweepProgress * heroWidth(in: size))
+                } else {
+                    Color.white
+                }
+            }
+            .frame(width: size.width, height: size.height)
+            .mask {
+                Image(uiImage: vehicleImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(
+                        width: heroWidth(in: size),
+                        height: size.height * 0.88
+                    )
+                    .position(heroPosition(in: size))
+            }
+            .blendMode(.screen)
+            .opacity(materialSweepOpacity)
+            .allowsHitTesting(false)
+        }
+    }
+
+    private func presentMaterialSweepIfNeeded() {
+        guard materialSweepTrigger != lastMaterialSweepTrigger else { return }
+        lastMaterialSweepTrigger = materialSweepTrigger
+        let style = SensoryMicroInteractionStyle(
+            effectIntensity: effectIntensity,
+            reduceMotion: reduceMotion
+        )
+        materialSweepProgress = -0.76
+        materialSweepOpacity = style.materialSweepAlpha
+
+        if style.usesMotion {
+            withAnimation(.easeInOut(duration: 0.44)) {
+                materialSweepProgress = 0.76
+            }
+            withAnimation(.easeOut(duration: 0.16).delay(0.32)) {
+                materialSweepOpacity = 0
+            }
+        } else {
+            withAnimation(.easeOut(duration: 0.34)) {
+                materialSweepOpacity = 0
+            }
         }
     }
 

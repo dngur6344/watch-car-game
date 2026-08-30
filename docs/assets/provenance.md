@@ -114,3 +114,54 @@ The same script composes the three aligned pairs with all eight catalog colors i
 | `Presentation/angular_hero_details_shadow.png` | presentation.vehicle.angular.details-shadow | P-PRESENTATION-ANGULAR | 1024×1024 complementary fixed details/shadow split | `aa710880cde0ebafeedb8caa6e1c4649ef1baaa674e735b08cca774a0925714c` |
 
 Contact-sheet evidence SHA-256: `749ad4d843e3d0e0ace9eee101db51436f21aeebf30bc364bc3b84c6bda8a1f4`.
+
+## Project-original audio kit (2026-08-29)
+
+All 15 production WAV files were created specifically for Watch Car Racer on 2026-08-29 by repository tool `Scripts/build_original_audio_assets.swift` version `1.0.0`. The tool runs offline with first-party Swift/Foundation capabilities and fixed seeds. It layers original oscillator voices, deterministic seeded noise, filters, envelopes, stereo phase offsets, and deterministic loop-boundary transitions, then removes DC offset, peak-normalizes, quantizes, and writes 48,000 Hz signed 16-bit little-endian PCM WAV files. No recording, stock sound, third-party sample, model-generated audio, external download, third-party library, or runtime synthesis is used.
+
+Source declaration: repository-authored deterministic oscillator, noise, and envelope recipes; no external source material. License declaration: project-original; all rights are held by the Watch Car Racer project owner. No third-party license or attribution is required. The complete per-role recipe text, format, duration, channel count, loop flag, authoring version, and shipped hash are also machine-readable in `WatchCarRacer/iOS/Resources/Audio/AudioAssetManifest.json`.
+
+The six driving loops combine role-specific motor harmonics or shaped noise with periodic modulation. The two stereo route ambiences combine low drones, independent seeded air layers, and channel-specific shimmer/metallic partials. The seven one-shots use bounded attack/release or exponential decay envelopes around synthesized ticks, bass/impact modes, chirps, and tonal/noise sweeps. Loop roles receive a deterministic 10 ms boundary tile plus entry/exit crossfades before DC removal and normalization; the first and last 10 ms windows therefore remain aligned after PCM quantization.
+
+| Production WAV | Role | Recipe summary | SHA-256 |
+| --- | --- | --- | --- |
+| `Audio/engine_idle_loop.wav` | `engine_idle_loop` | 55/110/165 Hz motor harmonics, 2 Hz pulse, low-passed mechanical noise | `e8d721b1a7d4f45deb0b04425a78119e36ca75cecaf652fd1e0f2e3c3f9e4995` |
+| `Audio/engine_mid_loop.wav` | `engine_mid_loop` | 90/180/270 Hz motor harmonics, 4 Hz pulse, mechanical noise | `98f0c790424298e3ef56e5c5446fea13cc5d1020527e3b4142acdbc926ffa57f` |
+| `Audio/engine_high_loop.wav` | `engine_high_loop` | 140/280/420/700 Hz motor harmonics and bright mechanical noise | `4d84c209fb8753523dbbc467b776801fbd70d43b227717b1193b2e81eadd0cf2` |
+| `Audio/road_loop.wav` | `road_loop` | low-passed surface noise with 34/68 Hz road rumble | `963e08db686dec36ed194b1aef448bc85fcec7e986113207f35d2c41c68d85f3` |
+| `Audio/wind_loop.wav` | `wind_loop` | broadband and high-pass air noise with slow gust modulation | `f58ecee5dc529a77fdffe73f280fac24eae9b17846b1c81937a964eb21d80564` |
+| `Audio/tire_scrub_loop.wav` | `tire_scrub_loop` | high-pass scrub noise with 620/930 Hz friction resonances | `4df6bbe15b5fa5c14deefd2bb08598b78c8f9baf236c15d3400e000608ef74f0` |
+| `Audio/near_miss_whoosh.wav` | `near_miss_whoosh` | fast air-noise envelope and descending tonal edge | `8cb847d61a9d7429922e672268fd88965967da39efff4f7e9adfbeb7cddb7686` |
+| `Audio/collision_impact.wav` | `collision_impact` | seeded transient with decaying 43/86 Hz impact modes | `b679d626612897bab768328e48ac22a83d8089ee236dea67deaf148add616d0c` |
+| `Audio/countdown_tick.wav` | `countdown_tick` | 1320/1980 Hz tick with short seeded attack | `266489475bdbc72bd91eaf2930cb20c3f1e50431151f562298338c6bd4dcaede` |
+| `Audio/go_bass_hit.wav` | `go_bass_hit` | descending 88-to-42 Hz bass hit and transient layer | `319325b51ebcd5894dc9434cbaa8e8e0ef270b80c3658f786809f8c0dd79ab14` |
+| `Audio/hub_ambience_loop.wav` | `hub_ambience_loop` | stereo 42/84 Hz drone, shimmer, and independent air layers | `14448e84aa02d904b642e85b7f81bc78a9be3a05ce08c5c1059d9f5f2c4154a5` |
+| `Audio/maintenance_ambience_loop.wav` | `maintenance_ambience_loop` | stereo 48/96 Hz drone, metallic partials, and independent air layers | `fba2ce59fc80da6647a36bc8f0fddea11138519048d302bc4b7ead7b2dccbcf4` |
+| `Audio/vehicle_select.wav` | `vehicle_select` | 760/1140 Hz confirmation chirp and click | `8e00f990ee0bf156167ecfa208bbaea594af8b89734eec5cbf505c8d70b7686a` |
+| `Audio/color_select.wav` | `color_select` | 1040/1560 Hz color chirp and click | `3a0091c4d259985d276a63f916118090d80a88cfa178ddc85ddc2c48d10301e0` |
+| `Audio/drive_transition.wav` | `drive_transition` | rising 190-to-780 Hz tonal sweep and air-noise layer | `05f55d93e7d0749d9f820af522e9fd65bf50ce2a336c55189ecfa9c55f744ddb` |
+
+## Project-original RealityKit 3D/PBR production kit (2026-08-30, revision 2)
+
+The racing view's production 3D kit is entirely project-authored and brand-neutral. Repository tool `Scripts/build_production_racing_usd.swift` revision 2 deterministically creates three distinct hero vehicles, a lower-complexity traffic sedan, and a modular track barrier. The Rally, GT, and Angular vehicles have independent lofted body profiles, canopy proportions, aero treatments, rear-light signatures, wheelbases, wheel diameters, and accent colors. Hero wheels include ten spokes, hubs, brake discs, calipers, and separate tires; hero bodies include named paint surfaces, fender volumes, mirrors, splitters, side skirts, lamps, diffusers, exhausts, vents, and vehicle-specific spoilers. The traffic asset retains the same material language with fewer wheel and body details for repeated rendering. Every root records its project-original license, authoring tool, asset role, and production revision in USD custom data.
+
+`/usr/bin/usdchecker` validates every editable USDA source, and `/usr/bin/usdzip --checkCompliance` stores each source without external dependencies in its runtime USDZ. The five runtime packages total less than 512 KiB and each package remains below 128 KiB. The app loads the selected vehicle's distinct USDZ, applies the chosen catalog color only to named paint and mirror surfaces, uses the lightweight traffic/barrier assets for obstacles, and retains in-code procedural geometry as a safe per-asset fallback.
+
+`Scripts/build_racing_pbr_maps.swift` deterministically derives the asphalt normal and roughness maps from the existing project-owned `Backgrounds/asphalt.png`. It uses CoreGraphics/ImageIO only, applies a wrapped Sobel-style height gradient for the tangent-space normal map and an aggregate-aware high-roughness curve for the scalar map, then writes 1024×1024, 8-bit sRGB RGBA PNGs. No stock model, downloaded texture, third-party asset pack, recognizable production vehicle, or external runtime dependency is used.
+
+| Production asset | Role | Source and processing | SHA-256 |
+| --- | --- | --- | --- |
+| `Racing3D/rally_racer.usda` | editable Rally hero source | short-wheelbase loft, rally wing, roof scoop, block lamps, hero wheel/brake detail | `94e23ae4da95829c7f086c228a933008f437be2f94cbaf5bbaf058c6b9a51f13` |
+| `Racing3D/rally_racer.usdz` | RealityKit Rally hero | compliant stored USDZ produced from the authored USDA | `753b0ca8836d3d3e0851189620b06afca8eaa1a306c638af458a019b1dba90e3` |
+| `Racing3D/gt_racer.usda` | editable GT hero source | long low loft, ducktail, continuous rear light, staggered hero wheels | `2cb6bbdc27dbecd520964342229c4dad8c05f3260162eae3c6d55f965771c970` |
+| `Racing3D/gt_racer.usdz` | RealityKit GT hero | compliant stored USDZ produced from the authored USDA | `248920909bd2bbbcecf699893ea69faf54186fd7864ef327ddb41541095b73e0` |
+| `Racing3D/angular_racer.usda` | editable Angular hero source | faceted wedge loft, blade wing, segmented lamps, broad rear wheels | `8de9be3e5949d626c75fde413f1c7fa43c7d49df8a0e0dc38f119fdece950bd6` |
+| `Racing3D/angular_racer.usdz` | RealityKit Angular hero | compliant stored USDZ produced from the authored USDA | `6398420dc8311c92fefc57b8c517f490b0fcc72a6e458c54efe01aa9f7b67248` |
+| `Racing3D/traffic_sedan_3d.usda` | editable repeated-traffic source | lower-complexity sedan loft and wheels with production materials | `fa46f51149f3f39ba92859bdc9154a60dad6bb5afe8dbb5ff8c4822ea4c76f03` |
+| `Racing3D/traffic_sedan_3d.usdz` | RealityKit traffic vehicle | compliant lightweight stored USDZ | `1fdb141d516f08efb9dc8f80f32047b4f30467a637397cf876e75546245a008d` |
+| `Racing3D/track_barrier.usda` | editable obstacle source | five-panel modular barrier, feet, alternating materials, emissive reflectors | `2d5009eea05facd538fbf364a4e1a9c7a7618b70593df60f0b43bc68c3feb68f` |
+| `Racing3D/track_barrier.usdz` | RealityKit barrier | compliant lightweight stored USDZ | `911fc70d5e295cbd442a721af73d2b3e9a6369772aea24d075120833e36c57ea` |
+| `Racing3D/asphalt_normal.png` | asphalt tangent-space normal | deterministic wrapped gradient derived from `Backgrounds/asphalt.png` | `c978c6d71292bb1bf012bd6e527cf74fe4ba758177fab50ad53f3634b8d9f571` |
+| `Racing3D/asphalt_roughness.png` | asphalt scalar roughness | deterministic aggregate-aware curve derived from `Backgrounds/asphalt.png` | `44bbd02430d7f5ca8b3f9f9830689c6203ec7814542e6a8b4a31386667ed8509` |
+
+Generator SHA-256: `f41480ccc68f019f2525de28d94de58fa80eb409388fd1091e97f4d8d2f51f5f`.

@@ -1,0 +1,578 @@
+#usda 1.0
+(
+    defaultPrim = "TrafficSedan"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "TrafficSedan" (
+    kind = "component"
+    customData = {
+        string assetRole = "traffic-vehicle"
+        string authoringTool = "Scripts/build_production_racing_usd.swift"
+        string license = "project-original"
+        int productionRevision = 2
+    }
+)
+{
+    def Scope "Materials"
+    {
+        def Material "Paint"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Paint/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.11000, 0.60000, 0.78000)
+                float inputs:metallic = 0.78000
+                float inputs:roughness = 0.20000
+                token outputs:surface
+            }
+        }
+        def Material "Glass"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Glass/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.01200, 0.03500, 0.07000)
+                float inputs:metallic = 0.38000
+                float inputs:roughness = 0.07000
+                token outputs:surface
+            }
+        }
+        def Material "DarkMetal"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/DarkMetal/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.02500, 0.03200, 0.04500)
+                float inputs:metallic = 0.90000
+                float inputs:roughness = 0.24000
+                token outputs:surface
+            }
+        }
+        def Material "Carbon"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Carbon/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.01200, 0.01600, 0.02300)
+                float inputs:metallic = 0.48000
+                float inputs:roughness = 0.34000
+                token outputs:surface
+            }
+        }
+        def Material "Tire"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Tire/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.00600, 0.00700, 0.00900)
+                float inputs:metallic = 0.00000
+                float inputs:roughness = 0.94000
+                token outputs:surface
+            }
+        }
+        def Material "Rim"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Rim/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.44000, 0.50000, 0.55000)
+                float inputs:metallic = 0.96000
+                float inputs:roughness = 0.18000
+                token outputs:surface
+            }
+        }
+        def Material "Brake"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Brake/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.20000, 0.22000, 0.24000)
+                float inputs:metallic = 0.92000
+                float inputs:roughness = 0.28000
+                token outputs:surface
+            }
+        }
+        def Material "Exhaust"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Exhaust/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.16000, 0.18000, 0.20000)
+                float inputs:metallic = 0.98000
+                float inputs:roughness = 0.20000
+                token outputs:surface
+            }
+        }
+        def Material "TailLight"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/TailLight/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.52000, 0.00400, 0.01200)
+                float inputs:metallic = 0.05000
+                float inputs:roughness = 0.10000
+                color3f inputs:emissiveColor = (1.00000, 0.01200, 0.02400)
+                token outputs:surface
+            }
+        }
+        def Material "HeadLight"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/HeadLight/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.62000, 0.86000, 1.00000)
+                float inputs:metallic = 0.02000
+                float inputs:roughness = 0.08000
+                color3f inputs:emissiveColor = (0.68000, 0.91000, 1.00000)
+                token outputs:surface
+            }
+        }
+        def Material "Accent"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Accent/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.98000, 0.74000, 0.08000)
+                float inputs:metallic = 0.54000
+                float inputs:roughness = 0.18000
+                color3f inputs:emissiveColor = (0.27440, 0.20720, 0.02240)
+                token outputs:surface
+            }
+        }
+    }
+
+    def Mesh "paint_body_shell" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform bool doubleSided = 0
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8]
+        int[] faceVertexIndices = [0, 1, 9, 8, 1, 2, 10, 9, 2, 3, 11, 10, 3, 4, 12, 11, 4, 5, 13, 12, 5, 6, 14, 13, 6, 7, 15, 14, 7, 0, 8, 15, 8, 9, 17, 16, 9, 10, 18, 17, 10, 11, 19, 18, 11, 12, 20, 19, 12, 13, 21, 20, 13, 14, 22, 21, 14, 15, 23, 22, 15, 8, 16, 23, 16, 17, 25, 24, 17, 18, 26, 25, 18, 19, 27, 26, 19, 20, 28, 27, 20, 21, 29, 28, 21, 22, 30, 29, 22, 23, 31, 30, 23, 16, 24, 31, 24, 25, 33, 32, 25, 26, 34, 33, 26, 27, 35, 34, 27, 28, 36, 35, 28, 29, 37, 36, 29, 30, 38, 37, 30, 31, 39, 38, 31, 24, 32, 39, 32, 33, 41, 40, 33, 34, 42, 41, 34, 35, 43, 42, 35, 36, 44, 43, 36, 37, 45, 44, 37, 38, 46, 45, 38, 39, 47, 46, 39, 32, 40, 47, 0, 1, 2, 3, 4, 5, 6, 7, 47, 46, 45, 44, 43, 42, 41, 40]
+        point3f[] points = [
+            (-0.33970, 0.17000, -1.43000),
+            (-0.43000, 0.26000, -1.43000),
+            (-0.43000, 0.38000, -1.43000),
+            (-0.32680, 0.43000, -1.43000),
+            (0.32680, 0.43000, -1.43000),
+            (0.43000, 0.38000, -1.43000),
+            (0.43000, 0.26000, -1.43000),
+            (0.33970, 0.17000, -1.43000),
+            (-0.52140, 0.15000, -1.14000),
+            (-0.66000, 0.24000, -1.14000),
+            (-0.66000, 0.51000, -1.14000),
+            (-0.50160, 0.58000, -1.14000),
+            (0.50160, 0.58000, -1.14000),
+            (0.66000, 0.51000, -1.14000),
+            (0.66000, 0.24000, -1.14000),
+            (0.52140, 0.15000, -1.14000),
+            (-0.56880, 0.15000, -0.57000),
+            (-0.72000, 0.24000, -0.57000),
+            (-0.72000, 0.61000, -0.57000),
+            (-0.54720, 0.67000, -0.57000),
+            (0.54720, 0.67000, -0.57000),
+            (0.72000, 0.61000, -0.57000),
+            (0.72000, 0.24000, -0.57000),
+            (0.56880, 0.15000, -0.57000),
+            (-0.57670, 0.15000, 0.72000),
+            (-0.73000, 0.24000, 0.72000),
+            (-0.73000, 0.62000, 0.72000),
+            (-0.55480, 0.68000, 0.72000),
+            (0.55480, 0.68000, 0.72000),
+            (0.73000, 0.62000, 0.72000),
+            (0.73000, 0.24000, 0.72000),
+            (0.57670, 0.15000, 0.72000),
+            (-0.48190, 0.18000, 1.31000),
+            (-0.61000, 0.27000, 1.31000),
+            (-0.61000, 0.50000, 1.31000),
+            (-0.46360, 0.55000, 1.31000),
+            (0.46360, 0.55000, 1.31000),
+            (0.61000, 0.50000, 1.31000),
+            (0.61000, 0.27000, 1.31000),
+            (0.48190, 0.18000, 1.31000),
+            (-0.41080, 0.20000, 1.43000),
+            (-0.52000, 0.29000, 1.43000),
+            (-0.52000, 0.45000, 1.43000),
+            (-0.39520, 0.49000, 1.43000),
+            (0.39520, 0.49000, 1.43000),
+            (0.52000, 0.45000, 1.43000),
+            (0.52000, 0.29000, 1.43000),
+            (0.41080, 0.20000, 1.43000)
+        ]
+        uniform token subdivisionScheme = "none"
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Mesh "glass_canopy" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform bool doubleSided = 0
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8]
+        int[] faceVertexIndices = [0, 1, 9, 8, 1, 2, 10, 9, 2, 3, 11, 10, 3, 4, 12, 11, 4, 5, 13, 12, 5, 6, 14, 13, 6, 7, 15, 14, 7, 0, 8, 15, 8, 9, 17, 16, 9, 10, 18, 17, 10, 11, 19, 18, 11, 12, 20, 19, 12, 13, 21, 20, 13, 14, 22, 21, 14, 15, 23, 22, 15, 8, 16, 23, 16, 17, 25, 24, 17, 18, 26, 25, 18, 19, 27, 26, 19, 20, 28, 27, 20, 21, 29, 28, 21, 22, 30, 29, 22, 23, 31, 30, 23, 16, 24, 31, 0, 1, 2, 3, 4, 5, 6, 7, 31, 30, 29, 28, 27, 26, 25, 24]
+        point3f[] points = [
+            (-0.38710, 0.66000, -0.52000),
+            (-0.49000, 0.75000, -0.52000),
+            (-0.49000, 0.82000, -0.52000),
+            (-0.37240, 0.90000, -0.52000),
+            (0.37240, 0.90000, -0.52000),
+            (0.49000, 0.82000, -0.52000),
+            (0.49000, 0.75000, -0.52000),
+            (0.38710, 0.66000, -0.52000),
+            (-0.42660, 0.68000, -0.24000),
+            (-0.54000, 0.77000, -0.24000),
+            (-0.54000, 0.94000, -0.24000),
+            (-0.41040, 1.01000, -0.24000),
+            (0.41040, 1.01000, -0.24000),
+            (0.54000, 0.94000, -0.24000),
+            (0.54000, 0.77000, -0.24000),
+            (0.42660, 0.68000, -0.24000),
+            (-0.43450, 0.68000, 0.55000),
+            (-0.55000, 0.77000, 0.55000),
+            (-0.55000, 0.94000, 0.55000),
+            (-0.41800, 1.01000, 0.55000),
+            (0.41800, 1.01000, 0.55000),
+            (0.55000, 0.94000, 0.55000),
+            (0.55000, 0.77000, 0.55000),
+            (0.43450, 0.68000, 0.55000),
+            (-0.37920, 0.65000, 0.84000),
+            (-0.48000, 0.74000, 0.84000),
+            (-0.48000, 0.80000, 0.84000),
+            (-0.36480, 0.89000, 0.84000),
+            (0.36480, 0.89000, 0.84000),
+            (0.48000, 0.80000, 0.84000),
+            (0.48000, 0.74000, 0.84000),
+            (0.37920, 0.65000, 0.84000)
+        ]
+        uniform token subdivisionScheme = "none"
+        rel material:binding = </TrafficSedan/Materials/Glass>
+    }
+    def Sphere "paint_fender_front_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double radius = 1
+        double3 xformOp:translate = (-0.70000, 0.36000, -0.88000)
+        float3 xformOp:scale = (0.13000, 0.24640, 0.36400)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Sphere "paint_fender_rear_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double radius = 1
+        double3 xformOp:translate = (-0.70000, 0.36000, 0.91000)
+        float3 xformOp:scale = (0.14000, 0.25200, 0.36960)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Cube "dark_side_skirt_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.71500, 0.18000, 0.05000)
+        float3 xformOp:scale = (0.03500, 0.07000, 1.03824)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Carbon>
+    }
+    def Cube "mirror_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.76000, 0.74000, -0.30000)
+        float xformOp:rotateY = 8.00000
+        float3 xformOp:scale = (0.12000, 0.05500, 0.13000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Cube "glass_side_left_divider" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.59000, 0.83000, 0.16000)
+        float xformOp:rotateX = -5.00000
+        float3 xformOp:scale = (0.01200, 0.19000, 0.02500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+    def Sphere "paint_fender_front_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double radius = 1
+        double3 xformOp:translate = (0.70000, 0.36000, -0.88000)
+        float3 xformOp:scale = (0.13000, 0.24640, 0.36400)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Sphere "paint_fender_rear_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double radius = 1
+        double3 xformOp:translate = (0.70000, 0.36000, 0.91000)
+        float3 xformOp:scale = (0.14000, 0.25200, 0.36960)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Cube "dark_side_skirt_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.71500, 0.18000, 0.05000)
+        float3 xformOp:scale = (0.03500, 0.07000, 1.03824)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Carbon>
+    }
+    def Cube "mirror_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.76000, 0.74000, -0.30000)
+        float xformOp:rotateY = -8.00000
+        float3 xformOp:scale = (0.12000, 0.05500, 0.13000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Cube "glass_side_right_divider" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.59000, 0.83000, 0.16000)
+        float xformOp:rotateX = -5.00000
+        float3 xformOp:scale = (0.01200, 0.19000, 0.02500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+    def Cube "dark_rear_bumper" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.28000, 1.44200)
+        float3 xformOp:scale = (0.62000, 0.09500, 0.05500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Carbon>
+    }
+    def Cube "dark_front_splitter" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.16000, -1.36200)
+        float xformOp:rotateX = -4.00000
+        float3 xformOp:scale = (0.62000, 0.03500, 0.14000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Carbon>
+    }
+    def Cube "accent_center_spine" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.68800, -0.15000)
+        float3 xformOp:scale = (0.03800, 0.01000, 1.00940)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Accent>
+    }
+    def Cube "tail_light_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.40000, 0.49000, 1.44200)
+        float3 xformOp:scale = (0.24000, 0.05500, 0.01800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/TailLight>
+    }
+    def Cube "tail_light_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.40000, 0.49000, 1.44200)
+        float3 xformOp:scale = (0.24000, 0.05500, 0.01800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/TailLight>
+    }
+    def Cube "head_light_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.42000, 0.46000, -1.44200)
+        float xformOp:rotateZ = 7.00000
+        float3 xformOp:scale = (0.21000, 0.03500, 0.01800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/HeadLight>
+    }
+    def Cube "head_light_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.42000, 0.46000, -1.44200)
+        float xformOp:rotateZ = -7.00000
+        float3 xformOp:scale = (0.21000, 0.03500, 0.01800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/HeadLight>
+    }
+    def Cube "paint_rear_lip" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.58000, 1.39200)
+        float xformOp:rotateX = 8.00000
+        float3 xformOp:scale = (0.56000, 0.02500, 0.08000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Xform "wheel_front_left"
+    {
+        double3 xformOp:translate = (-0.70000, 0.28000, -0.88000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.25000
+        double radius = 0.28000
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Tire>
+    }
+    def Cylinder "rim_outer" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.26500
+        double radius = 0.17920
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Rim>
+    }
+    def Cylinder "brake_disc" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.27000
+        double radius = 0.13160
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Brake>
+    }
+    def Cylinder "hub" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.28000
+        double radius = 0.03640
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+
+    }
+    def Xform "wheel_front_right"
+    {
+        double3 xformOp:translate = (0.70000, 0.28000, -0.88000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.25000
+        double radius = 0.28000
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Tire>
+    }
+    def Cylinder "rim_outer" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.26500
+        double radius = 0.17920
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Rim>
+    }
+    def Cylinder "brake_disc" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.27000
+        double radius = 0.13160
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Brake>
+    }
+    def Cylinder "hub" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.28000
+        double radius = 0.03640
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+
+    }
+    def Xform "wheel_rear_left"
+    {
+        double3 xformOp:translate = (-0.70000, 0.28000, 0.91000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.25000
+        double radius = 0.28000
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Tire>
+    }
+    def Cylinder "rim_outer" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.26500
+        double radius = 0.17920
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Rim>
+    }
+    def Cylinder "brake_disc" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.27000
+        double radius = 0.13160
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Brake>
+    }
+    def Cylinder "hub" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.28000
+        double radius = 0.03640
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+
+    }
+    def Xform "wheel_rear_right"
+    {
+        double3 xformOp:translate = (0.70000, 0.28000, 0.91000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.25000
+        double radius = 0.28000
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Tire>
+    }
+    def Cylinder "rim_outer" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.26500
+        double radius = 0.17920
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Rim>
+    }
+    def Cylinder "brake_disc" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.27000
+        double radius = 0.13160
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/Brake>
+    }
+    def Cylinder "hub" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.28000
+        double radius = 0.03640
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+
+    }
+
+}

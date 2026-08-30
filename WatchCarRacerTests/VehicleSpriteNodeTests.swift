@@ -19,7 +19,14 @@ final class VehicleSpriteNodeTests: XCTestCase {
             let expectedDetails = try assetLibrary.texture(named: textures.details)
 
             XCTAssertEqual(node.appearance, appearance)
-            XCTAssertEqual(node.children.count, 3)
+            XCTAssertEqual(node.children.count, 1)
+            XCTAssertTrue(node.children.first === node.impactPresentationNode)
+            XCTAssertEqual(node.impactPresentationNode.children.count, 2)
+            XCTAssertTrue(node.shadowNode.parent === node.impactPresentationNode)
+            XCTAssertTrue(node.bodyPresentationNode.parent === node.impactPresentationNode)
+            XCTAssertEqual(node.bodyPresentationNode.children.count, 2)
+            XCTAssertTrue(node.paintNode.parent === node.bodyPresentationNode)
+            XCTAssertTrue(node.detailsNode.parent === node.bodyPresentationNode)
             XCTAssertTrue(node.shadowNode.texture === expectedShadow)
             XCTAssertTrue(node.paintNode.texture === expectedPaint)
             XCTAssertTrue(node.detailsNode.texture === expectedDetails)
@@ -44,6 +51,61 @@ final class VehicleSpriteNodeTests: XCTestCase {
             XCTAssertEqual(node.paintNode.colorBlendFactor, 1)
             assertPaintColor(node.paintNode.color, equals: appearance.color.rgba)
         }
+    }
+
+    func testPresentationSeparatesBodyDetailsShadowAndImpactTransforms() throws {
+        let library = try GameAssetLibrary()
+        let appearance = try XCTUnwrap(
+            VehicleCatalog.resolve(VehicleCatalog.defaultSelection)
+        )
+        let node = try VehicleSpriteNode(appearance: appearance, assetLibrary: library)
+
+        node.applyPresentation(speedProgress: 1, steering: 1, level: .balanced)
+
+        XCTAssertEqual(
+            node.bodyPresentationNode.zRotation,
+            -VehicleSpriteNode.maximumBodyRoll,
+            accuracy: 0.000_001
+        )
+        XCTAssertEqual(
+            node.paintNode.position.x,
+            VehicleSpriteNode.maximumPaintOffset,
+            accuracy: 0.000_001
+        )
+        XCTAssertEqual(
+            node.detailsNode.position.x,
+            VehicleSpriteNode.maximumDetailsOffset,
+            accuracy: 0.000_001
+        )
+        XCTAssertEqual(node.shadowNode.position.x, -3, accuracy: 0.000_001)
+        XCTAssertEqual(node.shadowNode.position.y, -3.2, accuracy: 0.000_001)
+        XCTAssertEqual(node.shadowNode.xScale, 0.915, accuracy: 0.000_001)
+        XCTAssertEqual(node.shadowNode.yScale, 0.835, accuracy: 0.000_001)
+        XCTAssertEqual(node.shadowNode.alpha, 0.80, accuracy: 0.000_001)
+        XCTAssertEqual(node.impactPresentationNode.position, .zero)
+        XCTAssertEqual(node.impactPresentationNode.zRotation, 0)
+
+        node.applyPresentation(speedProgress: 1, steering: -1, level: .reduced)
+        XCTAssertEqual(
+            node.bodyPresentationNode.zRotation,
+            VehicleSpriteNode.maximumBodyRoll * VehicleSpriteNode.reducedTransformMultiplier,
+            accuracy: 0.000_001
+        )
+        XCTAssertEqual(
+            node.detailsNode.position.x,
+            -VehicleSpriteNode.maximumDetailsOffset
+                * VehicleSpriteNode.reducedTransformMultiplier,
+            accuracy: 0.000_001
+        )
+
+        node.applyPresentation(speedProgress: 1, steering: 1, level: .off)
+        XCTAssertEqual(node.bodyPresentationNode.zRotation, 0, accuracy: 0.000_001)
+        XCTAssertEqual(node.paintNode.position, .zero)
+        XCTAssertEqual(node.detailsNode.position, .zero)
+        XCTAssertEqual(node.shadowNode.position, .zero)
+        XCTAssertEqual(node.shadowNode.xScale, 1, accuracy: 0.000_001)
+        XCTAssertEqual(node.shadowNode.yScale, 1, accuracy: 0.000_001)
+        XCTAssertGreaterThan(node.shadowNode.alpha, 0.58, "Opacity-only speed response remains")
     }
 
     func testTrafficVariantIsStableByObstacleIDAndBarrierUsesAuthoredTexture() throws {

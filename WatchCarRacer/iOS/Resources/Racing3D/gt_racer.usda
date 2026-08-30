@@ -1,0 +1,1078 @@
+#usda 1.0
+(
+    defaultPrim = "GTRacer"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "GTRacer" (
+    kind = "component"
+    customData = {
+        string assetRole = "hero-vehicle"
+        string authoringTool = "Scripts/build_production_racing_usd.swift"
+        string license = "project-original"
+        int productionRevision = 2
+    }
+)
+{
+    def Scope "Materials"
+    {
+        def Material "Paint"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/Paint/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.11000, 0.60000, 0.78000)
+                float inputs:metallic = 0.78000
+                float inputs:roughness = 0.20000
+                token outputs:surface
+            }
+        }
+        def Material "Glass"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/Glass/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.01200, 0.03500, 0.07000)
+                float inputs:metallic = 0.38000
+                float inputs:roughness = 0.07000
+                token outputs:surface
+            }
+        }
+        def Material "DarkMetal"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/DarkMetal/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.02500, 0.03200, 0.04500)
+                float inputs:metallic = 0.90000
+                float inputs:roughness = 0.24000
+                token outputs:surface
+            }
+        }
+        def Material "Carbon"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/Carbon/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.01200, 0.01600, 0.02300)
+                float inputs:metallic = 0.48000
+                float inputs:roughness = 0.34000
+                token outputs:surface
+            }
+        }
+        def Material "Tire"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/Tire/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.00600, 0.00700, 0.00900)
+                float inputs:metallic = 0.00000
+                float inputs:roughness = 0.94000
+                token outputs:surface
+            }
+        }
+        def Material "Rim"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/Rim/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.44000, 0.50000, 0.55000)
+                float inputs:metallic = 0.96000
+                float inputs:roughness = 0.18000
+                token outputs:surface
+            }
+        }
+        def Material "Brake"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/Brake/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.20000, 0.22000, 0.24000)
+                float inputs:metallic = 0.92000
+                float inputs:roughness = 0.28000
+                token outputs:surface
+            }
+        }
+        def Material "Exhaust"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/Exhaust/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.16000, 0.18000, 0.20000)
+                float inputs:metallic = 0.98000
+                float inputs:roughness = 0.20000
+                token outputs:surface
+            }
+        }
+        def Material "TailLight"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/TailLight/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.52000, 0.00400, 0.01200)
+                float inputs:metallic = 0.05000
+                float inputs:roughness = 0.10000
+                color3f inputs:emissiveColor = (1.00000, 0.01200, 0.02400)
+                token outputs:surface
+            }
+        }
+        def Material "HeadLight"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/HeadLight/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.62000, 0.86000, 1.00000)
+                float inputs:metallic = 0.02000
+                float inputs:roughness = 0.08000
+                color3f inputs:emissiveColor = (0.68000, 0.91000, 1.00000)
+                token outputs:surface
+            }
+        }
+        def Material "Accent"
+        {
+            token outputs:surface.connect = </GTRacer/Materials/Accent/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.08000, 0.82000, 0.94000)
+                float inputs:metallic = 0.54000
+                float inputs:roughness = 0.18000
+                color3f inputs:emissiveColor = (0.02240, 0.22960, 0.26320)
+                token outputs:surface
+            }
+        }
+    }
+
+    def Mesh "paint_body_shell" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform bool doubleSided = 0
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8]
+        int[] faceVertexIndices = [0, 1, 9, 8, 1, 2, 10, 9, 2, 3, 11, 10, 3, 4, 12, 11, 4, 5, 13, 12, 5, 6, 14, 13, 6, 7, 15, 14, 7, 0, 8, 15, 8, 9, 17, 16, 9, 10, 18, 17, 10, 11, 19, 18, 11, 12, 20, 19, 12, 13, 21, 20, 13, 14, 22, 21, 14, 15, 23, 22, 15, 8, 16, 23, 16, 17, 25, 24, 17, 18, 26, 25, 18, 19, 27, 26, 19, 20, 28, 27, 20, 21, 29, 28, 21, 22, 30, 29, 22, 23, 31, 30, 23, 16, 24, 31, 24, 25, 33, 32, 25, 26, 34, 33, 26, 27, 35, 34, 27, 28, 36, 35, 28, 29, 37, 36, 29, 30, 38, 37, 30, 31, 39, 38, 31, 24, 32, 39, 32, 33, 41, 40, 33, 34, 42, 41, 34, 35, 43, 42, 35, 36, 44, 43, 36, 37, 45, 44, 37, 38, 46, 45, 38, 39, 47, 46, 39, 32, 40, 47, 40, 41, 49, 48, 41, 42, 50, 49, 42, 43, 51, 50, 43, 44, 52, 51, 44, 45, 53, 52, 45, 46, 54, 53, 46, 47, 55, 54, 47, 40, 48, 55, 0, 1, 2, 3, 4, 5, 6, 7, 55, 54, 53, 52, 51, 50, 49, 48]
+        point3f[] points = [
+            (-0.33970, 0.15000, -1.72000),
+            (-0.43000, 0.24000, -1.72000),
+            (-0.43000, 0.37000, -1.72000),
+            (-0.32680, 0.40000, -1.72000),
+            (0.32680, 0.40000, -1.72000),
+            (0.43000, 0.37000, -1.72000),
+            (0.43000, 0.24000, -1.72000),
+            (0.33970, 0.15000, -1.72000),
+            (-0.54510, 0.13000, -1.42000),
+            (-0.69000, 0.22000, -1.42000),
+            (-0.69000, 0.50000, -1.42000),
+            (-0.52440, 0.55000, -1.42000),
+            (0.52440, 0.55000, -1.42000),
+            (0.69000, 0.50000, -1.42000),
+            (0.69000, 0.22000, -1.42000),
+            (0.54510, 0.13000, -1.42000),
+            (-0.61620, 0.12000, -0.88000),
+            (-0.78000, 0.21000, -0.88000),
+            (-0.78000, 0.59000, -0.88000),
+            (-0.59280, 0.65000, -0.88000),
+            (0.59280, 0.65000, -0.88000),
+            (0.78000, 0.59000, -0.88000),
+            (0.78000, 0.21000, -0.88000),
+            (0.61620, 0.12000, -0.88000),
+            (-0.64780, 0.12000, 0.38000),
+            (-0.82000, 0.21000, 0.38000),
+            (-0.82000, 0.63000, 0.38000),
+            (-0.62320, 0.69000, 0.38000),
+            (0.62320, 0.69000, 0.38000),
+            (0.82000, 0.63000, 0.38000),
+            (0.82000, 0.21000, 0.38000),
+            (0.64780, 0.12000, 0.38000),
+            (-0.63200, 0.13000, 1.02000),
+            (-0.80000, 0.22000, 1.02000),
+            (-0.80000, 0.60000, 1.02000),
+            (-0.60800, 0.66000, 1.02000),
+            (0.60800, 0.66000, 1.02000),
+            (0.80000, 0.60000, 1.02000),
+            (0.80000, 0.22000, 1.02000),
+            (0.63200, 0.13000, 1.02000),
+            (-0.55300, 0.16000, 1.50000),
+            (-0.70000, 0.25000, 1.50000),
+            (-0.70000, 0.51000, 1.50000),
+            (-0.53200, 0.56000, 1.50000),
+            (0.53200, 0.56000, 1.50000),
+            (0.70000, 0.51000, 1.50000),
+            (0.70000, 0.25000, 1.50000),
+            (0.55300, 0.16000, 1.50000),
+            (-0.45030, 0.19000, 1.67000),
+            (-0.57000, 0.28000, 1.67000),
+            (-0.57000, 0.45000, 1.67000),
+            (-0.43320, 0.49000, 1.67000),
+            (0.43320, 0.49000, 1.67000),
+            (0.57000, 0.45000, 1.67000),
+            (0.57000, 0.28000, 1.67000),
+            (0.45030, 0.19000, 1.67000)
+        ]
+        uniform token subdivisionScheme = "none"
+        rel material:binding = </GTRacer/Materials/Paint>
+    }
+    def Mesh "glass_canopy" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform bool doubleSided = 0
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8]
+        int[] faceVertexIndices = [0, 1, 9, 8, 1, 2, 10, 9, 2, 3, 11, 10, 3, 4, 12, 11, 4, 5, 13, 12, 5, 6, 14, 13, 6, 7, 15, 14, 7, 0, 8, 15, 8, 9, 17, 16, 9, 10, 18, 17, 10, 11, 19, 18, 11, 12, 20, 19, 12, 13, 21, 20, 13, 14, 22, 21, 14, 15, 23, 22, 15, 8, 16, 23, 16, 17, 25, 24, 17, 18, 26, 25, 18, 19, 27, 26, 19, 20, 28, 27, 20, 21, 29, 28, 21, 22, 30, 29, 22, 23, 31, 30, 23, 16, 24, 31, 0, 1, 2, 3, 4, 5, 6, 7, 31, 30, 29, 28, 27, 26, 25, 24]
+        point3f[] points = [
+            (-0.39500, 0.64000, -0.67000),
+            (-0.50000, 0.73000, -0.67000),
+            (-0.50000, 0.79000, -0.67000),
+            (-0.38000, 0.88000, -0.67000),
+            (0.38000, 0.88000, -0.67000),
+            (0.50000, 0.79000, -0.67000),
+            (0.50000, 0.73000, -0.67000),
+            (0.39500, 0.64000, -0.67000),
+            (-0.45030, 0.66000, -0.34000),
+            (-0.57000, 0.75000, -0.34000),
+            (-0.57000, 0.91000, -0.34000),
+            (-0.43320, 1.00000, -0.34000),
+            (0.43320, 1.00000, -0.34000),
+            (0.57000, 0.91000, -0.34000),
+            (0.57000, 0.75000, -0.34000),
+            (0.45030, 0.66000, -0.34000),
+            (-0.46610, 0.67000, 0.48000),
+            (-0.59000, 0.76000, 0.48000),
+            (-0.59000, 0.92000, 0.48000),
+            (-0.44840, 1.01000, 0.48000),
+            (0.44840, 1.01000, 0.48000),
+            (0.59000, 0.92000, 0.48000),
+            (0.59000, 0.76000, 0.48000),
+            (0.46610, 0.67000, 0.48000),
+            (-0.40290, 0.64000, 0.85000),
+            (-0.51000, 0.73000, 0.85000),
+            (-0.51000, 0.79000, 0.85000),
+            (-0.38760, 0.88000, 0.85000),
+            (0.38760, 0.88000, 0.85000),
+            (0.51000, 0.79000, 0.85000),
+            (0.51000, 0.73000, 0.85000),
+            (0.40290, 0.64000, 0.85000)
+        ]
+        uniform token subdivisionScheme = "none"
+        rel material:binding = </GTRacer/Materials/Glass>
+    }
+    def Sphere "paint_fender_front_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double radius = 1
+        double3 xformOp:translate = (-0.79000, 0.38000, -1.08000)
+        float3 xformOp:scale = (0.13000, 0.26400, 0.39000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Paint>
+    }
+    def Sphere "paint_fender_rear_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double radius = 1
+        double3 xformOp:translate = (-0.79000, 0.40000, 1.08000)
+        float3 xformOp:scale = (0.14000, 0.28800, 0.42240)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Paint>
+    }
+    def Cube "dark_side_skirt_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.80500, 0.18000, 0.05000)
+        float3 xformOp:scale = (0.03500, 0.07000, 1.22904)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "mirror_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.85000, 0.74000, -0.30000)
+        float xformOp:rotateY = 8.00000
+        float3 xformOp:scale = (0.12000, 0.05500, 0.13000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Paint>
+    }
+    def Cube "glass_side_left_divider" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.59000, 0.83000, 0.16000)
+        float xformOp:rotateX = -5.00000
+        float3 xformOp:scale = (0.01200, 0.19000, 0.02500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/DarkMetal>
+    }
+    def Sphere "paint_fender_front_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double radius = 1
+        double3 xformOp:translate = (0.79000, 0.38000, -1.08000)
+        float3 xformOp:scale = (0.13000, 0.26400, 0.39000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Paint>
+    }
+    def Sphere "paint_fender_rear_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double radius = 1
+        double3 xformOp:translate = (0.79000, 0.40000, 1.08000)
+        float3 xformOp:scale = (0.14000, 0.28800, 0.42240)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Paint>
+    }
+    def Cube "dark_side_skirt_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.80500, 0.18000, 0.05000)
+        float3 xformOp:scale = (0.03500, 0.07000, 1.22904)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "mirror_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.85000, 0.74000, -0.30000)
+        float xformOp:rotateY = -8.00000
+        float3 xformOp:scale = (0.12000, 0.05500, 0.13000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Paint>
+    }
+    def Cube "glass_side_right_divider" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.59000, 0.83000, 0.16000)
+        float xformOp:rotateX = -5.00000
+        float3 xformOp:scale = (0.01200, 0.19000, 0.02500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/DarkMetal>
+    }
+    def Cube "dark_rear_bumper" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.28000, 1.68200)
+        float3 xformOp:scale = (0.62000, 0.09500, 0.05500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "dark_front_splitter" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.16000, -1.65200)
+        float xformOp:rotateX = -4.00000
+        float3 xformOp:scale = (0.62000, 0.03500, 0.14000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "accent_center_spine" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.66800, -0.15000)
+        float3 xformOp:scale = (0.03800, 0.01000, 1.19490)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Accent>
+    }
+    def Cube "tail_light_center_bar" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.49000, 1.68200)
+        float3 xformOp:scale = (0.56000, 0.03400, 0.01800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/TailLight>
+    }
+    def Cube "tail_light_left_blade" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.52000, 0.50000, 1.68200)
+        float xformOp:rotateZ = -7.00000
+        float3 xformOp:scale = (0.19000, 0.05200, 0.01900)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/TailLight>
+    }
+    def Cube "tail_light_right_blade" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.52000, 0.50000, 1.68200)
+        float xformOp:rotateZ = 7.00000
+        float3 xformOp:scale = (0.19000, 0.05200, 0.01900)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/TailLight>
+    }
+    def Cube "head_light_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.42000, 0.46000, -1.73200)
+        float xformOp:rotateZ = 7.00000
+        float3 xformOp:scale = (0.25000, 0.03500, 0.01800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/HeadLight>
+    }
+    def Cube "head_light_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.42000, 0.46000, -1.73200)
+        float xformOp:rotateZ = -7.00000
+        float3 xformOp:scale = (0.25000, 0.03500, 0.01800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/HeadLight>
+    }
+    def Cube "paint_ducktail" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.65000, 1.54200)
+        float xformOp:rotateX = 13.00000
+        float3 xformOp:scale = (0.67000, 0.05500, 0.17000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Paint>
+    }
+    def Cube "diffuser_fin_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.39000, 0.19000, 1.71200)
+        float xformOp:rotateX = -8.00000
+        float3 xformOp:scale = (0.01800, 0.10000, 0.22000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "diffuser_fin_27" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.13000, 0.19000, 1.71200)
+        float xformOp:rotateX = -8.00000
+        float3 xformOp:scale = (0.01800, 0.10000, 0.22000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "diffuser_fin_53" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.13000, 0.19000, 1.71200)
+        float xformOp:rotateX = -8.00000
+        float3 xformOp:scale = (0.01800, 0.10000, 0.22000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "diffuser_fin_79" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.39000, 0.19000, 1.71200)
+        float xformOp:rotateX = -8.00000
+        float3 xformOp:scale = (0.01800, 0.10000, 0.22000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cylinder "exhaust_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "Z"
+        double height = 0.13000
+        double radius = 0.07000
+        double3 xformOp:translate = (-0.30000, 0.25000, 1.76200)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Exhaust>
+    }
+    def Cylinder "exhaust_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "Z"
+        double height = 0.13000
+        double radius = 0.07000
+        double3 xformOp:translate = (0.30000, 0.25000, 1.76200)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Exhaust>
+    }
+    def Cube "hood_vent_left_0" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.25000, 0.57500, -0.89000)
+        float xformOp:rotateX = -3.00000
+        float3 xformOp:scale = (0.09500, 0.00800, 0.20000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "hood_vent_left_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.39000, 0.57500, -0.89000)
+        float xformOp:rotateX = -3.00000
+        float3 xformOp:scale = (0.09500, 0.00800, 0.20000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "hood_vent_right_0" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.25000, 0.57500, -0.89000)
+        float xformOp:rotateX = -3.00000
+        float3 xformOp:scale = (0.09500, 0.00800, 0.20000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Cube "hood_vent_right_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.39000, 0.57500, -0.89000)
+        float xformOp:rotateX = -3.00000
+        float3 xformOp:scale = (0.09500, 0.00800, 0.20000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Carbon>
+    }
+    def Xform "wheel_front_left"
+    {
+        double3 xformOp:translate = (-0.79000, 0.30000, -1.08000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.29000
+        double radius = 0.30000
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Tire>
+    }
+    def Cylinder "rim_outer" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.30500
+        double radius = 0.19200
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cylinder "brake_disc" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.31500
+        double radius = 0.14100
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Brake>
+    }
+    def Cylinder "hub" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.32500
+        double radius = 0.03900
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/DarkMetal>
+    }
+    def Cube "spoke_0" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 0.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 36.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_2" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 72.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_3" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 108.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_4" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 144.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_5" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 180.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_6" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 216.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_7" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 252.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_8" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 288.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_9" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 324.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "caliper" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.11700)
+        float3 xformOp:scale = (0.03500, 0.04800, 0.02400)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Accent>
+    }
+
+    }
+    def Xform "wheel_front_right"
+    {
+        double3 xformOp:translate = (0.79000, 0.30000, -1.08000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.29000
+        double radius = 0.30000
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Tire>
+    }
+    def Cylinder "rim_outer" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.30500
+        double radius = 0.19200
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cylinder "brake_disc" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.31500
+        double radius = 0.14100
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Brake>
+    }
+    def Cylinder "hub" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.32500
+        double radius = 0.03900
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/DarkMetal>
+    }
+    def Cube "spoke_0" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 0.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 36.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_2" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 72.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_3" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 108.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_4" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 144.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_5" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 180.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_6" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 216.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_7" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 252.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_8" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 288.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_9" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 324.00000
+        float3 xformOp:scale = (0.01800, 0.11700, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "caliper" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.11700)
+        float3 xformOp:scale = (0.03500, 0.04800, 0.02400)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Accent>
+    }
+
+    }
+    def Xform "wheel_rear_left"
+    {
+        double3 xformOp:translate = (-0.79000, 0.32000, 1.08000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.29000
+        double radius = 0.32000
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Tire>
+    }
+    def Cylinder "rim_outer" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.30500
+        double radius = 0.20480
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cylinder "brake_disc" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.31500
+        double radius = 0.15040
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Brake>
+    }
+    def Cylinder "hub" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.32500
+        double radius = 0.04160
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/DarkMetal>
+    }
+    def Cube "spoke_0" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 0.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 36.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_2" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 72.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_3" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 108.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_4" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 144.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_5" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 180.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_6" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 216.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_7" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 252.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_8" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 288.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_9" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 324.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "caliper" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.12480)
+        float3 xformOp:scale = (0.03500, 0.05120, 0.02560)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Accent>
+    }
+
+    }
+    def Xform "wheel_rear_right"
+    {
+        double3 xformOp:translate = (0.79000, 0.32000, 1.08000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.29000
+        double radius = 0.32000
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Tire>
+    }
+    def Cylinder "rim_outer" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.30500
+        double radius = 0.20480
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cylinder "brake_disc" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.31500
+        double radius = 0.15040
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/Brake>
+    }
+    def Cylinder "hub" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform token axis = "X"
+        double height = 0.32500
+        double radius = 0.04160
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        rel material:binding = </GTRacer/Materials/DarkMetal>
+    }
+    def Cube "spoke_0" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 0.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 36.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_2" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 72.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_3" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 108.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_4" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 144.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_5" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 180.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_6" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 216.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_7" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 252.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_8" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 288.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "spoke_9" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.00000)
+        float xformOp:rotateX = 324.00000
+        float3 xformOp:scale = (0.01800, 0.12480, 0.02200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Rim>
+    }
+    def Cube "caliper" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.00000, 0.12480)
+        float3 xformOp:scale = (0.03500, 0.05120, 0.02560)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </GTRacer/Materials/Accent>
+    }
+
+    }
+
+}

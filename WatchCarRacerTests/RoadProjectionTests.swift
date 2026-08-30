@@ -73,4 +73,60 @@ final class RoadProjectionTests: XCTestCase {
             )
         }
     }
+
+    func testRoadsideProjectionCanExtendBeyondTrackEdgeWithoutAffectingRoadBounds() {
+        let projection = RoadProjection(
+            screenSize: landscapeSizes[0],
+            roadHalfWidth: 3,
+            maximumDistance: 48
+        )
+        let edge = projection.project(lateral: 3, distance: 12)
+        let roadside = projection.project(lateral: 4.2, distance: 12)
+
+        XCTAssertGreaterThan(roadside.point.x, edge.point.x)
+        XCTAssertEqual(roadside.point.y, edge.point.y, accuracy: 0.000_001)
+        XCTAssertEqual(roadside.scale, edge.scale, accuracy: 0.000_001)
+    }
+
+    func testTrackPerspectiveBendsSharedCenterlineWhileKeepingRoadEdgesVisible() {
+        for size in landscapeSizes {
+            let road = RoadProjection(
+                screenSize: size,
+                roadHalfWidth: 3,
+                maximumDistance: 48
+            )
+            let track = TrackPerspectiveProjection(road: road, travel: 0)
+
+            XCTAssertEqual(track.centerOffset(at: 0), 0, accuracy: 0.000_001)
+            XCTAssertNotEqual(track.centerOffset(at: 48), 0, accuracy: 0.000_001)
+
+            for distance in [0.0, 6, 18, 32, 48] {
+                let left = track.project(lateral: -3, distance: distance).point
+                let center = track.project(lateral: 0, distance: distance).point
+                let right = track.project(lateral: 3, distance: distance).point
+                XCTAssertGreaterThanOrEqual(left.x, 0)
+                XCTAssertLessThanOrEqual(right.x, size.width)
+                XCTAssertLessThan(left.x, center.x)
+                XCTAssertLessThan(center.x, right.x)
+            }
+        }
+    }
+
+    func testTrackHeadingIsFiniteBoundedAndChangesAsTrackAdvances() {
+        let road = RoadProjection(
+            screenSize: landscapeSizes[0],
+            roadHalfWidth: 3,
+            maximumDistance: 52
+        )
+        let first = TrackPerspectiveProjection(road: road, travel: 0)
+        let later = TrackPerspectiveProjection(road: road, travel: 180)
+        let firstHeading = first.heading(at: 4, sampleLength: 5)
+        let laterHeading = later.heading(at: 4, sampleLength: 5)
+
+        XCTAssertTrue(firstHeading.isFinite)
+        XCTAssertTrue(laterHeading.isFinite)
+        XCTAssertLessThanOrEqual(abs(firstHeading), 0.22)
+        XCTAssertLessThanOrEqual(abs(laterHeading), 0.22)
+        XCTAssertNotEqual(firstHeading, laterHeading, accuracy: 0.000_001)
+    }
 }

@@ -80,6 +80,18 @@ final class GameSceneMapTests: XCTestCase {
             )
         }
 
+        let curbContainer = try XCTUnwrap(scene.childNode(withName: "//map.trackCurbs"))
+        let curbs = curbContainer.children.compactMap { $0 as? SKShapeNode }
+        XCTAssertEqual(curbs.count, GameScene.trackCurbSegmentCountPerSide * 2)
+        XCTAssertTrue(curbs.allSatisfy { $0.path != nil })
+
+        let guardrailContainer = try XCTUnwrap(
+            scene.childNode(withName: "//map.guardrails")
+        )
+        let guardrails = guardrailContainer.children.compactMap { $0 as? SKShapeNode }
+        XCTAssertEqual(guardrails.count, 2)
+        XCTAssertTrue(guardrails.allSatisfy { $0.path != nil })
+
         XCTAssertFalse(scene.allDescendants.contains { $0.name == "map.sun" })
         XCTAssertFalse(scene.allDescendants.contains { $0.name == "map.horizon" })
         XCTAssertFalse(laneContainer.children.contains { $0 is SKShapeNode })
@@ -203,10 +215,14 @@ final class GameSceneMapTests: XCTestCase {
             return XCTFail("Missing lane sprite", file: file, line: line)
         }
         let snapshot = scene.currentSnapshot
-        let projection = RoadProjection(
+        let roadProjection = RoadProjection(
             screenSize: scene.size,
             roadHalfWidth: snapshot.roadHalfWidth,
             maximumDistance: max(configuration.spawnDistance + 4, 52)
+        )
+        let projection = TrackPerspectiveProjection(
+            road: roadProjection,
+            travel: snapshot.distance
         )
         let spacing = 4.5
         let speedRange = max(configuration.maximumSpeed - configuration.initialSpeed, 0.001)
@@ -223,18 +239,33 @@ final class GameSceneMapTests: XCTestCase {
         let lateral = separatorX * snapshot.laneWidth
         let nearPoint = projection.project(lateral: lateral, distance: distance)
         let farPoint = projection.project(lateral: lateral, distance: distance + markLength)
-        let height = max(farPoint.point.y - nearPoint.point.y, 1)
+        let deltaX = farPoint.point.x - nearPoint.point.x
+        let deltaY = farPoint.point.y - nearPoint.point.y
+        let length = max(hypot(deltaX, deltaY), 1)
 
-        XCTAssertEqual(node.position.x, nearPoint.point.x, accuracy: 0.000_01, file: file, line: line)
+        XCTAssertEqual(
+            node.position.x,
+            (nearPoint.point.x + farPoint.point.x) / 2,
+            accuracy: 0.000_05,
+            file: file,
+            line: line
+        )
         XCTAssertEqual(
             node.position.y,
-            nearPoint.point.y + height / 2,
-            accuracy: 0.000_01,
+            (nearPoint.point.y + farPoint.point.y) / 2,
+            accuracy: 0.000_05,
             file: file,
             line: line
         )
         XCTAssertEqual(node.xScale, max(nearPoint.scale, 0.2), accuracy: 0.000_01, file: file, line: line)
-        XCTAssertEqual(node.yScale, height / 40, accuracy: 0.000_01, file: file, line: line)
+        XCTAssertEqual(node.yScale, length / 40, accuracy: 0.000_01, file: file, line: line)
+        XCTAssertEqual(
+            node.zRotation,
+            -atan2(deltaX, deltaY),
+            accuracy: 0.000_01,
+            file: file,
+            line: line
+        )
         XCTAssertEqual(
             node.alpha,
             CGFloat(0.68 + speedProgress * 0.30),
@@ -260,10 +291,14 @@ final class GameSceneMapTests: XCTestCase {
             return XCTFail("Missing roadside sprite", file: file, line: line)
         }
         let snapshot = scene.currentSnapshot
-        let projection = RoadProjection(
+        let roadProjection = RoadProjection(
             screenSize: scene.size,
             roadHalfWidth: snapshot.roadHalfWidth,
             maximumDistance: max(configuration.spawnDistance + 4, 52)
+        )
+        let projection = TrackPerspectiveProjection(
+            road: roadProjection,
+            travel: snapshot.distance
         )
         let cycleLength = projection.maximumDistance + 10
         let parallax = 0.78 + Double(index % 3) * 0.09
@@ -280,8 +315,8 @@ final class GameSceneMapTests: XCTestCase {
             distance: distance
         )
 
-        XCTAssertEqual(node.position.x, projected.point.x, accuracy: 0.000_01, file: file, line: line)
-        XCTAssertEqual(node.position.y, projected.point.y, accuracy: 0.000_01, file: file, line: line)
+        XCTAssertEqual(node.position.x, projected.point.x, accuracy: 0.000_05, file: file, line: line)
+        XCTAssertEqual(node.position.y, projected.point.y, accuracy: 0.000_05, file: file, line: line)
         XCTAssertEqual(node.xScale, projected.scale, accuracy: 0.000_01, file: file, line: line)
         XCTAssertEqual(node.yScale, projected.scale, accuracy: 0.000_01, file: file, line: line)
         XCTAssertEqual(

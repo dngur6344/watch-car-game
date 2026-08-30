@@ -69,7 +69,10 @@ struct SteeringPacket: Codable, Equatable, Sendable {
 }
 
 enum WatchFeedbackKind: String, Codable, Equatable, Sendable {
+    case countdownTick
+    case go
     case nearMiss
+    case nearMissStrong
     case collision
 }
 

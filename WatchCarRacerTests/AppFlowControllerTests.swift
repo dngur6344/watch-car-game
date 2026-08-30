@@ -41,6 +41,35 @@ final class AppFlowControllerTests: XCTestCase {
         XCTAssertEqual(store.saveCalls, [edited])
     }
 
+    func testSelectionCuesOnlyFollowAcceptedChangedMutations() throws {
+        let saved = VehicleCatalog.defaultSelection
+        let store = RecordingSelectionStore(selection: saved)
+        var cues: [GameAudioCue] = []
+        let flow = try makeFlow(
+            store: store,
+            routeCuePlayer: { cues.append($0) }
+        )
+
+        XCTAssertFalse(flow.selectVehicle(.gt))
+        XCTAssertFalse(flow.selectColor(.voltCyan))
+        flow.enterMaintenance()
+        XCTAssertFalse(flow.selectVehicle(saved.vehicleID))
+        XCTAssertTrue(flow.selectVehicle(.gt))
+        XCTAssertFalse(flow.selectVehicle(.gt))
+        XCTAssertFalse(flow.selectColor(saved.colorID))
+        XCTAssertTrue(flow.selectColor(.voltCyan))
+        XCTAssertFalse(flow.selectColor(.voltCyan))
+        flow.exitMaintenance()
+        XCTAssertFalse(flow.selectVehicle(.angular))
+        XCTAssertFalse(flow.selectColor(.emberGold))
+
+        XCTAssertEqual(cues, [.vehicleSelect, .colorSelect])
+        XCTAssertEqual(
+            flow.draftSelection,
+            VehicleSelection(vehicleID: .gt, colorID: .voltCyan)
+        )
+    }
+
     func testMaintenanceBackRetainsDraftInMemoryWithoutSavingAndReentryRestoresIt() throws {
         let store = RecordingSelectionStore(selection: VehicleCatalog.defaultSelection)
         let flow = try makeFlow(store: store)
@@ -264,9 +293,12 @@ final class AppFlowControllerTests: XCTestCase {
 
     func testFailedAssetPreparationStaysInHubAndSavesZeroTimes() async throws {
         let store = RecordingSelectionStore(selection: VehicleCatalog.defaultSelection)
-        let flow = try makeFlow(store: store, prepareAssets: {
-            throw TestFailure.assetLoad
-        })
+        var cues: [GameAudioCue] = []
+        let flow = try makeFlow(
+            store: store,
+            prepareAssets: { throw TestFailure.assetLoad },
+            routeCuePlayer: { cues.append($0) }
+        )
 
         await flow.prepareAssets()
         flow.drive()
@@ -276,6 +308,7 @@ final class AppFlowControllerTests: XCTestCase {
         XCTAssertFalse(flow.canDrive)
         XCTAssertNil(flow.gameSession)
         XCTAssertEqual(store.saveCalls, [])
+        XCTAssertTrue(cues.isEmpty)
         XCTAssertTrue(flow.errorMessage?.contains("Unable to load garage assets") == true)
         XCTAssertTrue(flow.errorMessage?.contains(TestFailure.assetLoad.localizedDescription) == true)
     }
@@ -285,10 +318,12 @@ final class AppFlowControllerTests: XCTestCase {
         let selected = VehicleSelection(vehicleID: .gt, colorID: .lunarSilver)
         let store = RecordingSelectionStore(selection: saved)
         let assetLibrary = try GameAssetLibrary()
+        var cues: [GameAudioCue] = []
         let flow = AppFlowController(
             selectionStore: store,
             localBestScoreStore: StubLocalBestScoreStore(),
             assetLibrary: assetLibrary,
+            routeCuePlayer: { cues.append($0) },
             prepareAssets: {},
             seedProvider: { 99 },
             gameSessionFactory: { _, _, _, _ in
@@ -300,6 +335,7 @@ final class AppFlowControllerTests: XCTestCase {
         flow.selectColor(selected.colorID)
         flow.exitMaintenance()
         await flow.prepareAssets()
+        cues.removeAll()
 
         flow.drive()
 
@@ -308,8 +344,27 @@ final class AppFlowControllerTests: XCTestCase {
         XCTAssertEqual(flow.draftSelection, selected)
         XCTAssertNil(flow.gameSession)
         XCTAssertEqual(store.saveCalls, [])
+        XCTAssertTrue(cues.isEmpty)
         XCTAssertTrue(flow.errorMessage?.contains("Unable to start the drive") == true)
         XCTAssertTrue(flow.canDrive)
+    }
+
+    func testDriveTransitionCueOccursOnceOnlyAfterSuccessfulDrive() async throws {
+        let store = RecordingSelectionStore(selection: VehicleCatalog.defaultSelection)
+        var cues: [GameAudioCue] = []
+        let flow = try makeFlow(
+            store: store,
+            routeCuePlayer: { cues.append($0) }
+        )
+
+        XCTAssertFalse(flow.drive())
+        XCTAssertTrue(cues.isEmpty)
+
+        await flow.prepareAssets()
+        XCTAssertTrue(flow.drive())
+        XCTAssertFalse(flow.drive())
+
+        XCTAssertEqual(cues, [.driveTransition])
     }
 
     func testReadyDriveIntentStartsOneAdaptiveSessionAndCommitsOnce() async throws {
@@ -478,6 +533,7 @@ final class AppFlowControllerTests: XCTestCase {
             snapshot: crashed,
             events: [.collision(obstacleID: 1, kind: .barrier)]
         )
+        try await Task.sleep(for: .milliseconds(550))
 
         XCTAssertEqual(bestStore.recordCalls, [120])
         XCTAssertTrue(bestStore.writeCalls.isEmpty)
@@ -493,6 +549,7 @@ final class AppFlowControllerTests: XCTestCase {
     private func makeFlow(
         store: RecordingSelectionStore,
         prepareAssets: @escaping AppFlowController.AssetPreparation = {},
+        routeCuePlayer: AppFlowController.RouteCuePlayer? = nil,
         seeds: [UInt64] = [1]
     ) throws -> AppFlowController {
         let assetLibrary = try GameAssetLibrary()
@@ -501,6 +558,7 @@ final class AppFlowControllerTests: XCTestCase {
             selectionStore: store,
             localBestScoreStore: StubLocalBestScoreStore(),
             assetLibrary: assetLibrary,
+            routeCuePlayer: routeCuePlayer,
             prepareAssets: prepareAssets,
             seedProvider: {
                 precondition(!remainingSeeds.isEmpty, "The test did not provide enough seeds.")

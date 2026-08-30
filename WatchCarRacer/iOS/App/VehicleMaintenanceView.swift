@@ -9,11 +9,13 @@ struct VehicleMaintenanceView: View {
 
     let flow: AppFlowController
     let presentationAssetLibrary: PresentationAssetLibrary
+    let sensorySettings: SensorySettingsController
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var presentationStatus: PresentationLoadStatus = .idle
     @State private var presentationReloadRequest = 0
+    @State private var materialSweepTrigger = 0
 
     var body: some View {
         GeometryReader { proxy in
@@ -24,6 +26,8 @@ struct VehicleMaintenanceView: View {
                         appearance: appearance,
                         assetLibrary: presentationAssetLibrary,
                         reloadRequest: presentationReloadRequest,
+                        materialSweepTrigger: materialSweepTrigger,
+                        effectIntensity: sensorySettings.settings.effectIntensity,
                         loadStatus: $presentationStatus
                     )
                 }
@@ -137,7 +141,9 @@ struct VehicleMaintenanceView: View {
             ForEach(Self.vehicleOptions, id: \.id) { vehicle in
                 let isSelected = vehicle.id == flow.draftSelection.vehicleID
                 Button {
-                    flow.selectVehicle(vehicle.id)
+                    if flow.selectVehicle(vehicle.id) {
+                        materialSweepTrigger &+= 1
+                    }
                 } label: {
                     HStack(spacing: 10) {
                         Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
@@ -183,7 +189,11 @@ struct VehicleMaintenanceView: View {
                     MaintenanceColorButton(
                         color: color,
                         isSelected: color.id == flow.draftSelection.colorID,
-                        onSelect: { flow.selectColor(color.id) }
+                        onSelect: {
+                            if flow.selectColor(color.id) {
+                                materialSweepTrigger &+= 1
+                            }
+                        }
                     )
                 }
             }

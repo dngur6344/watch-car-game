@@ -1,0 +1,181 @@
+#usda 1.0
+(
+    defaultPrim = "TrackBarrier"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "TrackBarrier" (
+    kind = "component"
+    customData = {
+        string assetRole = "track-obstacle"
+        string authoringTool = "Scripts/build_production_racing_usd.swift"
+        string license = "project-original"
+        int productionRevision = 2
+    }
+)
+{
+    def Scope "Materials"
+    {
+        def Material "White"
+        {
+            token outputs:surface.connect = </TrackBarrier/Materials/White/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.82000, 0.84000, 0.80000)
+                float inputs:metallic = 0.08000
+                float inputs:roughness = 0.54000
+                token outputs:surface
+            }
+        }
+        def Material "Orange"
+        {
+            token outputs:surface.connect = </TrackBarrier/Materials/Orange/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.96000, 0.24000, 0.02500)
+                float inputs:metallic = 0.10000
+                float inputs:roughness = 0.42000
+                token outputs:surface
+            }
+        }
+        def Material "DarkMetal"
+        {
+            token outputs:surface.connect = </TrackBarrier/Materials/DarkMetal/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.03500, 0.04200, 0.05000)
+                float inputs:metallic = 0.86000
+                float inputs:roughness = 0.31000
+                token outputs:surface
+            }
+        }
+        def Material "Reflector"
+        {
+            token outputs:surface.connect = </TrackBarrier/Materials/Reflector/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (1.00000, 0.52000, 0.08000)
+                float inputs:metallic = 0.02000
+                float inputs:roughness = 0.08000
+                color3f inputs:emissiveColor = (1.00000, 0.22000, 0.02000)
+                token outputs:surface
+            }
+        }
+    }
+
+    def Cube "dark_base" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.08500, 0.00000)
+        float3 xformOp:scale = (0.80000, 0.08500, 0.22000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/DarkMetal>
+    }
+    def Cube "panel_0" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.60000, 0.41000, 0.00000)
+        float xformOp:rotateZ = -3.00000
+        float3 xformOp:scale = (0.15000, 0.25000, 0.14500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/White>
+    }
+    def Cube "reflector_0" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.60000, 0.43000, 0.15400)
+        float3 xformOp:scale = (0.04500, 0.04500, 0.00800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/Reflector>
+    }
+    def Cube "panel_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.30000, 0.41000, 0.00000)
+        float xformOp:rotateZ = 3.00000
+        float3 xformOp:scale = (0.15000, 0.25000, 0.14500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/Orange>
+    }
+    def Cube "reflector_1" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.30000, 0.43000, 0.15400)
+        float3 xformOp:scale = (0.04500, 0.04500, 0.00800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/Reflector>
+    }
+    def Cube "panel_2" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.41000, 0.00000)
+        float xformOp:rotateZ = -3.00000
+        float3 xformOp:scale = (0.15000, 0.25000, 0.14500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/White>
+    }
+    def Cube "reflector_2" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.43000, 0.15400)
+        float3 xformOp:scale = (0.04500, 0.04500, 0.00800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/Reflector>
+    }
+    def Cube "panel_3" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.30000, 0.41000, 0.00000)
+        float xformOp:rotateZ = 3.00000
+        float3 xformOp:scale = (0.15000, 0.25000, 0.14500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/Orange>
+    }
+    def Cube "reflector_3" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.30000, 0.43000, 0.15400)
+        float3 xformOp:scale = (0.04500, 0.04500, 0.00800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/Reflector>
+    }
+    def Cube "panel_4" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.60000, 0.41000, 0.00000)
+        float xformOp:rotateZ = -3.00000
+        float3 xformOp:scale = (0.15000, 0.25000, 0.14500)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/White>
+    }
+    def Cube "reflector_4" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.60000, 0.43000, 0.15400)
+        float3 xformOp:scale = (0.04500, 0.04500, 0.00800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/Reflector>
+    }
+    def Cube "foot_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (-0.58000, 0.18000, 0.00000)
+        float3 xformOp:scale = (0.07000, 0.18000, 0.07000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/DarkMetal>
+    }
+    def Cube "foot_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.58000, 0.18000, 0.00000)
+        float3 xformOp:scale = (0.07000, 0.18000, 0.07000)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrackBarrier/Materials/DarkMetal>
+    }
+
+}

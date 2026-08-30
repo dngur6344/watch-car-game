@@ -1,10 +1,15 @@
+import SpriteKit
 import XCTest
 @testable import WatchCarRacer
 
 @MainActor
 final class GameSessionControllerTests: XCTestCase {
-    func testSnapshotAndCollisionEventBridgeToHUDStateAndResultPresentation() {
-        let controller = GameSessionController(seed: 7)
+    func testSnapshotAndCollisionEventBridgeToHUDStateAndDelayedResultPresentation() async {
+        let collisionSleeper = ManualDurationSleeper()
+        let controller = GameSessionController(
+            seed: 7,
+            collisionSleeper: { try await collisionSleeper.sleep(for: $0) }
+        )
         let running = GameSimulation(seed: 7).snapshot
         let crashed = snapshot(from: running, phase: .crashed, score: 321, speed: 15)
         let collision = GameEvent.collision(obstacleID: 9, kind: .barrier)
@@ -17,7 +22,7 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertEqual(controller.lastEvent, collision)
         XCTAssertEqual(
             controller.presentationPhase,
-            .result(
+            .collision(
                 RunResult(
                     score: 321,
                     previousBest: 0,
@@ -27,6 +32,15 @@ final class GameSessionControllerTests: XCTestCase {
             )
         )
         XCTAssertFalse(controller.scene.isPaused)
+        XCTAssertFalse(controller.acceptsTouchInput)
+
+        await waitUntil { collisionSleeper.pendingCount == 1 }
+        XCTAssertEqual(collisionSleeper.pendingDurations, [0.52])
+        collisionSleeper.resumeNext()
+        await waitUntil {
+            if case .result = controller.presentationPhase { true } else { false }
+        }
+        XCTAssertTrue(controller.scene.isPaused)
     }
 
     func testRetryReusesSessionSeedAndClearsSceneHUDAndTouch() {
@@ -74,6 +88,68 @@ final class GameSessionControllerTests: XCTestCase {
         )
     }
 
+    func testCatchUpEventKeepsFirstSubstepDirectionAndClosenessInsteadOfFinalSnapshot() throws {
+        var configuration = GameSimulation.Configuration()
+        configuration.playerLateralSpeed = 60
+        configuration.initialSpeed = 12
+        configuration.maximumSpeed = 12
+        configuration.trafficCarSpeed = 6
+        configuration.firstSpawnDelay = 0.01
+        configuration.initialSpawnInterval = 100
+        configuration.minimumSpawnInterval = 100
+        configuration.spawnDistance = -1.95
+        let scene = try makeScene(seed: 1, configuration: configuration)
+        var steeringReadCount = 0
+        scene.steeringProvider = { _ in
+            defer { steeringReadCount += 1 }
+            switch steeringReadCount {
+            case 0:
+                return 0.8
+            case 1:
+                return 0
+            default:
+                return 1
+            }
+        }
+        var capturedPresentations: [GameEventPresentation] = []
+        scene.frameHandler = { _, presentations in
+            if !presentations.isEmpty {
+                capturedPresentations = presentations
+            }
+        }
+
+        scene.update(0)
+        scene.update(GameScene.fixedStep * 1.1)
+        scene.update(GameScene.fixedStep * 6.1)
+
+        let presentation = try XCTUnwrap(capturedPresentations.first)
+        let context = try XCTUnwrap(presentation.spatialContext)
+        XCTAssertEqual(capturedPresentations.count, 1)
+        XCTAssertEqual(
+            presentation.event,
+            .nearMiss(obstacleID: 0, kind: .trafficCar, bonus: 100)
+        )
+        XCTAssertEqual(steeringReadCount, 6)
+        XCTAssertEqual(presentation.snapshot.playerX, 0.8, accuracy: 0.000_001)
+        XCTAssertEqual(context.side, .right)
+        XCTAssertEqual(context.closeness, 4.0 / 7.0, accuracy: 0.000_001)
+        XCTAssertEqual(presentation.snapshot.score, 100)
+
+        XCTAssertEqual(scene.currentSnapshot.playerX, 2.55, accuracy: 0.000_001)
+        XCTAssertEqual(scene.currentSnapshot.score, 101)
+        let finalSnapshotContext = try XCTUnwrap(
+            GameEventPresentation(
+                event: presentation.event,
+                snapshot: scene.currentSnapshot,
+                configuration: configuration
+            ).spatialContext
+        )
+        XCTAssertEqual(finalSnapshotContext.side, .left)
+        XCTAssertEqual(finalSnapshotContext.closeness, 1, accuracy: 0.000_001)
+        XCTAssertNotEqual(context.side, finalSnapshotContext.side)
+        XCTAssertNotEqual(context.closeness, finalSnapshotContext.closeness)
+    }
+
 #if DEBUG
     func testSceneReportsRollingFrameRateWithoutChangingSimulationTiming() throws {
         var configuration = GameSimulation.Configuration()
@@ -105,6 +181,8 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertEqual(controller.frameRateSamples.count, controller.frameRateSampleCount)
         XCTAssertGreaterThanOrEqual(controller.frameRateSamples.count, 2)
         XCTAssertTrue(controller.frameRateSamples.allSatisfy { abs($0 - 60) < 0.000_001 })
+        XCTAssertTrue(controller.frameRateSamplePhases.allSatisfy { $0 == .racing })
+        XCTAssertEqual(controller.frameRateSamplePhases.count, controller.frameRateSamples.count)
         XCTAssertEqual(controller.maximumConsecutiveFrameRateSamplesBelow50, 0)
         XCTAssertNotNil(controller.firstObstacleFrameRateSample)
     }
@@ -345,7 +423,11 @@ final class GameSessionControllerTests: XCTestCase {
     }
 
     func testResultLifecycleNeverRestartsRacingAndPausesAfterReactivation() async {
-        let controller = GameSessionController(seed: 6, countdownSleeper: {})
+        let controller = GameSessionController(
+            seed: 6,
+            countdownSleeper: {},
+            collisionSleeper: { _ in }
+        )
         await waitUntil { controller.presentationPhase == .racing }
         let crashed = snapshot(
             from: controller.scene.currentSnapshot,
@@ -357,9 +439,12 @@ final class GameSessionControllerTests: XCTestCase {
             snapshot: crashed,
             events: [.collision(obstacleID: 1, kind: .barrier)]
         )
+        await waitUntil {
+            if case .result = controller.presentationPhase { true } else { false }
+        }
         let resultPhase = controller.presentationPhase
 
-        XCTAssertFalse(controller.scene.isPaused, "Initial result keeps feedback actions live")
+        XCTAssertTrue(controller.scene.isPaused)
         controller.handleLifecycle(.inactive)
         XCTAssertTrue(controller.scene.isPaused)
         controller.handleLifecycle(.background)
@@ -408,6 +493,7 @@ final class GameSessionControllerTests: XCTestCase {
         let controller = GameSessionController(
             seed: 12,
             countdownSleeper: {},
+            collisionSleeper: { _ in },
             resultRecorder: { score in
                 recordedScores.append(score)
                 return RunResult(
@@ -429,6 +515,9 @@ final class GameSessionControllerTests: XCTestCase {
             snapshot: firstCrash,
             events: [.collision(obstacleID: 1, kind: .barrier)]
         )
+        await waitUntil {
+            if case .result = controller.presentationPhase { true } else { false }
+        }
         let firstResult = try? XCTUnwrap(result(from: controller.presentationPhase))
 
         controller.receive(
@@ -455,11 +544,425 @@ final class GameSessionControllerTests: XCTestCase {
             snapshot: secondCrash,
             events: [.collision(obstacleID: 1, kind: .barrier)]
         )
+        await waitUntil {
+            if case .result = controller.presentationPhase { true } else { false }
+        }
 
         XCTAssertEqual(recordedScores, [250, 100])
         XCTAssertEqual(firstResult?.score, 250)
         XCTAssertEqual(result(from: controller.presentationPhase)?.localBest, 200)
         XCTAssertEqual(result(from: controller.presentationPhase)?.isNewBest, false)
+    }
+
+    func testStartRitualEmitsExactCueContractAcrossThreeSecondsAndRemovesTokens() async {
+        let countdownSleeper = ManualCountdownSleeper()
+        let visibilitySleeper = ManualDurationSleeper()
+        let clock = FakeMonotonicClock(now: 40)
+        let phone = StartCueRecordingPhoneFeedbackPlayer()
+        let watch = StartCueRecordingWatchFeedbackSender()
+        let ids = StartCueIDSequence()
+        let controller = GameSessionController(
+            seed: 301,
+            feedbackPlayer: phone,
+            watchFeedbackSender: watch,
+            currentTime: { clock.now },
+            makeStartCueEventID: { ids.next() },
+            countdownSleeper: { try await countdownSleeper.sleep() },
+            presentationSleeper: { try await visibilitySleeper.sleep(for: $0) }
+        )
+        let initialSnapshot = controller.scene.currentSnapshot
+
+        await assertVisibleCue(
+            .three,
+            controller: controller,
+            sleeper: visibilitySleeper,
+            duration: 0.18
+        )
+        await waitUntil { countdownSleeper.pendingCount == 1 }
+        clock.now += 1
+        countdownSleeper.resumeNext()
+        await waitUntil { controller.presentationPhase == .countdown(2) }
+        await assertVisibleCue(
+            .two,
+            controller: controller,
+            sleeper: visibilitySleeper,
+            duration: 0.18
+        )
+        await waitUntil { countdownSleeper.pendingCount == 1 }
+        clock.now += 1
+        countdownSleeper.resumeNext()
+        await waitUntil { controller.presentationPhase == .countdown(1) }
+        await assertVisibleCue(
+            .one,
+            controller: controller,
+            sleeper: visibilitySleeper,
+            duration: 0.18
+        )
+        await waitUntil { countdownSleeper.pendingCount == 1 }
+        clock.now += 1
+        countdownSleeper.resumeNext()
+        await waitUntil { controller.presentationPhase == .racing }
+
+        XCTAssertFalse(controller.scene.isPaused)
+        XCTAssertTrue(controller.acceptsTouchInput)
+        XCTAssertEqual(controller.scene.currentSnapshot, initialSnapshot)
+        await assertVisibleCue(
+            .go,
+            controller: controller,
+            sleeper: visibilitySleeper,
+            duration: 0.26
+        )
+
+        XCTAssertEqual(phone.startCues.map(\.kind), [.three, .two, .one, .go])
+        XCTAssertEqual(phone.startCues.map(\.audioRate), [0.88, 1, 1.12, 1])
+        XCTAssertEqual(
+            phone.startCues.map(\.visualTreatment),
+            [.ring(.cyan), .ring(.mint), .ring(.orange), .fullScreenSweep(.mintWhite)]
+        )
+        XCTAssertEqual(
+            phone.startCues.map(\.phoneImpact),
+            [
+                PhoneImpactCommand(style: .light, intensity: 0.35),
+                PhoneImpactCommand(style: .rigid, intensity: 0.55),
+                PhoneImpactCommand(style: .rigid, intensity: 0.75),
+                PhoneImpactCommand(style: .heavy, intensity: 0.90),
+            ]
+        )
+        XCTAssertEqual(phone.startCues.map(\.emittedAt), [40, 41, 42, 43])
+        XCTAssertEqual(
+            zip(phone.startCues.map(\.emittedAt), phone.startCues.dropFirst().map(\.emittedAt))
+                .map { $1 - $0 },
+            [1, 1, 1]
+        )
+        XCTAssertEqual(phone.startCues.last!.emittedAt - phone.startCues.first!.emittedAt, 3)
+        XCTAssertEqual(Set(phone.startCues.map(\.id)).count, 4)
+        XCTAssertEqual(watch.packets.map(\.eventID), phone.startCues.map(\.id))
+        XCTAssertEqual(watch.packets.map(\.kind), [.countdownTick, .countdownTick, .countdownTick, .go])
+        XCTAssertEqual(phone.startCues[0].opacity(for: .balanced), 1)
+        XCTAssertEqual(phone.startCues[0].opacity(for: .reduced), 0.55)
+    }
+
+    func testInitialRetryAndForegroundReentryEachEmitAFreshCompleteRitual() async {
+        let phone = StartCueRecordingPhoneFeedbackPlayer()
+        let controller = GameSessionController(
+            seed: 305,
+            feedbackPlayer: phone,
+            countdownSleeper: {},
+            presentationSleeper: { _ in }
+        )
+
+        await waitUntil { phone.startCues.count == 4 }
+        XCTAssertEqual(phone.startCues.map(\.kind), [.three, .two, .one, .go])
+
+        controller.retry()
+        await waitUntil { phone.startCues.count == 8 }
+        XCTAssertEqual(
+            Array(phone.startCues[4..<8]).map(\.kind),
+            [.three, .two, .one, .go]
+        )
+
+        controller.handleLifecycle(.background)
+        controller.handleLifecycle(.active)
+        await waitUntil { phone.startCues.count == 12 }
+        XCTAssertEqual(
+            Array(phone.startCues[8..<12]).map(\.kind),
+            [.three, .two, .one, .go]
+        )
+    }
+
+    func testStaleCueRemovalCannotRemoveNewerCue() async {
+        let countdownSleeper = ManualCountdownSleeper()
+        let visibilitySleeper = ManualDurationSleeper()
+        let controller = GameSessionController(
+            seed: 302,
+            countdownSleeper: { try await countdownSleeper.sleep() },
+            presentationSleeper: { try await visibilitySleeper.sleep(for: $0) }
+        )
+
+        await waitUntil { controller.startCuePresentation?.kind == .three }
+        let firstID = controller.startCuePresentation?.id
+        controller.startCueDidBecomeVisible(id: firstID!)
+        await waitUntil { visibilitySleeper.pendingCount == 1 }
+        await waitUntil { countdownSleeper.pendingCount == 1 }
+        countdownSleeper.resumeNext()
+        await waitUntil { controller.presentationPhase == .countdown(2) }
+        let secondID = controller.startCuePresentation?.id
+
+        controller.startCueDidBecomeVisible(id: firstID!)
+        await Task.yield()
+        XCTAssertEqual(visibilitySleeper.pendingCount, 1)
+        XCTAssertEqual(controller.startCuePresentation?.id, secondID)
+
+        controller.startCueDidBecomeVisible(id: secondID!)
+        await waitUntil { visibilitySleeper.pendingCount == 2 }
+
+        visibilitySleeper.resumeNext()
+        await Task.yield()
+        XCTAssertNotEqual(firstID, secondID)
+        XCTAssertEqual(controller.startCuePresentation?.id, secondID)
+
+        visibilitySleeper.resumeNext()
+        await waitUntil { controller.startCuePresentation == nil }
+    }
+
+    func testStartCueVisibilityTimerWaitsForViewMountAndRemovesAtExactContract() async {
+        let countdownSleeper = ManualCountdownSleeper()
+        let visibilitySleeper = ManualDurationSleeper()
+        let controller = GameSessionController(
+            seed: 306,
+            countdownSleeper: { try await countdownSleeper.sleep() },
+            presentationSleeper: { try await visibilitySleeper.sleep(for: $0) }
+        )
+
+        await waitUntil { controller.startCuePresentation?.kind == .three }
+        let cue = controller.startCuePresentation!
+        await Task.yield()
+        XCTAssertEqual(visibilitySleeper.pendingCount, 0)
+        XCTAssertFalse(controller.hasActiveStartCueTask)
+
+        controller.startCueDidBecomeVisible(id: cue.id)
+        await waitUntil { visibilitySleeper.pendingCount == 1 }
+        XCTAssertEqual(visibilitySleeper.pendingDurations, [0.18])
+        controller.startCueDidBecomeVisible(id: cue.id)
+        await Task.yield()
+        XCTAssertEqual(visibilitySleeper.pendingCount, 1)
+
+        visibilitySleeper.resumeNext()
+        await waitUntil { controller.startCuePresentation == nil }
+        XCTAssertFalse(controller.hasActiveStartCueTask)
+    }
+
+    func testRetryBackgroundAndStopCancelAcknowledgedCueRemoval() async {
+        let countdownSleeper = ManualCountdownSleeper()
+        let visibilitySleeper = ManualDurationSleeper()
+        let controller = GameSessionController(
+            seed: 307,
+            countdownSleeper: { try await countdownSleeper.sleep() },
+            presentationSleeper: { try await visibilitySleeper.sleep(for: $0) }
+        )
+
+        await waitUntil { controller.startCuePresentation?.kind == .three }
+        controller.startCueDidBecomeVisible(id: controller.startCuePresentation!.id)
+        await waitUntil { visibilitySleeper.pendingCount == 1 }
+        controller.retry()
+        let retryCueID = controller.startCuePresentation!.id
+        visibilitySleeper.resumeNext()
+        await Task.yield()
+        XCTAssertEqual(controller.startCuePresentation?.id, retryCueID)
+        XCTAssertFalse(controller.hasActiveStartCueTask)
+
+        controller.startCueDidBecomeVisible(id: retryCueID)
+        await waitUntil { visibilitySleeper.pendingCount == 1 }
+        controller.handleLifecycle(.background)
+        XCTAssertNil(controller.startCuePresentation)
+        XCTAssertFalse(controller.hasActiveStartCueTask)
+        visibilitySleeper.resumeNext()
+        await Task.yield()
+        XCTAssertNil(controller.startCuePresentation)
+
+        controller.handleLifecycle(.active)
+        await waitUntil { controller.startCuePresentation?.kind == .three }
+        controller.startCueDidBecomeVisible(id: controller.startCuePresentation!.id)
+        await waitUntil { visibilitySleeper.pendingCount == 1 }
+        controller.stop()
+        XCTAssertNil(controller.startCuePresentation)
+        XCTAssertFalse(controller.hasActiveStartCueTask)
+        visibilitySleeper.resumeNext()
+        await Task.yield()
+        XCTAssertNil(controller.startCuePresentation)
+    }
+
+    func testCollisionRecordsAtZeroThenPromotesAt520MillisecondsAndCleansScene() async throws {
+        let collisionSleeper = ManualDurationSleeper()
+        var clock: TimeInterval = 0
+        var recordedResults: [RunResult] = []
+        let controller = GameSessionController(
+            seed: 303,
+            currentTime: { clock },
+            countdownSleeper: {},
+            collisionSleeper: { try await collisionSleeper.sleep(for: $0) },
+            resultRecorder: { score in
+                let result = RunResult(
+                    score: score,
+                    previousBest: 10,
+                    localBest: score,
+                    isNewBest: true
+                )
+                recordedResults.append(result)
+                return result
+            }
+        )
+        controller.scene.didMove(
+            to: SKView(frame: CGRect(origin: .zero, size: controller.scene.size))
+        )
+        await waitUntil { controller.presentationPhase == .racing }
+        let presentation = collisionPresentation(
+            from: controller.scene.currentSnapshot,
+            obstacleID: 55,
+            sideX: -0.4,
+            score: 432
+        )
+
+        controller.receive(
+            snapshot: presentation.snapshot,
+            presentationEvents: [presentation]
+        )
+        let recorded = try XCTUnwrap(recordedResults.first)
+
+        XCTAssertEqual(recordedResults, [recorded])
+        XCTAssertEqual(controller.presentationPhase, .collision(recorded))
+        XCTAssertFalse(controller.acceptsTouchInput)
+        XCTAssertFalse(controller.scene.isPaused)
+        XCTAssertTrue(controller.scene.isCollisionPresentationActive)
+        XCTAssertEqual(controller.scene.presentationDiagnostics.collisionImpactSide, .left)
+        XCTAssertEqual(controller.scene.presentationDiagnostics.activeDebrisCount, 0)
+        XCTAssertLessThanOrEqual(
+            controller.scene.presentationDiagnostics.debrisNodeCount,
+            24
+        )
+
+        controller.receive(
+            snapshot: presentation.snapshot,
+            presentationEvents: [presentation]
+        )
+        XCTAssertEqual(recordedResults, [recorded])
+        XCTAssertEqual(controller.presentationPhase, .collision(recorded))
+
+        await waitUntil { collisionSleeper.pendingCount == 1 }
+        XCTAssertEqual(collisionSleeper.pendingDurations, [0.52])
+        clock = 0.479
+        XCTAssertEqual(controller.presentationPhase, .collision(recorded))
+        XCTAssertFalse(controller.scene.isPaused)
+
+        clock = 0.520
+        collisionSleeper.resumeNext()
+        await waitUntil { controller.presentationPhase == .result(recorded) }
+        XCTAssertEqual(clock, 0.520)
+        XCTAssertTrue(controller.scene.isPaused)
+        XCTAssertFalse(controller.scene.isCollisionPresentationActive)
+        XCTAssertEqual(controller.scene.presentationDiagnostics.activeDebrisCount, 0)
+        XCTAssertEqual(controller.scene.presentationDiagnostics.nodesWithActions, 0)
+    }
+
+    func testCollisionLifecyclePromotionAndRetryCancelStaleCompletion() async {
+        let collisionSleeper = ManualDurationSleeper()
+        let controller = GameSessionController(
+            seed: 304,
+            countdownSleeper: {},
+            collisionSleeper: { try await collisionSleeper.sleep(for: $0) }
+        )
+        await waitUntil { controller.presentationPhase == .racing }
+        let crashed = snapshot(
+            from: controller.scene.currentSnapshot,
+            phase: .crashed,
+            score: 77,
+            speed: 12
+        )
+        controller.receive(
+            snapshot: crashed,
+            events: [.collision(obstacleID: 1, kind: .barrier)]
+        )
+        await waitUntil { collisionSleeper.pendingCount == 1 }
+        guard case let .collision(result) = controller.presentationPhase else {
+            return XCTFail("Expected collision phase")
+        }
+
+        controller.handleLifecycle(.inactive)
+        XCTAssertEqual(controller.presentationPhase, .result(result))
+        XCTAssertTrue(controller.scene.isPaused)
+        XCTAssertFalse(controller.hasActiveCollisionTask)
+        collisionSleeper.resumeNext()
+        await Task.yield()
+        controller.handleLifecycle(.active)
+        XCTAssertEqual(controller.presentationPhase, .result(result))
+        XCTAssertFalse(controller.hasActiveCountdownTask)
+
+        controller.retry()
+        await waitUntil { controller.presentationPhase == .racing }
+        let secondCrash = snapshot(
+            from: controller.scene.currentSnapshot,
+            phase: .crashed,
+            score: 88,
+            speed: 12
+        )
+        controller.receive(
+            snapshot: secondCrash,
+            events: [.collision(obstacleID: 1, kind: .barrier)]
+        )
+        await waitUntil { collisionSleeper.pendingCount == 1 }
+        controller.retry()
+        controller.handleLifecycle(.inactive)
+        let retryPhase = controller.presentationPhase
+        collisionSleeper.resumeNext()
+        await Task.yield()
+        XCTAssertEqual(controller.presentationPhase, retryPhase)
+        XCTAssertNotEqual(controller.presentationPhase, .result(result))
+        XCTAssertTrue(controller.scene.isPaused)
+    }
+
+    private func assertVisibleCue(
+        _ kind: StartCueKind,
+        controller: GameSessionController,
+        sleeper: ManualDurationSleeper,
+        duration: TimeInterval
+    ) async {
+        await waitUntil { controller.startCuePresentation?.kind == kind }
+        XCTAssertEqual(controller.startCuePresentation?.visibleDuration, duration)
+        guard let cueID = controller.startCuePresentation?.id else {
+            XCTFail("Expected a visible cue")
+            return
+        }
+        XCTAssertEqual(sleeper.pendingCount, 0)
+        controller.startCueDidBecomeVisible(id: cueID)
+        await waitUntil { sleeper.pendingCount == 1 }
+        XCTAssertEqual(sleeper.pendingDurations, [duration])
+        sleeper.resumeNext()
+        await waitUntil { controller.startCuePresentation == nil }
+        await waitUntil { sleeper.pendingCount == 0 }
+        if kind != .go {
+            await waitUntil { controller.hasActiveCountdownTask }
+        }
+    }
+
+    private func collisionPresentation(
+        from base: GameSnapshot,
+        obstacleID: UInt64,
+        sideX: Double,
+        score: Int
+    ) -> GameEventPresentation {
+        var configuration = GameSimulation.Configuration()
+        configuration.playerWidth = base.playerWidth
+        let obstacle = ObstacleSnapshot(
+            id: obstacleID,
+            rowID: obstacleID,
+            kind: .barrier,
+            laneIndex: 1,
+            x: sideX,
+            distance: 0,
+            width: 1.7,
+            length: 1,
+            closingSpeed: 12,
+            didAwardNearMiss: false
+        )
+        let crashed = GameSnapshot(
+            phase: .crashed,
+            playerX: 0,
+            playerWidth: base.playerWidth,
+            playerLength: base.playerLength,
+            roadHalfWidth: base.roadHalfWidth,
+            laneWidth: base.laneWidth,
+            obstacles: [obstacle],
+            score: score,
+            speed: base.speed,
+            elapsedTime: base.elapsedTime,
+            distance: base.distance,
+            spawnInterval: base.spawnInterval
+        )
+        return GameEventPresentation(
+            event: .collision(obstacleID: obstacleID, kind: .barrier),
+            snapshot: crashed,
+            configuration: configuration
+        )
     }
 
     private func completeCountdown(
@@ -492,8 +995,12 @@ final class GameSessionControllerTests: XCTestCase {
     }
 
     private func result(from phase: RunPresentationPhase) -> RunResult? {
-        guard case let .result(result) = phase else { return nil }
-        return result
+        switch phase {
+        case let .collision(result), let .result(result):
+            return result
+        case .countdown, .racing:
+            return nil
+        }
     }
 
     private func snapshot(
@@ -593,5 +1100,72 @@ private final class ManualCountdownSleeper {
     func resumeNext() {
         precondition(!continuations.isEmpty, "No countdown sleep is pending")
         continuations.removeFirst().resume()
+    }
+}
+
+@MainActor
+private final class ManualDurationSleeper {
+    private struct PendingSleep {
+        let duration: TimeInterval
+        let continuation: CheckedContinuation<Void, Never>
+    }
+
+    private var pending: [PendingSleep] = []
+
+    var pendingCount: Int {
+        pending.count
+    }
+
+    var pendingDurations: [TimeInterval] {
+        pending.map(\.duration)
+    }
+
+    func sleep(for duration: TimeInterval) async throws {
+        await withCheckedContinuation { continuation in
+            pending.append(PendingSleep(duration: duration, continuation: continuation))
+        }
+    }
+
+    func resumeNext() {
+        precondition(!pending.isEmpty, "No duration sleep is pending")
+        pending.removeFirst().continuation.resume()
+    }
+}
+
+@MainActor
+private final class StartCueRecordingPhoneFeedbackPlayer: PhoneFeedbackPlaying {
+    private(set) var feedback: [GameFeedback] = []
+    private(set) var startCues: [StartCuePresentation] = []
+
+    func play(_ feedback: GameFeedback) {
+        self.feedback.append(feedback)
+    }
+
+    func playStartCue(_ cue: StartCuePresentation) {
+        startCues.append(cue)
+    }
+}
+
+@MainActor
+private final class StartCueRecordingWatchFeedbackSender: WatchFeedbackSending {
+    private(set) var packets: [WatchFeedbackPacket] = []
+
+    func sendFeedback(_ packet: WatchFeedbackPacket) throws {
+        packets.append(packet)
+    }
+}
+
+@MainActor
+private final class StartCueIDSequence {
+    private var value: UInt64 = 0
+
+    func next() -> UUID {
+        value += 1
+        return UUID(
+            uuidString: String(
+                format: "70000000-0000-0000-0000-%012llx",
+                value
+            )
+        )!
     }
 }

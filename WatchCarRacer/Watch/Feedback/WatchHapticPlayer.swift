@@ -9,11 +9,21 @@ protocol WatchHapticPlaying: AnyObject {
 @MainActor
 final class WatchHapticPlayer: WatchHapticPlaying {
     func play(_ kind: WatchFeedbackKind) {
+        WKInterfaceDevice.current().play(Self.hapticType(for: kind))
+    }
+
+    static func hapticType(for kind: WatchFeedbackKind) -> WKHapticType {
         switch kind {
+        case .countdownTick:
+            .click
+        case .go:
+            .start
         case .nearMiss:
-            WKInterfaceDevice.current().play(.click)
+            .click
+        case .nearMissStrong:
+            .directionUp
         case .collision:
-            WKInterfaceDevice.current().play(.failure)
+            .failure
         }
     }
 }

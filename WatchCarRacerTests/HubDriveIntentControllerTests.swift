@@ -17,6 +17,7 @@ final class HubDriveIntentControllerTests: XCTestCase {
         XCTAssertTrue(controller.hasStartedDrive)
         XCTAssertFalse(controller.hasPendingDriveIntent)
         XCTAssertFalse(controller.isReadinessSheetPresented)
+        XCTAssertEqual(controller.driveTransitionTrigger, 1)
     }
 
     func testNotReadyRequestOnlyPresentsPendingSheet() {
@@ -33,6 +34,7 @@ final class HubDriveIntentControllerTests: XCTestCase {
         XCTAssertTrue(controller.hasPendingDriveIntent)
         XCTAssertTrue(controller.isReadinessSheetPresented)
         XCTAssertFalse(controller.hasStartedDrive)
+        XCTAssertEqual(controller.driveTransitionTrigger, 0)
     }
 
     func testCancelAndInteractiveDismissShareIdempotentCancellationContract() {
@@ -49,6 +51,7 @@ final class HubDriveIntentControllerTests: XCTestCase {
         XCTAssertTrue(routes.isEmpty)
         XCTAssertFalse(controller.hasPendingDriveIntent)
         XCTAssertFalse(controller.isReadinessSheetPresented)
+        XCTAssertEqual(controller.driveTransitionTrigger, 0)
 
         controller.requestDrive(readiness: .needsCalibration)
         controller.readinessSheetDidDismiss()
@@ -57,6 +60,7 @@ final class HubDriveIntentControllerTests: XCTestCase {
         XCTAssertTrue(routes.isEmpty)
         XCTAssertFalse(controller.hasPendingDriveIntent)
         XCTAssertFalse(controller.isReadinessSheetPresented)
+        XCTAssertEqual(controller.driveTransitionTrigger, 0)
     }
 
     func testContinueWithTouchConsumesPendingIntentExactlyOnce() {
@@ -76,6 +80,7 @@ final class HubDriveIntentControllerTests: XCTestCase {
         XCTAssertTrue(controller.hasStartedDrive)
         XCTAssertFalse(controller.hasPendingDriveIntent)
         XCTAssertFalse(controller.isReadinessSheetPresented)
+        XCTAssertEqual(controller.driveTransitionTrigger, 1)
     }
 
     func testFailedStartCanBeRetriedWithoutDuplicatingAnAcceptedStart() {
@@ -92,6 +97,23 @@ final class HubDriveIntentControllerTests: XCTestCase {
 
         XCTAssertEqual(routes, [.adaptiveWatchPreferred, .adaptiveWatchPreferred])
         XCTAssertTrue(controller.hasStartedDrive)
+        XCTAssertEqual(controller.driveTransitionTrigger, 1)
+    }
+
+    func testPresentationUnavailableRejectsDriveWithoutTransitionFeedback() {
+        var routes: [SessionControlRoute] = []
+        let controller = HubDriveIntentController { route in
+            routes.append(route)
+            return true
+        }
+
+        controller.requestDrive(readiness: .ready, presentationIsReady: false)
+
+        XCTAssertTrue(routes.isEmpty)
+        XCTAssertFalse(controller.hasStartedDrive)
+        XCTAssertFalse(controller.hasPendingDriveIntent)
+        XCTAssertFalse(controller.isReadinessSheetPresented)
+        XCTAssertEqual(controller.driveTransitionTrigger, 0)
     }
 
     func testMaintenanceDataAndPendingAccessibilitySeamsAreExact() {

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: $0 <presentation|fps|memory> <iOS simulator name> <OS version> [timeout seconds]" >&2
+    echo "Usage: $0 <presentation|fps|memory|sensory> <iOS simulator name> <OS version> [timeout seconds]" >&2
 }
 
 if [[ $# -lt 3 || $# -gt 4 ]]; then
@@ -14,22 +14,33 @@ fi
 MODE="$1"
 DEVICE_NAME="$2"
 OS_VERSION="$3"
+ACCEPTANCE_LABEL="SG6 $MODE"
 
 case "$MODE" in
     presentation)
         SUMMARY_PREFIX="SG6_PRESENTATION_SUMMARY"
+        LAUNCH_ARGUMENT="--sg6-presentation"
         DEFAULT_TIMEOUT=60
         START_DELAY=0
         ;;
     fps)
         SUMMARY_PREFIX="SG6_FPS_SUMMARY"
+        LAUNCH_ARGUMENT="--sg6-fps"
         DEFAULT_TIMEOUT=540
         START_DELAY=1
         ;;
     memory)
         SUMMARY_PREFIX="SG6_MEMORY_SUMMARY"
+        LAUNCH_ARGUMENT="--sg6-memory"
         DEFAULT_TIMEOUT=900
         START_DELAY=8
+        ;;
+    sensory)
+        SUMMARY_PREFIX="SG8_SENSORY_SUMMARY"
+        LAUNCH_ARGUMENT="--sg8-sensory"
+        ACCEPTANCE_LABEL="SG8 sensory"
+        DEFAULT_TIMEOUT=120
+        START_DELAY=1
         ;;
     *)
         usage
@@ -55,6 +66,39 @@ DERIVED_DATA="${SG6_DERIVED_DATA_PATH:-${TMPDIR:-/tmp}/watch-car-racer-sg6-deriv
 UNIFIED_LOG="$EVIDENCE_DIR/unified.log"
 TRACE_PID=""
 LOG_STREAM_PID=""
+LAUNCH_ARGUMENTS=(
+    "$LAUNCH_ARGUMENT"
+    --sg6-start-delay
+    "$START_DELAY"
+)
+
+if [[ "$MODE" == "sensory" ]]; then
+    if [[ -n "${SG8_EFFECT_INTENSITY:-}" ]]; then
+        case "$SG8_EFFECT_INTENSITY" in
+            balanced|reduced)
+                LAUNCH_ARGUMENTS+=(
+                    --sg8-effect-intensity "$SG8_EFFECT_INTENSITY"
+                )
+                ;;
+            *)
+                echo "SG8_EFFECT_INTENSITY must be balanced or reduced." >&2
+                exit 64
+                ;;
+        esac
+    fi
+    for expectation in SG8_EXPECT_REDUCE_MOTION SG8_EXPECT_REDUCE_TRANSPARENCY; do
+        value="${!expectation:-}"
+        if [[ -z "$value" ]]; then
+            continue
+        fi
+        if [[ "$value" != "true" && "$value" != "false" ]]; then
+            echo "$expectation must be true or false." >&2
+            exit 64
+        fi
+        argument="--$(printf '%s' "$expectation" | tr '[:upper:]_' '[:lower:]-')"
+        LAUNCH_ARGUMENTS+=("$argument" "$value")
+    done
+fi
 
 mkdir -p "$EVIDENCE_DIR"
 mkdir -p "$DERIVED_DATA"
@@ -124,6 +168,11 @@ SIMULATOR_LOG_DIRECTORY="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATO
     echo "derivedData=$DERIVED_DATA"
     echo "simulatorLogDirectory=$SIMULATOR_LOG_DIRECTORY"
     echo "startedUTC=$TIMESTAMP"
+    if [[ "$MODE" == "sensory" ]]; then
+        echo "effectIntensity=${SG8_EFFECT_INTENSITY:-stored}"
+        echo "expectedReduceMotion=${SG8_EXPECT_REDUCE_MOTION:-unspecified}"
+        echo "expectedReduceTransparency=${SG8_EXPECT_REDUCE_TRANSPARENCY:-unspecified}"
+    fi
 } > "$EVIDENCE_DIR/run-metadata.txt"
 
 set -o pipefail
@@ -167,9 +216,7 @@ LAUNCH_OUTPUT="$(xcrun simctl launch \
     --terminate-running-process \
     "$SIMULATOR_UDID" \
     "$BUNDLE_ID" \
-    "--sg6-$MODE" \
-    --sg6-start-delay \
-    "$START_DELAY")"
+    "${LAUNCH_ARGUMENTS[@]}")"
 printf '%s\n' "$LAUNCH_OUTPUT" | tee "$EVIDENCE_DIR/launch.log"
 APP_PID="${LAUNCH_OUTPUT##*: }"
 if [[ ! "$APP_PID" =~ ^[0-9]+$ ]]; then
@@ -289,11 +336,11 @@ if (( SUMMARY_COUNT != 1 )); then
 fi
 
 if ! grep -F -q "$SUMMARY_PREFIX pass=true" "$EVIDENCE_DIR/summary.log"; then
-    echo "SG6 $MODE acceptance reported pass=false." >&2
+    echo "$ACCEPTANCE_LABEL acceptance reported pass=false." >&2
     cat "$EVIDENCE_DIR/summary.log" >&2
     echo "Evidence: $EVIDENCE_DIR" >&2
     exit 1
 fi
 
 cat "$EVIDENCE_DIR/summary.log"
-echo "SG6 $MODE acceptance evidence: $EVIDENCE_DIR"
+echo "$ACCEPTANCE_LABEL acceptance evidence: $EVIDENCE_DIR"

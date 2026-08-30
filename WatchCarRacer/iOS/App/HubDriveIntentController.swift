@@ -8,6 +8,7 @@ final class HubDriveIntentController {
     private(set) var isReadinessSheetPresented = false
     private(set) var hasPendingDriveIntent = false
     private(set) var hasStartedDrive = false
+    private(set) var driveTransitionTrigger = 0
 
     @ObservationIgnored private let startDrive: DriveStarter
 
@@ -24,11 +25,14 @@ final class HubDriveIntentController {
         hasStartedDrive = false
     }
 
-    func requestDrive(readiness: WatchReadinessStatus) {
-        guard canRequestDrive else { return }
+    func requestDrive(
+        readiness: WatchReadinessStatus,
+        presentationIsReady: Bool = true
+    ) {
+        guard canRequestDrive, presentationIsReady else { return }
 
         if readiness.isReady {
-            hasStartedDrive = startDrive(.adaptiveWatchPreferred)
+            completeDrive(using: .adaptiveWatchPreferred)
         } else {
             hasPendingDriveIntent = true
             isReadinessSheetPresented = true
@@ -49,6 +53,13 @@ final class HubDriveIntentController {
 
         hasPendingDriveIntent = false
         isReadinessSheetPresented = false
-        hasStartedDrive = startDrive(.touchOnly)
+        completeDrive(using: .touchOnly)
+    }
+
+    private func completeDrive(using route: SessionControlRoute) {
+        hasStartedDrive = startDrive(route)
+        if hasStartedDrive {
+            driveTransitionTrigger &+= 1
+        }
     }
 }

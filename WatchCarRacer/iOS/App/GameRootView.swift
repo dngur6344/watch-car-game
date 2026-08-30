@@ -1,4 +1,3 @@
-import SpriteKit
 import SwiftUI
 
 struct GameRootView: View {
@@ -8,20 +7,24 @@ struct GameRootView: View {
     }
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var accessibilityReduceTransparency
     @AccessibilityFocusState private var presentationFocus: PresentationAccessibilityFocus?
 
     let gameSession: GameSessionController
     let watchSession: PhoneWatchSession
+    let sensorySettings: SensorySettingsController
     let onRetry: () -> Void
     let onMainHub: () -> Void
 
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                SpriteView(
-                    scene: gameSession.scene,
-                    preferredFramesPerSecond: 60,
-                    options: [.ignoresSiblingOrder]
+                RacingWorldView(
+                    snapshot: gameSession.renderSnapshot,
+                    steering: gameSession.steeringSnapshot.value,
+                    lastEvent: gameSession.lastEvent,
+                    appearance: gameSession.appearance,
+                    configuration: gameSession.scene.configuration
                 )
                 .ignoresSafeArea()
 
@@ -43,6 +46,8 @@ struct GameRootView: View {
                         )
                 case .racing:
                     EmptyView()
+                case .collision:
+                    collisionOverlay
                 case let .result(result):
                     resultOverlay(result)
                         .transition(
@@ -52,18 +57,34 @@ struct GameRootView: View {
                         )
                 }
 
+                if let cue = gameSession.startCuePresentation, cue.kind == .go {
+                    GoStartCueView(
+                        cue: cue,
+                        opacity: cue.opacity(
+                            for: sensorySettings.settings.effectIntensity
+                        ),
+                        reduceMotion: accessibilityReduceMotion,
+                        onCueVisible: gameSession.startCueDidBecomeVisible
+                    )
+                    .id(cue.id)
+                    .allowsHitTesting(false)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Go")
+                    .accessibilityIdentifier("game.startCue.go")
+                }
+
                 if let fallbackBannerText = gameSession.fallbackBannerText {
                     VStack {
                         Text(fallbackBannerText)
-                            .font(.caption2.bold())
+                            .font(.system(size: 9, weight: .bold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.88))
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 11)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
                             .background(.black.opacity(0.68), in: Capsule())
                             .accessibilityIdentifier("game.inputFallback")
                         Spacer()
                     }
-                    .padding(.top, 110)
+                    .padding(.top, 66)
                     .allowsHitTesting(false)
                 }
             }
@@ -72,8 +93,11 @@ struct GameRootView: View {
                 value: gameSession.presentationPhase
             )
         }
-        .onChange(of: accessibilityReduceMotion, initial: true) { _, reduceMotion in
-            gameSession.scene.setReduceMotionEnabled(reduceMotion)
+        .onChange(of: sceneAccessibilityPolicy, initial: true) { _, policy in
+            gameSession.scene.setAccessibilityPolicy(policy)
+#if DEBUG
+            SG6AcceptanceProbe.recordAccessibilityPolicyApplied(policy)
+#endif
         }
         .onChange(of: gameSession.presentationPhase, initial: true) { _, phase in
             switch phase {
@@ -81,72 +105,141 @@ struct GameRootView: View {
                 presentationFocus = .countdown
             case .racing:
                 presentationFocus = nil
+            case .collision:
+                presentationFocus = nil
             case .result:
                 presentationFocus = .result
             }
         }
         .background(Color(red: 0.025, green: 0.035, blue: 0.065))
         .preferredColorScheme(.dark)
+        .onAppear {
+            gameSession.startGameLoop()
+        }
+        .onDisappear {
+            gameSession.stopGameLoop()
+        }
+    }
+
+    private var sceneAccessibilityPolicy: SensoryAccessibilityPolicy {
+        SensoryAccessibilityPolicy(
+            settings: sensorySettings.settings,
+            reduceMotion: accessibilityReduceMotion,
+            reduceTransparency: accessibilityReduceTransparency
+        )
     }
 
     private var hud: some View {
-        HStack(alignment: .top, spacing: 12) {
-            hudCard(title: "SCORE", value: String(gameSession.score))
+        ZStack(alignment: .top) {
+            HStack(alignment: .top, spacing: 12) {
+                hudMetric(
+                    title: "SCORE",
+                    value: String(gameSession.score),
+                    unit: nil,
+                    systemImage: "flag.checkered"
+                )
                 .accessibilityIdentifier("game.score")
 
-            Spacer(minLength: 8)
+                Spacer(minLength: 156)
+
+                hudMetric(
+                    title: "SPEED",
+                    value: String(gameSession.speed),
+                    unit: "KM/H",
+                    systemImage: "speedometer"
+                )
+                .accessibilityIdentifier("game.speed")
+            }
+
+            VStack(spacing: 3) {
+                raceStatusChip
 
 #if DEBUG
-            diagnostics
+                compactDiagnostics
 #endif
-
-            hudCard(title: "SPEED", value: "\(gameSession.speed) km/h")
-
-            VStack(alignment: .trailing, spacing: 3) {
-                Text(presentationStatus)
-                    .font(.caption.bold())
-                    .foregroundStyle(
-                        gameSession.presentationPhase == .racing ? .mint : .orange
-                    )
-                    .accessibilityIdentifier("game.phase")
-                Text("INPUT · \(gameSession.inputSourceDescription)")
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(.white.opacity(0.72))
-                    .accessibilityIdentifier("game.inputSource")
             }
-            .padding(.vertical, 9)
-            .padding(.horizontal, 11)
-            .background(.black.opacity(0.56), in: RoundedRectangle(cornerRadius: 10))
         }
+        .frame(height: 50)
     }
 
-    private func hudCard(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(title)
-                .font(.caption2.bold())
-                .foregroundStyle(.white.opacity(0.62))
-            Text(value)
-                .font(.headline.monospacedDigit().bold())
-                .foregroundStyle(.white)
+    private func hudMetric(
+        title: String,
+        value: String,
+        unit: String?,
+        systemImage: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Label(title, systemImage: systemImage)
+                .font(.system(size: 8, weight: .bold, design: .rounded))
+                .tracking(0.7)
+                .foregroundStyle(.white.opacity(0.58))
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(value)
+                    .font(.system(size: 23, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.74)
+                    .foregroundStyle(.white)
+                if let unit {
+                    Text(unit)
+                        .font(.system(size: 8, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.62))
+                }
+            }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 11)
-        .background(.black.opacity(0.56), in: RoundedRectangle(cornerRadius: 10))
+        .padding(.vertical, 6)
+        .padding(.horizontal, 9)
+        .frame(minWidth: 88, alignment: .leading)
+        .background(.black.opacity(0.46), in: RoundedRectangle(cornerRadius: 9))
+        .overlay {
+            RoundedRectangle(cornerRadius: 9)
+                .stroke(.white.opacity(0.10), lineWidth: 0.5)
+        }
         .accessibilityElement(children: .combine)
+    }
+
+    private var raceStatusChip: some View {
+        HStack(spacing: 5) {
+            Circle()
+                .fill(gameSession.presentationPhase == .racing ? .mint : .orange)
+                .frame(width: 5, height: 5)
+            Text(presentationStatus)
+                .font(.system(size: 9, weight: .bold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.90))
+                .accessibilityIdentifier("game.phase")
+            Rectangle()
+                .fill(.white.opacity(0.18))
+                .frame(width: 1, height: 9)
+            Image(systemName: watchSession.isFallback ? "hand.draw" : "applewatch")
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.62))
+            Text(gameSession.inputSourceDescription.uppercased())
+                .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.68))
+                .accessibilityIdentifier("game.inputSource")
+        }
+        .padding(.vertical, 5)
+        .padding(.horizontal, 8)
+        .background(.black.opacity(0.42), in: Capsule())
+        .overlay {
+            Capsule().stroke(.white.opacity(0.10), lineWidth: 0.5)
+        }
     }
 
     private func touchSurface(height: CGFloat) -> some View {
         GeometryReader { touchProxy in
-            ZStack(alignment: .top) {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(.white.opacity(0.055))
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(.white.opacity(0.18), lineWidth: 1)
+            ZStack(alignment: .bottom) {
+                Color.clear
 
-                Label("DRAG LEFT / RIGHT · RELEASE TO CENTER", systemImage: "arrow.left.and.right")
-                    .font(.caption2.bold())
-                    .foregroundStyle(.white.opacity(0.70))
-                    .padding(.top, 10)
+                Label("DRAG TO STEER", systemImage: "arrow.left.and.right")
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.66))
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 7)
+                    .background(.black.opacity(0.34), in: Capsule())
+                    .padding(.bottom, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .allowsHitTesting(false)
             }
             .contentShape(Rectangle())
             .gesture(
@@ -179,7 +272,10 @@ struct GameRootView: View {
                 .foregroundStyle(.white.opacity(0.76))
             CountdownNumberView(
                 value: value,
-                reduceMotion: accessibilityReduceMotion
+                cue: activeCountdownCue(for: value),
+                accentOpacity: sensorySettings.settings.effectIntensity == .balanced ? 1 : 0.55,
+                reduceMotion: accessibilityReduceMotion,
+                onCueVisible: gameSession.startCueDidBecomeVisible
             )
             .id(value)
         }
@@ -197,6 +293,34 @@ struct GameRootView: View {
         .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("game.countdown")
         .accessibilityFocused($presentationFocus, equals: .countdown)
+    }
+
+    private func activeCountdownCue(for value: Int) -> StartCuePresentation? {
+        guard let cue = gameSession.startCuePresentation,
+              cue.kind.countdownValue == value else {
+            return nil
+        }
+        return cue
+    }
+
+    private var collisionOverlay: some View {
+        Text("IMPACT")
+            .font(.system(size: 24, weight: .black, design: .rounded))
+            .tracking(4)
+            .foregroundStyle(.white)
+            .padding(.vertical, 9)
+            .padding(.horizontal, 18)
+            .background(.black.opacity(0.58), in: Capsule())
+            .transition(accessibilityReduceMotion ? .opacity : .scale.combined(with: .opacity))
+            .allowsHitTesting(false)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Impact")
+            .accessibilityIdentifier("game.collision")
+#if DEBUG
+            .onAppear {
+                SG6AcceptanceProbe.recordCollisionRendered()
+            }
+#endif
     }
 
     private func resultOverlay(_ result: RunResult) -> some View {
@@ -254,6 +378,11 @@ struct GameRootView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("game.result")
+#if DEBUG
+        .onAppear {
+            SG6AcceptanceProbe.recordResultRendered()
+        }
+#endif
     }
 
     private func resultMetric(title: String, value: Int) -> some View {
@@ -278,74 +407,34 @@ struct GameRootView: View {
             return "COUNTDOWN"
         case .racing:
             return "RACING"
+        case .collision:
+            return "IMPACT"
         case .result:
             return "RESULT"
         }
     }
 
 #if DEBUG
-    private var diagnostics: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 5) {
-                Text("WATCH DIAGNOSTICS")
-                    .font(.caption2.bold())
-                Spacer(minLength: 4)
-                Text(watchSession.sourceDescription)
-                    .foregroundStyle(watchSession.isFallback ? .orange : .mint)
-            }
-
-            steeringTracer
-
-            Text(
-                "\(watchSession.packetStateDescription) · \(watchSession.activationDescription) · "
-                    + "reach \(watchSession.isReachable ? "Y" : "N")"
-            )
-            Text(
-                "age \(formattedMilliseconds(watchSession.packetAgeMilliseconds)) · "
-                    + "gap \(watchSession.sequenceGaps) · p95 "
-                    + formattedMilliseconds(watchSession.interarrivalP95Milliseconds)
-            )
-            Text(
-                "value \(watchSession.receivedSteering.formatted(.number.precision(.fractionLength(3)))) · "
-                    + "decode \(watchSession.decodingFailures)"
-            )
-            .accessibilityIdentifier("phone.received.value")
-            Text(frameRateDescription)
-                .accessibilityIdentifier("game.frameRate")
+    private var compactDiagnostics: some View {
+        HStack(spacing: 4) {
+            Text("FPS \(formattedFrameRate(gameSession.framesPerSecond))")
+            Circle()
+                .fill(watchSession.isFallback ? .orange : .mint)
+                .frame(width: 3, height: 3)
+            Text(watchSession.isFallback ? "WATCH —" : "WATCH LIVE")
         }
-        .font(.system(size: 8, design: .monospaced))
-        .foregroundStyle(.white.opacity(0.78))
-        .padding(7)
-        .frame(maxWidth: 235)
-        .background(.black.opacity(0.58), in: RoundedRectangle(cornerRadius: 9))
-    }
-
-    private var steeringTracer: some View {
-        GeometryReader { proxy in
-            let markerTravel = max(0, proxy.size.width - 10)
-            ZStack {
-                Capsule()
-                    .fill(.white.opacity(0.18))
-                    .frame(height: 3)
-                Rectangle()
-                    .fill(.white.opacity(0.30))
-                    .frame(width: 1, height: 10)
-                Circle()
-                    .fill(watchSession.isFallback ? .orange : .mint)
-                    .frame(width: 10, height: 10)
-                    .offset(x: watchSession.effectiveSteering * markerTravel / 2)
-            }
-            .frame(maxHeight: .infinity)
-        }
-        .frame(height: 11)
-        .accessibilityIdentifier("phone.steering.value")
-    }
-
-    private func formattedMilliseconds(_ value: Double?) -> String {
-        guard let value else {
-            return "—"
-        }
-        return "\(value.formatted(.number.precision(.fractionLength(1))))ms"
+        .font(.system(size: 7, weight: .medium, design: .monospaced))
+        .foregroundStyle(.white.opacity(0.52))
+        .padding(.vertical, 2)
+        .padding(.horizontal, 6)
+        .background(.black.opacity(0.28), in: Capsule())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Debug diagnostics")
+        .accessibilityValue(
+            "\(frameRateDescription), \(watchSession.sourceDescription), "
+                + "steering \(watchSession.receivedSteering.formatted(.number.precision(.fractionLength(3))))"
+        )
+        .accessibilityIdentifier("game.frameRate")
     }
 
     private var frameRateDescription: String {
@@ -366,27 +455,127 @@ struct GameRootView: View {
 
 private struct CountdownNumberView: View {
     let value: Int
+    let cue: StartCuePresentation?
+    let accentOpacity: Double
     let reduceMotion: Bool
+    let onCueVisible: (UUID) -> Void
 
-    @State private var scale: CGFloat = 0.72
+    @State private var scale: CGFloat = 0.78
+    @State private var ringOpacity = 1.0
 
     var body: some View {
-        Text(value, format: .number)
-            .font(.system(size: 72, weight: .black, design: .rounded))
-            .monospacedDigit()
-            .foregroundStyle(.white)
-            .scaleEffect(reduceMotion ? 1 : scale)
-            .onAppear {
+        ZStack {
+            if let cue,
+               case let .ring(accentColor) = cue.visualTreatment {
+                Circle()
+                    .stroke(accentColor.color, lineWidth: 5)
+                    .frame(width: 100, height: 100)
+                    .scaleEffect(reduceMotion ? 1 : scale)
+                    .opacity(ringOpacity * accentOpacity)
+                    .accessibilityHidden(true)
+                    .onAppear {
+                        onCueVisible(cue.id)
 #if DEBUG
-                SG6AcceptanceProbe.recordCountdownRendered(value)
+                        SG6AcceptanceProbe.recordStartCueVisible(cue)
 #endif
-                guard !reduceMotion else {
-                    scale = 1
-                    return
+                    }
+#if DEBUG
+                    .onDisappear {
+                        SG6AcceptanceProbe.recordStartCueHidden(cue)
+                    }
+#endif
+            }
+
+            Text(value, format: .number)
+                .font(.system(size: 72, weight: .black, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+        }
+        .frame(width: 108, height: 108)
+        .onAppear {
+#if DEBUG
+            SG6AcceptanceProbe.recordCountdownRendered(value)
+#endif
+            guard !reduceMotion else { return }
+            withAnimation(.easeOut(duration: cue?.visibleDuration ?? 0.18)) {
+                scale = 1.12
+                ringOpacity = 0.30
+            }
+        }
+    }
+}
+
+private struct GoStartCueView: View {
+    let cue: StartCuePresentation
+    let opacity: Double
+    let reduceMotion: Bool
+    let onCueVisible: (UUID) -> Void
+
+    @State private var sweepProgress: CGFloat = -1
+    @State private var textScale: CGFloat = 0.88
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                Color.white.opacity(0.12 * opacity)
+
+                if !reduceMotion {
+                    LinearGradient(
+                        colors: [
+                            .clear,
+                            StartCueAccentColor.mintWhite.color.opacity(0.88 * opacity),
+                            .white.opacity(0.92 * opacity),
+                            .clear,
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: proxy.size.width * 0.42)
+                    .offset(x: sweepProgress * proxy.size.width)
                 }
-                withAnimation(.easeOut(duration: 0.55)) {
-                    scale = 1.08
+
+                Text("GO")
+                    .font(.system(size: 86, weight: .black, design: .rounded))
+                    .tracking(4)
+                    .foregroundStyle(.white)
+                    .shadow(color: .mint.opacity(0.85 * opacity), radius: 14)
+                    .scaleEffect(reduceMotion ? 1 : textScale)
+            }
+            .opacity(opacity)
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(.easeOut(duration: cue.visibleDuration)) {
+                    sweepProgress = 1
+                    textScale = 1.08
                 }
             }
+        }
+        .ignoresSafeArea()
+        .onAppear {
+            onCueVisible(cue.id)
+#if DEBUG
+            SG6AcceptanceProbe.recordStartCueVisible(cue)
+#endif
+        }
+#if DEBUG
+        .onDisappear {
+            SG6AcceptanceProbe.recordStartCueHidden(cue)
+        }
+#endif
+    }
+}
+
+private extension StartCueAccentColor {
+    var color: Color {
+        switch self {
+        case .cyan:
+            .cyan
+        case .mint:
+            .mint
+        case .orange:
+            .orange
+        case .mintWhite:
+            Color(red: 0.72, green: 1, blue: 0.92)
+        }
     }
 }

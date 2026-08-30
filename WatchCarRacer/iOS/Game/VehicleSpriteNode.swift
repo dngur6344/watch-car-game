@@ -6,8 +6,18 @@ final class VehicleSpriteNode: SKNode {
     static let shadowNodeName = "vehicle.shadow"
     static let paintNodeName = "vehicle.paint"
     static let detailsNodeName = "vehicle.details"
+    static let impactPresentationNodeName = "vehicle.presentation.impact"
+    static let bodyPresentationNodeName = "vehicle.presentation.body"
+
+    static let maximumBodyRoll: CGFloat = 0.065
+    static let maximumPaintOffset: CGFloat = 0.75
+    static let maximumDetailsOffset: CGFloat = 1.5
+    static let maximumShadowOffset: CGFloat = 3
+    static let reducedTransformMultiplier: CGFloat = 0.45
 
     let appearance: VehicleAppearance
+    let impactPresentationNode = SKNode()
+    let bodyPresentationNode = SKNode()
     let shadowNode: SKSpriteNode
     let paintNode: SKSpriteNode
     let detailsNode: SKSpriteNode
@@ -47,6 +57,9 @@ final class VehicleSpriteNode: SKNode {
         paintNode.zPosition = 1
         detailsNode.zPosition = 2
 
+        impactPresentationNode.name = Self.impactPresentationNodeName
+        bodyPresentationNode.name = Self.bodyPresentationNodeName
+
         shadowNode.color = .white
         shadowNode.colorBlendFactor = 0
         paintNode.color = UIColor(
@@ -59,14 +72,60 @@ final class VehicleSpriteNode: SKNode {
         detailsNode.color = .white
         detailsNode.colorBlendFactor = 0
 
-        addChild(shadowNode)
-        addChild(paintNode)
-        addChild(detailsNode)
+        addChild(impactPresentationNode)
+        impactPresentationNode.addChild(shadowNode)
+        impactPresentationNode.addChild(bodyPresentationNode)
+        bodyPresentationNode.addChild(paintNode)
+        bodyPresentationNode.addChild(detailsNode)
     }
 
     @available(*, unavailable)
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) is not supported")
+    }
+
+    func applyPresentation(
+        speedProgress: Double,
+        steering: Double,
+        level: SensoryAccessibilityPolicy.DecorativeEffectLevel
+    ) {
+        let clampedSpeed = CGFloat(min(max(speedProgress.isFinite ? speedProgress : 0, 0), 1))
+        let clampedSteering = CGFloat(min(max(steering.isFinite ? steering : 0, -1), 1))
+        let amplitude: CGFloat = switch level {
+        case .balanced:
+            1
+        case .reduced:
+            Self.reducedTransformMultiplier
+        case .off:
+            0
+        }
+
+        bodyPresentationNode.zRotation = -clampedSteering * Self.maximumBodyRoll * amplitude
+        paintNode.position = CGPoint(
+            x: clampedSteering * Self.maximumPaintOffset * amplitude,
+            y: 0
+        )
+        detailsNode.position = CGPoint(
+            x: clampedSteering * Self.maximumDetailsOffset * amplitude,
+            y: 0
+        )
+
+        let steeringMagnitude = abs(clampedSteering)
+        shadowNode.position = CGPoint(
+            x: -clampedSteering * Self.maximumShadowOffset * amplitude,
+            y: -(1.4 + clampedSpeed * 1.8) * amplitude
+        )
+        shadowNode.xScale = 1 - (clampedSpeed * 0.06 + steeringMagnitude * 0.025) * amplitude
+        shadowNode.yScale = 1 - (clampedSpeed * 0.13 + steeringMagnitude * 0.035) * amplitude
+        shadowNode.alpha = 0.58 + (clampedSpeed * 0.16 + steeringMagnitude * 0.06) * max(amplitude, 0.45)
+    }
+
+    func resetPresentation() {
+        impactPresentationNode.removeAllActions()
+        impactPresentationNode.position = .zero
+        impactPresentationNode.zRotation = 0
+        impactPresentationNode.setScale(1)
+        applyPresentation(speedProgress: 0, steering: 0, level: .off)
     }
 }
 

@@ -5,11 +5,13 @@ struct MainHubView: View {
     let watchSession: PhoneWatchSession
     let presentationAssetLibrary: PresentationAssetLibrary
     let driveIntent: HubDriveIntentController
+    let sensorySettings: SensorySettingsController
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var presentationStatus: PresentationLoadStatus = .idle
     @State private var presentationReloadRequest = 0
+    @State private var isSensorySettingsPresented = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -71,6 +73,9 @@ struct MainHubView: View {
                 onCancel: driveIntent.cancelPendingDrive,
                 onContinueWithTouch: driveIntent.continueWithTouch
             )
+        }
+        .sheet(isPresented: $isSensorySettingsPresented) {
+            SensorySettingsView(controller: sensorySettings)
         }
     }
 
@@ -203,10 +208,27 @@ struct MainHubView: View {
             .accessibilityHint("Edit vehicle appearance. Changes remain pending until Drive.")
             .accessibilityIdentifier("hub.maintenance")
 
+            Button {
+                isSensorySettingsPresented = true
+            } label: {
+                Label("SENSORY SETTINGS", systemImage: "slider.horizontal.3")
+                    .font(compact ? .subheadline.bold() : .headline.bold())
+                    .frame(maxWidth: .infinity, minHeight: compact ? 44 : 50)
+            }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .accessibilityLabel("Sensory settings")
+            .accessibilityValue(sensorySettingsAccessibilityValue)
+            .accessibilityHint("Adjust sound effects, haptics, and visual effect intensity.")
+            .accessibilityIdentifier("hub.sensorySettings")
+
             assetStatus
 
             Button {
-                driveIntent.requestDrive(readiness: watchSession.readinessStatus)
+                driveIntent.requestDrive(
+                    readiness: watchSession.readinessStatus,
+                    presentationIsReady: presentationStatus == .ready
+                )
             } label: {
                 Label("DRIVE", systemImage: "steeringwheel")
                     .font(compact ? .headline.bold() : .title3.bold())
@@ -334,5 +356,12 @@ struct MainHubView: View {
             return "Save this vehicle and start with Apple Watch preferred controls"
         }
         return "Review Apple Watch readiness before saving or starting"
+    }
+
+    private var sensorySettingsAccessibilityValue: String {
+        let settings = sensorySettings.settings
+        return "Sound effects \(settings.sfxEnabled ? "on" : "off"), "
+            + "haptics \(settings.hapticsEnabled ? "on" : "off"), "
+            + "effects \(settings.effectIntensity.displayName)"
     }
 }

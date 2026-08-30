@@ -76,6 +76,44 @@
 		040000000000000000000043 /* WatchReadinessSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000043 /* WatchReadinessSheet.swift */; };
 		040000000000000000000044 /* HubDriveIntentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000044 /* HubDriveIntentController.swift */; };
 		040000000000000000000045 /* HubDriveIntentControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000045 /* HubDriveIntentControllerTests.swift */; };
+		040000000000000000000046 /* SensorySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000046 /* SensorySettings.swift */; };
+		040000000000000000000047 /* SensoryAccessibilityPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000047 /* SensoryAccessibilityPolicy.swift */; };
+		040000000000000000000048 /* SensorySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000048 /* SensorySettingsView.swift */; };
+		040000000000000000000049 /* SensorySettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000049 /* SensorySettingsTests.swift */; };
+		04000000000000000000004A /* AudioAssetContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000004A /* AudioAssetContractTests.swift */; };
+		04000000000000000000004B /* AudioAssetManifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000004B /* AudioAssetManifest.json */; };
+		04000000000000000000004C /* engine_idle_loop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000004C /* engine_idle_loop.wav */; };
+		04000000000000000000004D /* engine_mid_loop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000004D /* engine_mid_loop.wav */; };
+		04000000000000000000004E /* engine_high_loop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000004E /* engine_high_loop.wav */; };
+		04000000000000000000004F /* road_loop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000004F /* road_loop.wav */; };
+		040000000000000000000050 /* wind_loop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000050 /* wind_loop.wav */; };
+		040000000000000000000051 /* tire_scrub_loop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000051 /* tire_scrub_loop.wav */; };
+		040000000000000000000052 /* near_miss_whoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000052 /* near_miss_whoosh.wav */; };
+		040000000000000000000053 /* collision_impact.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000053 /* collision_impact.wav */; };
+		040000000000000000000054 /* countdown_tick.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000054 /* countdown_tick.wav */; };
+		040000000000000000000055 /* go_bass_hit.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000055 /* go_bass_hit.wav */; };
+		040000000000000000000056 /* hub_ambience_loop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000056 /* hub_ambience_loop.wav */; };
+		040000000000000000000057 /* maintenance_ambience_loop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000057 /* maintenance_ambience_loop.wav */; };
+		040000000000000000000058 /* vehicle_select.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000058 /* vehicle_select.wav */; };
+		040000000000000000000059 /* color_select.wav in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000059 /* color_select.wav */; };
+		04000000000000000000005A /* drive_transition.wav in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000005A /* drive_transition.wav */; };
+		04000000000000000000005B /* AudioAssetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000005B /* AudioAssetLibrary.swift */; };
+		04000000000000000000005C /* AudioMixModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000005C /* AudioMixModel.swift */; };
+		04000000000000000000005D /* GameAudioDirector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000005D /* GameAudioDirector.swift */; };
+		04000000000000000000005E /* AudioMixModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000005E /* AudioMixModelTests.swift */; };
+		04000000000000000000005F /* GameAudioDirectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000005F /* GameAudioDirectorTests.swift */; };
+		040000000000000000000060 /* GameScenePresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000060 /* GameScenePresentationTests.swift */; };
+		040000000000000000000061 /* SG8SensoryAcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000061 /* SG8SensoryAcceptanceTests.swift */; };
+		040000000000000000000062 /* RacingWorldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000062 /* RacingWorldView.swift */; };
+		040000000000000000000063 /* RacingWorldLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000063 /* RacingWorldLayoutTests.swift */; };
+		040000000000000000000064 /* GameLoopDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000064 /* GameLoopDriver.swift */; };
+		040000000000000000000065 /* rally_racer.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000065 /* rally_racer.usdz */; };
+		040000000000000000000066 /* asphalt_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000066 /* asphalt_normal.png */; };
+		040000000000000000000067 /* asphalt_roughness.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000067 /* asphalt_roughness.png */; };
+		040000000000000000000068 /* gt_racer.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000068 /* gt_racer.usdz */; };
+		040000000000000000000069 /* angular_racer.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000069 /* angular_racer.usdz */; };
+		04000000000000000000006A /* traffic_sedan_3d.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006A /* traffic_sedan_3d.usdz */; };
+		04000000000000000000006B /* track_barrier.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006B /* track_barrier.usdz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -184,6 +222,44 @@
 		030000000000000000000043 /* WatchReadinessSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchReadinessSheet.swift; sourceTree = "<group>"; };
 		030000000000000000000044 /* HubDriveIntentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubDriveIntentController.swift; sourceTree = "<group>"; };
 		030000000000000000000045 /* HubDriveIntentControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubDriveIntentControllerTests.swift; sourceTree = "<group>"; };
+		030000000000000000000046 /* SensorySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorySettings.swift; sourceTree = "<group>"; };
+		030000000000000000000047 /* SensoryAccessibilityPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensoryAccessibilityPolicy.swift; sourceTree = "<group>"; };
+		030000000000000000000048 /* SensorySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorySettingsView.swift; sourceTree = "<group>"; };
+		030000000000000000000049 /* SensorySettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorySettingsTests.swift; sourceTree = "<group>"; };
+		03000000000000000000004A /* AudioAssetContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetContractTests.swift; sourceTree = "<group>"; };
+		03000000000000000000004B /* AudioAssetManifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = AudioAssetManifest.json; sourceTree = "<group>"; };
+		03000000000000000000004C /* engine_idle_loop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = engine_idle_loop.wav; sourceTree = "<group>"; };
+		03000000000000000000004D /* engine_mid_loop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = engine_mid_loop.wav; sourceTree = "<group>"; };
+		03000000000000000000004E /* engine_high_loop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = engine_high_loop.wav; sourceTree = "<group>"; };
+		03000000000000000000004F /* road_loop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = road_loop.wav; sourceTree = "<group>"; };
+		030000000000000000000050 /* wind_loop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = wind_loop.wav; sourceTree = "<group>"; };
+		030000000000000000000051 /* tire_scrub_loop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = tire_scrub_loop.wav; sourceTree = "<group>"; };
+		030000000000000000000052 /* near_miss_whoosh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = near_miss_whoosh.wav; sourceTree = "<group>"; };
+		030000000000000000000053 /* collision_impact.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = collision_impact.wav; sourceTree = "<group>"; };
+		030000000000000000000054 /* countdown_tick.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = countdown_tick.wav; sourceTree = "<group>"; };
+		030000000000000000000055 /* go_bass_hit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = go_bass_hit.wav; sourceTree = "<group>"; };
+		030000000000000000000056 /* hub_ambience_loop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = hub_ambience_loop.wav; sourceTree = "<group>"; };
+		030000000000000000000057 /* maintenance_ambience_loop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = maintenance_ambience_loop.wav; sourceTree = "<group>"; };
+		030000000000000000000058 /* vehicle_select.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = vehicle_select.wav; sourceTree = "<group>"; };
+		030000000000000000000059 /* color_select.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = color_select.wav; sourceTree = "<group>"; };
+		03000000000000000000005A /* drive_transition.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = drive_transition.wav; sourceTree = "<group>"; };
+		03000000000000000000005B /* AudioAssetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetLibrary.swift; sourceTree = "<group>"; };
+		03000000000000000000005C /* AudioMixModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioMixModel.swift; sourceTree = "<group>"; };
+		03000000000000000000005D /* GameAudioDirector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAudioDirector.swift; sourceTree = "<group>"; };
+		03000000000000000000005E /* AudioMixModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioMixModelTests.swift; sourceTree = "<group>"; };
+		03000000000000000000005F /* GameAudioDirectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAudioDirectorTests.swift; sourceTree = "<group>"; };
+		030000000000000000000060 /* GameScenePresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScenePresentationTests.swift; sourceTree = "<group>"; };
+		030000000000000000000061 /* SG8SensoryAcceptanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SG8SensoryAcceptanceTests.swift; sourceTree = "<group>"; };
+		030000000000000000000062 /* RacingWorldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingWorldView.swift; sourceTree = "<group>"; };
+		030000000000000000000063 /* RacingWorldLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingWorldLayoutTests.swift; sourceTree = "<group>"; };
+		030000000000000000000064 /* GameLoopDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameLoopDriver.swift; sourceTree = "<group>"; };
+		030000000000000000000065 /* rally_racer.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = rally_racer.usdz; sourceTree = "<group>"; };
+		030000000000000000000066 /* asphalt_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = asphalt_normal.png; sourceTree = "<group>"; };
+		030000000000000000000067 /* asphalt_roughness.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = asphalt_roughness.png; sourceTree = "<group>"; };
+		030000000000000000000068 /* gt_racer.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = gt_racer.usdz; sourceTree = "<group>"; };
+		030000000000000000000069 /* angular_racer.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = angular_racer.usdz; sourceTree = "<group>"; };
+		03000000000000000000006A /* traffic_sedan_3d.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = traffic_sedan_3d.usdz; sourceTree = "<group>"; };
+		03000000000000000000006B /* track_barrier.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = track_barrier.usdz; sourceTree = "<group>"; };
 		0300000000000000000000F1 /* WatchCarRacer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F2 /* WatchCarRacerWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacerWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F3 /* WatchCarRacerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WatchCarRacerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -235,6 +311,7 @@
 				02000000000000000000000B /* Input */,
 				02000000000000000000000E /* Game */,
 				02000000000000000000000F /* Feedback */,
+				020000000000000000000016 /* Sensory */,
 				020000000000000000000012 /* Resources */,
 			);
 			path = iOS;
@@ -301,6 +378,13 @@
 				030000000000000000000040 /* PresentationAssetTests.swift */,
 				030000000000000000000045 /* HubDriveIntentControllerTests.swift */,
 				03000000000000000000002E /* GameSceneMapTests.swift */,
+				030000000000000000000049 /* SensorySettingsTests.swift */,
+				03000000000000000000004A /* AudioAssetContractTests.swift */,
+				03000000000000000000005E /* AudioMixModelTests.swift */,
+				03000000000000000000005F /* GameAudioDirectorTests.swift */,
+				030000000000000000000060 /* GameScenePresentationTests.swift */,
+				030000000000000000000061 /* SG8SensoryAcceptanceTests.swift */,
+				030000000000000000000063 /* RacingWorldLayoutTests.swift */,
 			);
 			path = WatchCarRacerTests;
 			sourceTree = "<group>";
@@ -360,6 +444,8 @@
 				030000000000000000000012 /* GameScene.swift */,
 				03000000000000000000001D /* GameAssetLibrary.swift */,
 				030000000000000000000028 /* VehicleSpriteNode.swift */,
+				030000000000000000000062 /* RacingWorldView.swift */,
+				030000000000000000000064 /* GameLoopDriver.swift */,
 			);
 			path = Game;
 			sourceTree = "<group>";
@@ -396,9 +482,11 @@
 				030000000000000000000020 /* Obstacles.atlas */,
 				030000000000000000000021 /* Environment.atlas */,
 				020000000000000000000013 /* Backgrounds */,
+				020000000000000000000018 /* Racing3D */,
 				030000000000000000000024 /* AssetManifest.json */,
 				030000000000000000000037 /* PresentationAssetManifest.json */,
 				020000000000000000000015 /* Presentation */,
+				020000000000000000000017 /* Audio */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -410,6 +498,20 @@
 				030000000000000000000023 /* asphalt.png */,
 			);
 			path = Backgrounds;
+			sourceTree = "<group>";
+		};
+		020000000000000000000018 /* Racing3D */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000065 /* rally_racer.usdz */,
+				030000000000000000000068 /* gt_racer.usdz */,
+				030000000000000000000069 /* angular_racer.usdz */,
+				03000000000000000000006A /* traffic_sedan_3d.usdz */,
+				03000000000000000000006B /* track_barrier.usdz */,
+				030000000000000000000066 /* asphalt_normal.png */,
+				030000000000000000000067 /* asphalt_roughness.png */,
+			);
+			path = Racing3D;
 			sourceTree = "<group>";
 		};
 		020000000000000000000014 /* Presentation */ = {
@@ -433,6 +535,42 @@
 				03000000000000000000003F /* angular_hero_details_shadow.png */,
 			);
 			path = Presentation;
+			sourceTree = "<group>";
+		};
+		020000000000000000000016 /* Sensory */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000046 /* SensorySettings.swift */,
+				030000000000000000000047 /* SensoryAccessibilityPolicy.swift */,
+				030000000000000000000048 /* SensorySettingsView.swift */,
+				03000000000000000000005B /* AudioAssetLibrary.swift */,
+				03000000000000000000005C /* AudioMixModel.swift */,
+				03000000000000000000005D /* GameAudioDirector.swift */,
+			);
+			path = Sensory;
+			sourceTree = "<group>";
+		};
+		020000000000000000000017 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				03000000000000000000004B /* AudioAssetManifest.json */,
+				03000000000000000000004C /* engine_idle_loop.wav */,
+				03000000000000000000004D /* engine_mid_loop.wav */,
+				03000000000000000000004E /* engine_high_loop.wav */,
+				03000000000000000000004F /* road_loop.wav */,
+				030000000000000000000050 /* wind_loop.wav */,
+				030000000000000000000051 /* tire_scrub_loop.wav */,
+				030000000000000000000052 /* near_miss_whoosh.wav */,
+				030000000000000000000053 /* collision_impact.wav */,
+				030000000000000000000054 /* countdown_tick.wav */,
+				030000000000000000000055 /* go_bass_hit.wav */,
+				030000000000000000000056 /* hub_ambience_loop.wav */,
+				030000000000000000000057 /* maintenance_ambience_loop.wav */,
+				030000000000000000000058 /* vehicle_select.wav */,
+				030000000000000000000059 /* color_select.wav */,
+				03000000000000000000005A /* drive_transition.wav */,
+			);
+			path = Audio;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -544,6 +682,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				040000000000000000000065 /* rally_racer.usdz in Resources */,
+				040000000000000000000068 /* gt_racer.usdz in Resources */,
+				040000000000000000000069 /* angular_racer.usdz in Resources */,
+				04000000000000000000006A /* traffic_sedan_3d.usdz in Resources */,
+				04000000000000000000006B /* track_barrier.usdz in Resources */,
+				040000000000000000000066 /* asphalt_normal.png in Resources */,
+				040000000000000000000067 /* asphalt_roughness.png in Resources */,
 				040000000000000000000021 /* Vehicles.atlas in Resources */,
 				040000000000000000000022 /* Obstacles.atlas in Resources */,
 				040000000000000000000023 /* Environment.atlas in Resources */,
@@ -559,6 +704,22 @@
 				04000000000000000000003D /* gt_hero_details_shadow.png in Resources */,
 				04000000000000000000003E /* angular_hero_paint.png in Resources */,
 				04000000000000000000003F /* angular_hero_details_shadow.png in Resources */,
+				04000000000000000000004B /* AudioAssetManifest.json in Resources */,
+				04000000000000000000004C /* engine_idle_loop.wav in Resources */,
+				04000000000000000000004D /* engine_mid_loop.wav in Resources */,
+				04000000000000000000004E /* engine_high_loop.wav in Resources */,
+				04000000000000000000004F /* road_loop.wav in Resources */,
+				040000000000000000000050 /* wind_loop.wav in Resources */,
+				040000000000000000000051 /* tire_scrub_loop.wav in Resources */,
+				040000000000000000000052 /* near_miss_whoosh.wav in Resources */,
+				040000000000000000000053 /* collision_impact.wav in Resources */,
+				040000000000000000000054 /* countdown_tick.wav in Resources */,
+				040000000000000000000055 /* go_bass_hit.wav in Resources */,
+				040000000000000000000056 /* hub_ambience_loop.wav in Resources */,
+				040000000000000000000057 /* maintenance_ambience_loop.wav in Resources */,
+				040000000000000000000058 /* vehicle_select.wav in Resources */,
+				040000000000000000000059 /* color_select.wav in Resources */,
+				04000000000000000000005A /* drive_transition.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -598,6 +759,14 @@
 				040000000000000000000044 /* HubDriveIntentController.swift in Sources */,
 				040000000000000000000031 /* SG6AcceptanceCoordinator.swift in Sources */,
 				040000000000000000000036 /* PresentationAssetLibrary.swift in Sources */,
+				040000000000000000000046 /* SensorySettings.swift in Sources */,
+				040000000000000000000047 /* SensoryAccessibilityPolicy.swift in Sources */,
+				040000000000000000000048 /* SensorySettingsView.swift in Sources */,
+				04000000000000000000005B /* AudioAssetLibrary.swift in Sources */,
+				04000000000000000000005C /* AudioMixModel.swift in Sources */,
+				04000000000000000000005D /* GameAudioDirector.swift in Sources */,
+				040000000000000000000062 /* RacingWorldView.swift in Sources */,
+				040000000000000000000064 /* GameLoopDriver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -636,6 +805,13 @@
 				040000000000000000000030 /* GameSceneMapTests.swift in Sources */,
 				040000000000000000000040 /* PresentationAssetTests.swift in Sources */,
 				040000000000000000000045 /* HubDriveIntentControllerTests.swift in Sources */,
+				040000000000000000000049 /* SensorySettingsTests.swift in Sources */,
+				04000000000000000000004A /* AudioAssetContractTests.swift in Sources */,
+				04000000000000000000005E /* AudioMixModelTests.swift in Sources */,
+				04000000000000000000005F /* GameAudioDirectorTests.swift in Sources */,
+				040000000000000000000060 /* GameScenePresentationTests.swift in Sources */,
+				040000000000000000000061 /* SG8SensoryAcceptanceTests.swift in Sources */,
+				040000000000000000000063 /* RacingWorldLayoutTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

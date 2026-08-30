@@ -19,6 +19,7 @@ final class AppFlowController {
 
     typealias AssetPreparation = @MainActor () async throws -> Void
     typealias SeedProvider = @MainActor () -> UInt64
+    typealias RouteCuePlayer = @MainActor (GameAudioCue) -> Void
     typealias GameSessionFactory = @MainActor (
         _ seed: UInt64,
         _ appearance: VehicleAppearance,
@@ -36,17 +37,23 @@ final class AppFlowController {
 
     let assetLibrary: GameAssetLibrary
     let localBestScoreStore: any LocalBestScoreStoring
+    let audioDirector: GameAudioDirector?
 
     @ObservationIgnored private let selectionStore: any VehicleSelectionStoring
     @ObservationIgnored private let prepareAssetsOperation: AssetPreparation
     @ObservationIgnored private let seedProvider: SeedProvider
     @ObservationIgnored private let gameSessionFactory: GameSessionFactory
+    @ObservationIgnored private let routeCuePlayer: RouteCuePlayer
 
     init(
         selectionStore: any VehicleSelectionStoring,
         localBestScoreStore: any LocalBestScoreStoring,
         assetLibrary: GameAssetLibrary,
         watchInput: (any WatchSteeringReadingProviding)? = nil,
+        audioDirector: GameAudioDirector? = nil,
+        feedbackPlayer: (any PhoneFeedbackPlaying)? = nil,
+        isHapticsEnabled: @escaping @MainActor () -> Bool = { true },
+        routeCuePlayer: RouteCuePlayer? = nil,
         prepareAssets: AssetPreparation? = nil,
         seedProvider: @escaping SeedProvider = {
             UInt64.random(in: UInt64.min...UInt64.max)
@@ -56,11 +63,16 @@ final class AppFlowController {
         self.selectionStore = selectionStore
         self.localBestScoreStore = localBestScoreStore
         self.assetLibrary = assetLibrary
+        self.audioDirector = audioDirector
+        self.routeCuePlayer = routeCuePlayer ?? { cue in
+            audioDirector?.play(cue)
+        }
         let committedSelection = selectionStore.load()
         self.committedSelection = committedSelection
         draftSelection = committedSelection
         prepareAssetsOperation = prepareAssets ?? {
             try await assetLibrary.preloadAll()
+            try audioDirector?.prepareAssets()
         }
         self.seedProvider = seedProvider
         let resultStore = localBestScoreStore
@@ -71,6 +83,9 @@ final class AppFlowController {
                 assetLibrary: library,
                 controlRoute: controlRoute,
                 watchInput: watchInput,
+                feedbackPlayer: feedbackPlayer,
+                audioDirector: audioDirector,
+                isHapticsEnabled: isHapticsEnabled,
                 resultRecorder: { score in
                     let previousBest = resultStore.load()
                     let localBest = resultStore.record(score)
@@ -103,22 +118,38 @@ final class AppFlowController {
         route = .hub
     }
 
-    func selectVehicle(_ vehicleID: VehicleID) {
-        guard route == .maintenance else { return }
-        draftSelection = VehicleSelection(
+    @discardableResult
+    func selectVehicle(_ vehicleID: VehicleID) -> Bool {
+        guard route == .maintenance else { return false }
+        let selection = VehicleSelection(
             vehicleID: vehicleID,
             colorID: draftSelection.colorID
         )
+        guard selection != draftSelection,
+              VehicleCatalog.resolve(selection) != nil else {
+            return false
+        }
+        draftSelection = selection
         clearControllerCreationErrorIfPossible()
+        routeCuePlayer(.vehicleSelect)
+        return true
     }
 
-    func selectColor(_ colorID: VehicleColorID) {
-        guard route == .maintenance else { return }
-        draftSelection = VehicleSelection(
+    @discardableResult
+    func selectColor(_ colorID: VehicleColorID) -> Bool {
+        guard route == .maintenance else { return false }
+        let selection = VehicleSelection(
             vehicleID: draftSelection.vehicleID,
             colorID: colorID
         )
+        guard selection != draftSelection,
+              VehicleCatalog.resolve(selection) != nil else {
+            return false
+        }
+        draftSelection = selection
         clearControllerCreationErrorIfPossible()
+        routeCuePlayer(.colorSelect)
+        return true
     }
 
     func prepareAssets() async {
@@ -167,6 +198,7 @@ final class AppFlowController {
             controller.handleLifecycle(lifecyclePhase)
             errorMessage = nil
             route = .playing
+            routeCuePlayer(.driveTransition)
             return true
         } catch {
             errorMessage = "Unable to start the drive. \(error.localizedDescription)"
@@ -181,7 +213,11 @@ final class AppFlowController {
 
     func handleLifecycle(_ phase: GameSessionLifecyclePhase) {
         lifecyclePhase = phase
-        gameSession?.handleLifecycle(phase)
+        if let gameSession {
+            gameSession.handleLifecycle(phase)
+        } else {
+            audioDirector?.handleLifecycle(phase)
+        }
     }
 
     func returnToHub() {
