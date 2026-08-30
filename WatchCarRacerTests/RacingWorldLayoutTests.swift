@@ -206,6 +206,30 @@ final class RacingWorldLayoutTests: XCTestCase {
         XCTAssertEqual(ahead.position.z, -54, accuracy: 0.000_1)
     }
 
+    func testTrackProfilesProduceDistinctCurvesAndElevation() {
+        let coastal = RacingWorldLayout.trackPlacement(
+            distance: 54,
+            travel: 63,
+            track: .coastal
+        )
+        let alpine = RacingWorldLayout.trackPlacement(
+            distance: 54,
+            travel: 63,
+            track: .alpine
+        )
+        let desert = RacingWorldLayout.trackPlacement(
+            distance: 54,
+            travel: 63,
+            track: .desert
+        )
+
+        XCTAssertGreaterThan(simd_distance(coastal.position, alpine.position), 0.5)
+        XCTAssertGreaterThan(simd_distance(coastal.position, desert.position), 0.5)
+        XCTAssertGreaterThan(simd_distance(alpine.position, desert.position), 0.5)
+        XCTAssertEqual(coastal.position.z, alpine.position.z, accuracy: 0.000_1)
+        XCTAssertEqual(alpine.position.z, desert.position.z, accuracy: 0.000_1)
+    }
+
     func testSpeedProgressClampsToConfiguredRange() {
         XCTAssertEqual(
             RacingWorldLayout.speedProgress(speed: 4, initialSpeed: 12, maximumSpeed: 24),
@@ -305,6 +329,33 @@ final class RacingWorldLayoutTests: XCTestCase {
         XCTAssertTrue((0...1).contains(invalid.glarePosition.x))
         XCTAssertTrue((0...1).contains(invalid.glarePosition.y))
         XCTAssertTrue((0...1).contains(invalid.glareOpacity))
+    }
+
+    func testWeatherChangesSunlightAndTrackCatalogIsComplete() {
+        XCTAssertEqual(RacingTrack.allCases.count, 3)
+        XCTAssertEqual(RacingWeather.allCases.count, 4)
+
+        let clear = RacingSunlightModel.state(
+            travel: 120,
+            steering: 0,
+            environment: RacingEnvironmentSelection(track: .coastal, weather: .clear)
+        )
+        let rain = RacingSunlightModel.state(
+            travel: 120,
+            steering: 0,
+            environment: RacingEnvironmentSelection(track: .coastal, weather: .rain)
+        )
+        let storm = RacingSunlightModel.state(
+            travel: 120,
+            steering: 0,
+            environment: RacingEnvironmentSelection(track: .desert, weather: .storm)
+        )
+
+        XCTAssertLessThan(rain.intensity, clear.intensity)
+        XCTAssertLessThan(storm.intensity, rain.intensity)
+        XCTAssertLessThan(rain.glareOpacity, clear.glareOpacity)
+        XCTAssertLessThan(storm.glareOpacity, rain.glareOpacity)
+        XCTAssertNotEqual(storm.color, clear.color)
     }
 
     func testRacing3DAssetsMatchAuthoredHashesAndUSDZContract() throws {

@@ -13,6 +13,7 @@ struct GameRootView: View {
     let gameSession: GameSessionController
     let watchSession: PhoneWatchSession
     let sensorySettings: SensorySettingsController
+    let environment: RacingEnvironmentSelection
     let onRetry: () -> Void
     let onMainHub: () -> Void
 
@@ -24,7 +25,8 @@ struct GameRootView: View {
                     steering: gameSession.steeringSnapshot.value,
                     lastEvent: gameSession.lastEvent,
                     appearance: gameSession.appearance,
-                    configuration: gameSession.scene.configuration
+                    configuration: gameSession.scene.configuration,
+                    environment: environment
                 )
                 .ignoresSafeArea()
 

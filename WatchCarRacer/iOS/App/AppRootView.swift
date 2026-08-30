@@ -54,6 +54,7 @@ struct AppRootView: View {
                         gameSession: gameSession,
                         watchSession: watchSession,
                         sensorySettings: sensorySettings,
+                        environment: flow.environmentSelection,
                         onRetry: flow.retry,
                         onMainHub: flow.returnToHub
                     )

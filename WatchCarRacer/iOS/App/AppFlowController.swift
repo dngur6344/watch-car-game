@@ -30,6 +30,7 @@ final class AppFlowController {
     private(set) var route: Route = .hub
     private(set) var committedSelection: VehicleSelection
     private(set) var draftSelection: VehicleSelection
+    private(set) var environmentSelection: RacingEnvironmentSelection = .default
     private(set) var assetReadiness: AssetReadiness = .idle
     private(set) var gameSession: GameSessionController?
     private(set) var errorMessage: String?
@@ -116,6 +117,28 @@ final class AppFlowController {
     func exitMaintenance() {
         guard route == .maintenance else { return }
         route = .hub
+    }
+
+    @discardableResult
+    func selectTrack(_ track: RacingTrack) -> Bool {
+        guard route == .hub,
+              gameSession == nil,
+              environmentSelection.track != track else {
+            return false
+        }
+        environmentSelection.track = track
+        return true
+    }
+
+    @discardableResult
+    func selectWeather(_ weather: RacingWeather) -> Bool {
+        guard route == .hub,
+              gameSession == nil,
+              environmentSelection.weather != weather else {
+            return false
+        }
+        environmentSelection.weather = weather
+        return true
     }
 
     @discardableResult

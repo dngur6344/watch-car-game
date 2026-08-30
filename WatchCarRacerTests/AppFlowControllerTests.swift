@@ -16,6 +16,36 @@ final class AppFlowControllerTests: XCTestCase {
         XCTAssertEqual(store.saveCalls, [])
     }
 
+    func testTrackAndWeatherSelectionIsLimitedToHubAndRetainedForRetry() async throws {
+        let store = RecordingSelectionStore(selection: VehicleCatalog.defaultSelection)
+        let flow = try makeFlow(store: store)
+
+        XCTAssertEqual(flow.environmentSelection, .default)
+        XCTAssertTrue(flow.selectTrack(.alpine))
+        XCTAssertTrue(flow.selectWeather(.rain))
+        XCTAssertFalse(flow.selectTrack(.alpine))
+        XCTAssertFalse(flow.selectWeather(.rain))
+        XCTAssertEqual(
+            flow.environmentSelection,
+            RacingEnvironmentSelection(track: .alpine, weather: .rain)
+        )
+
+        flow.enterMaintenance()
+        XCTAssertFalse(flow.selectTrack(.desert))
+        XCTAssertFalse(flow.selectWeather(.storm))
+        flow.exitMaintenance()
+        await flow.prepareAssets()
+        XCTAssertTrue(flow.drive())
+        XCTAssertFalse(flow.selectTrack(.desert))
+        XCTAssertFalse(flow.selectWeather(.storm))
+
+        flow.retry()
+        XCTAssertEqual(
+            flow.environmentSelection,
+            RacingEnvironmentSelection(track: .alpine, weather: .rain)
+        )
+    }
+
     func testSelectionCanOnlyBeEditedInMaintenance() async throws {
         let saved = VehicleCatalog.defaultSelection
         let store = RecordingSelectionStore(selection: saved)

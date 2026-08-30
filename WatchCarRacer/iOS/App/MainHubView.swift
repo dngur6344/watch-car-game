@@ -12,6 +12,7 @@ struct MainHubView: View {
     @State private var presentationStatus: PresentationLoadStatus = .idle
     @State private var presentationReloadRequest = 0
     @State private var isSensorySettingsPresented = false
+    @State private var isEnvironmentPickerPresented = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -76,6 +77,9 @@ struct MainHubView: View {
         }
         .sheet(isPresented: $isSensorySettingsPresented) {
             SensorySettingsView(controller: sensorySettings)
+        }
+        .sheet(isPresented: $isEnvironmentPickerPresented) {
+            RacingEnvironmentPickerView(flow: flow)
         }
     }
 
@@ -195,6 +199,7 @@ struct MainHubView: View {
         VStack(alignment: .leading, spacing: compact ? 8 : 12) {
             localBestCard(compact: compact)
             watchStatusCard(compact: compact)
+            environmentButton(compact: compact)
 
             Button {
                 flow.enterMaintenance()
@@ -299,6 +304,47 @@ struct MainHubView: View {
         .accessibilityIdentifier("hub.watchStatus")
     }
 
+    private func environmentButton(compact: Bool) -> some View {
+        Button {
+            isEnvironmentPickerPresented = true
+        } label: {
+            HStack(spacing: compact ? 8 : 12) {
+                Image(systemName: flow.environmentSelection.track.symbolName)
+                    .font(compact ? .headline : .title2)
+                    .foregroundStyle(.cyan)
+                    .frame(width: compact ? 36 : 44, height: compact ? 36 : 44)
+                    .background(.cyan.opacity(0.12), in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("TRACK & WEATHER")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white.opacity(0.64))
+                    Text(
+                        "\(flow.environmentSelection.track.displayName) · "
+                            + flow.environmentSelection.weather.displayName
+                    )
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.white)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: flow.environmentSelection.weather.symbolName)
+                    .font(.headline)
+                    .foregroundStyle(.white.opacity(0.72))
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white.opacity(0.46))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Track and weather")
+        .accessibilityValue(
+            "\(flow.environmentSelection.track.displayName), "
+                + flow.environmentSelection.weather.displayName
+        )
+        .accessibilityHint("Choose the racing track and weather conditions")
+        .accessibilityIdentifier("hub.environment")
+    }
+
     @ViewBuilder
     private var assetStatus: some View {
         if let errorMessage = flow.errorMessage {
@@ -363,5 +409,148 @@ struct MainHubView: View {
         return "Sound effects \(settings.sfxEnabled ? "on" : "off"), "
             + "haptics \(settings.hapticsEnabled ? "on" : "off"), "
             + "effects \(settings.effectIntensity.displayName)"
+    }
+}
+
+private struct RacingEnvironmentPickerView: View {
+    let flow: AppFlowController
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    optionSection(
+                        title: "TRACK",
+                        subtitle: "Each route changes corner rhythm, elevation and scenery."
+                    ) {
+                        ForEach(RacingTrack.allCases) { track in
+                            optionButton(
+                                title: track.displayName,
+                                detail: track.detail,
+                                symbolName: track.symbolName,
+                                isSelected: flow.environmentSelection.track == track,
+                                accessibilityID: "environment.track.\(track.rawValue)"
+                            ) {
+                                flow.selectTrack(track)
+                            }
+                        }
+                    }
+
+                    optionSection(
+                        title: "WEATHER",
+                        subtitle: "Visibility, sunlight and asphalt reflections react to conditions."
+                    ) {
+                        ForEach(RacingWeather.allCases) { weather in
+                            optionButton(
+                                title: weather.displayName,
+                                detail: weather.detail,
+                                symbolName: weather.symbolName,
+                                isSelected: flow.environmentSelection.weather == weather,
+                                accessibilityID: "environment.weather.\(weather.rawValue)"
+                            ) {
+                                flow.selectWeather(weather)
+                            }
+                        }
+                    }
+                }
+                .padding(20)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
+            }
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.02, green: 0.04, blue: 0.08),
+                        Color(red: 0.03, green: 0.12, blue: 0.15),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+            )
+            .navigationTitle("TRACK CONDITIONS")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("DONE") {
+                        dismiss()
+                    }
+                    .fontWeight(.bold)
+                    .accessibilityIdentifier("environment.done")
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .presentationDetents([.medium, .large])
+    }
+
+    private func optionSection<Content: View>(
+        title: String,
+        subtitle: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.caption.bold())
+                .tracking(1.2)
+                .foregroundStyle(.mint)
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.62))
+            LazyVStack(spacing: 10) {
+                content()
+            }
+        }
+    }
+
+    private func optionButton(
+        title: String,
+        detail: String,
+        symbolName: String,
+        isSelected: Bool,
+        accessibilityID: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: symbolName)
+                    .font(.title3.bold())
+                    .foregroundStyle(isSelected ? .black : .mint)
+                    .frame(width: 38, height: 38)
+                    .background(isSelected ? Color.mint : Color.mint.opacity(0.12), in: Circle())
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.headline.bold())
+                        .foregroundStyle(.white)
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.66))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.mint)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(13)
+            .frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
+            .background(
+                isSelected ? Color.mint.opacity(0.12) : Color.white.opacity(0.055),
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(isSelected ? Color.mint.opacity(0.74) : Color.white.opacity(0.10))
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint(detail)
+        .accessibilityIdentifier(accessibilityID)
     }
 }

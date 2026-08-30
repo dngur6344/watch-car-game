@@ -2,6 +2,81 @@ import RealityKit
 import SwiftUI
 import UIKit
 
+enum RacingTrack: String, CaseIterable, Identifiable, Sendable {
+    case coastal
+    case alpine
+    case desert
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .coastal: "Ocean Drive"
+        case .alpine: "Alpine Pass"
+        case .desert: "Desert Circuit"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .coastal: "Fast coastal sweepers and illuminated resort straights"
+        case .alpine: "Tighter mountain bends with stronger elevation changes"
+        case .desert: "Wide high-speed arcs across an open canyon route"
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .coastal: "water.waves"
+        case .alpine: "mountain.2.fill"
+        case .desert: "sun.max.fill"
+        }
+    }
+}
+
+enum RacingWeather: String, CaseIterable, Identifiable, Sendable {
+    case clear
+    case rain
+    case fog
+    case storm
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .clear: "Clear"
+        case .rain: "Rain"
+        case .fog: "Fog"
+        case .storm: "Storm"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .clear: "High visibility with direct sunlight"
+        case .rain: "Wet asphalt, darker reflections and rainfall"
+        case .fog: "Soft light with reduced horizon visibility"
+        case .storm: "Heavy rain, low sunlight and distant lightning"
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .clear: "sun.max.fill"
+        case .rain: "cloud.rain.fill"
+        case .fog: "cloud.fog.fill"
+        case .storm: "cloud.bolt.rain.fill"
+        }
+    }
+}
+
+struct RacingEnvironmentSelection: Equatable, Sendable {
+    var track: RacingTrack
+    var weather: RacingWeather
+
+    static let `default` = RacingEnvironmentSelection(track: .coastal, weather: .clear)
+}
+
 struct RacingWorldLayout {
     struct Placement {
         let position: SIMD3<Float>
@@ -58,11 +133,15 @@ struct RacingWorldLayout {
         return Float(unwrappedDistance - cycle * cycleLength)
     }
 
-    static func trackPlacement(distance: Float, travel: Double) -> Placement {
-        let position = trackCenter(distance: distance, travel: travel)
+    static func trackPlacement(
+        distance: Float,
+        travel: Double,
+        track: RacingTrack = .coastal
+    ) -> Placement {
+        let position = trackCenter(distance: distance, travel: travel, track: track)
         let sample: Float = 0.4
-        let before = trackCenter(distance: distance - sample, travel: travel)
-        let after = trackCenter(distance: distance + sample, travel: travel)
+        let before = trackCenter(distance: distance - sample, travel: travel, track: track)
+        let after = trackCenter(distance: distance + sample, travel: travel, track: track)
         let delta = after - before
         let direction = simd_length_squared(delta) > 0.000_001
             ? simd_normalize(delta)
@@ -78,16 +157,21 @@ struct RacingWorldLayout {
 
     static func obstaclePlacement(
         _ obstacle: ObstacleSnapshot,
-        travel: Double
+        travel: Double,
+        track: RacingTrack = .coastal
     ) -> Placement {
         let distance = Float(obstacle.distance.isFinite ? obstacle.distance : 0)
-        let track = trackPlacement(distance: distance, travel: travel)
+        let trackPlacement = trackPlacement(
+            distance: distance,
+            travel: travel,
+            track: track
+        )
         let lateral = Float(obstacle.x.isFinite ? obstacle.x : 0)
         let clearance: Float = obstacle.kind == .barrier ? 0.34 : 0
-        let offset = track.orientation.act(SIMD3(lateral, clearance, 0))
+        let offset = trackPlacement.orientation.act(SIMD3(lateral, clearance, 0))
         return Placement(
-            position: track.position + offset,
-            orientation: track.orientation
+            position: trackPlacement.position + offset,
+            orientation: trackPlacement.orientation
         )
     }
 
@@ -158,12 +242,17 @@ struct RacingWorldLayout {
         playerX: Double,
         steering: Double,
         speedProgress: Float,
-        travel: Double
+        travel: Double,
+        track: RacingTrack = .coastal
     ) -> CameraPose {
         let safePlayerX = Float(playerX.isFinite ? playerX : 0)
         let safeSteering = Float(min(max(steering.isFinite ? steering : 0, -1), 1))
         let progress = min(max(speedProgress.isFinite ? speedProgress : 0, 0), 1)
-        let curveFocus = trackPlacement(distance: 16, travel: travel).position
+        let curveFocus = trackPlacement(
+            distance: 16,
+            travel: travel,
+            track: track
+        ).position
         let roadPulse = Float(sin((travel.isFinite ? travel : 0) * 0.24))
 
         return CameraPose(
@@ -182,16 +271,32 @@ struct RacingWorldLayout {
         )
     }
 
-    private static func trackCenter(distance: Float, travel: Double) -> SIMD3<Float> {
+    private static func trackCenter(
+        distance: Float,
+        travel: Double,
+        track: RacingTrack
+    ) -> SIMD3<Float> {
         let safeTravel = Float(travel.isFinite ? max(travel, 0) : 0)
         let influence = min(abs(distance) / 28, 1)
-        let curvePhase = safeTravel * 0.032
-        let elevationPhase = safeTravel * 0.019 + 0.8
-        let x = (sin(curvePhase + distance * 0.032) - sin(curvePhase))
-            * 5.2 * influence
+        let profile: (
+            curveFrequency: Float,
+            curveAmplitude: Float,
+            elevationFrequency: Float,
+            elevationAmplitude: Float,
+            phase: Float
+        ) = switch track {
+        case .coastal: (0.032, 5.2, 0.019, 0.45, 0.8)
+        case .alpine: (0.044, 6.8, 0.026, 0.76, 1.35)
+        case .desert: (0.022, 4.1, 0.014, 0.30, 0.30)
+        }
+        let curvePhase = safeTravel * profile.curveFrequency + profile.phase
+        let elevationPhase = safeTravel * profile.elevationFrequency + profile.phase
+        let x = (
+            sin(curvePhase + distance * profile.curveFrequency) - sin(curvePhase)
+        ) * profile.curveAmplitude * influence
         let elevationWave = (
-            sin(elevationPhase + distance * 0.019) - sin(elevationPhase)
-        ) * 0.45 * influence
+            sin(elevationPhase + distance * profile.elevationFrequency) - sin(elevationPhase)
+        ) * profile.elevationAmplitude * influence
         let horizonLift = influence * 0.28
         let minimumLift = influence * 0.04
         let y = distance >= 0
@@ -219,12 +324,33 @@ struct RacingSunlightModel {
         }
     }
 
-    static func state(travel: Double, steering: Double) -> State {
+    static func state(
+        travel: Double,
+        steering: Double,
+        environment: RacingEnvironmentSelection = .default
+    ) -> State {
         let safeTravel = Float(travel.isFinite ? max(travel, 0) : 0)
         let safeSteering = Float(min(max(steering.isFinite ? steering : 0, -1), 1))
         let routePhase = safeTravel * 0.0024
         let horizontalDrift = sin(routePhase)
         let verticalDrift = cos(routePhase * 0.72)
+        let trackWarmth: SIMD3<Float> = switch environment.track {
+        case .coastal: SIMD3(1, 0.90, 0.75)
+        case .alpine: SIMD3(0.90, 0.95, 1)
+        case .desert: SIMD3(1, 0.82, 0.60)
+        }
+        let weatherIntensity: Float = switch environment.weather {
+        case .clear: 1
+        case .rain: 0.60
+        case .fog: 0.44
+        case .storm: 0.25
+        }
+        let glareMultiplier: Float = switch environment.weather {
+        case .clear: 1
+        case .rain: 0.28
+        case .fog: 0.14
+        case .storm: 0.06
+        }
 
         return State(
             sourcePosition: SIMD3(
@@ -233,17 +359,18 @@ struct RacingSunlightModel {
                 -25.5 + verticalDrift * 2.4
             ),
             target: SIMD3(0, 0.2, -7.5),
-            color: SIMD3(
-                1,
-                0.89 + verticalDrift * 0.018,
-                0.72 + verticalDrift * 0.025
+            color: simd_clamp(
+                trackWarmth + SIMD3(0, verticalDrift * 0.018, verticalDrift * 0.025),
+                .zero,
+                SIMD3(repeating: 1)
             ),
-            intensity: 18_400 + verticalDrift * 1_100,
+            intensity: (18_400 + verticalDrift * 1_100) * weatherIntensity,
             glarePosition: SIMD2(
                 min(max(0.18 + horizontalDrift * 0.045 - safeSteering * 0.012, 0.10), 0.30),
                 min(max(0.17 - verticalDrift * 0.018, 0.12), 0.23)
             ),
             glareOpacity: min(max(0.46 + verticalDrift * 0.055, 0.34), 0.54)
+                * glareMultiplier
         )
     }
 }
@@ -343,6 +470,7 @@ struct RacingWorldView: View {
     let lastEvent: GameEvent?
     let appearance: VehicleAppearance
     let configuration: GameSimulation.Configuration
+    let environment: RacingEnvironmentSelection
 
     var body: some View {
         ZStack {
@@ -357,6 +485,7 @@ struct RacingWorldView: View {
                     lastEvent: lastEvent,
                     appearance: appearance,
                     configuration: configuration,
+                    environment: environment,
                     resources: resources
                 )
                 content.add(world)
@@ -371,15 +500,23 @@ struct RacingWorldView: View {
                     snapshot: snapshot,
                     steering: steering,
                     lastEvent: lastEvent,
-                    configuration: configuration
+                    configuration: configuration,
+                    environment: environment
                 )
             }
 
             RacingSunGlareOverlay(
                 state: RacingSunlightModel.state(
                     travel: snapshot.distance,
-                    steering: steering
+                    steering: steering,
+                    environment: environment
                 ),
+                reducesTransparency: accessibilityReduceTransparency
+            )
+
+            RacingWeatherOverlay(
+                weather: environment.weather,
+                distance: snapshot.distance,
                 reducesTransparency: accessibilityReduceTransparency
             )
         }
@@ -394,8 +531,11 @@ struct RacingWorldView: View {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()
-                .saturation(1.08)
-                .contrast(1.04)
+                .hueRotation(trackSkyHue)
+                .saturation(environment.weather == .clear ? 1.08 : 0.82)
+                .contrast(environment.weather == .fog ? 0.82 : 1.04)
+                .brightness(skyBrightness)
+                .overlay(trackSkyTint)
         } else {
             LinearGradient(
                 colors: [
@@ -407,6 +547,105 @@ struct RacingWorldView: View {
                 endPoint: .bottom
             )
         }
+    }
+
+    private var trackSkyHue: Angle {
+        switch environment.track {
+        case .coastal: .zero
+        case .alpine: .degrees(-18)
+        case .desert: .degrees(24)
+        }
+    }
+
+    private var skyBrightness: Double {
+        switch environment.weather {
+        case .clear: 0
+        case .rain: -0.16
+        case .fog: 0.04
+        case .storm: -0.30
+        }
+    }
+
+    private var trackSkyTint: Color {
+        let base: Color = switch environment.track {
+        case .coastal: .clear
+        case .alpine: Color(red: 0.50, green: 0.76, blue: 0.92).opacity(0.10)
+        case .desert: Color(red: 1, green: 0.48, blue: 0.18).opacity(0.16)
+        }
+        return base
+    }
+}
+
+private struct RacingWeatherOverlay: View {
+    let weather: RacingWeather
+    let distance: Double
+    let reducesTransparency: Bool
+
+    var body: some View {
+        ZStack {
+            switch weather {
+            case .clear:
+                EmptyView()
+            case .rain:
+                Color(red: 0.05, green: 0.12, blue: 0.20)
+                    .opacity(reducesTransparency ? 0.08 : 0.15)
+                rain(opacity: reducesTransparency ? 0.20 : 0.42)
+            case .fog:
+                fog(opacity: reducesTransparency ? 0.18 : 0.42)
+            case .storm:
+                Color(red: 0.015, green: 0.035, blue: 0.09)
+                    .opacity(reducesTransparency ? 0.18 : 0.34)
+                rain(opacity: reducesTransparency ? 0.28 : 0.58)
+                Color.white.opacity(lightningOpacity)
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func rain(opacity: Double) -> some View {
+        Canvas { context, size in
+            let safeDistance = distance.isFinite ? max(distance, 0) : 0
+            let phase = CGFloat(safeDistance * 7.4)
+            for index in 0..<54 {
+                let seed = CGFloat(index)
+                let x = (seed * 73 + phase * (0.72 + CGFloat(index % 5) * 0.07))
+                    .truncatingRemainder(dividingBy: size.width + 80) - 40
+                let y = (seed * 47 + phase * 2.1)
+                    .truncatingRemainder(dividingBy: size.height + 70) - 35
+                var drop = Path()
+                drop.move(to: CGPoint(x: x, y: y))
+                drop.addLine(
+                    to: CGPoint(
+                        x: x - 8 - CGFloat(index % 3) * 2,
+                        y: y + 24 + CGFloat(index % 4) * 5
+                    )
+                )
+                context.stroke(
+                    drop,
+                    with: .color(.white.opacity(opacity)),
+                    lineWidth: index.isMultiple(of: 4) ? 1.3 : 0.7
+                )
+            }
+        }
+    }
+
+    private func fog(opacity: Double) -> some View {
+        LinearGradient(
+            colors: [
+                Color(red: 0.72, green: 0.80, blue: 0.82).opacity(opacity * 0.34),
+                Color(red: 0.76, green: 0.82, blue: 0.82).opacity(opacity),
+                Color(red: 0.52, green: 0.60, blue: 0.62).opacity(opacity * 0.55),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    private var lightningOpacity: Double {
+        let safeDistance = distance.isFinite ? max(distance, 0) : 0
+        return pow(max(sin(safeDistance * 0.024 - 1.1), 0), 34) * 0.22
     }
 }
 
@@ -518,20 +757,23 @@ private enum RacingWorldFactory {
         lastEvent: GameEvent?,
         appearance: VehicleAppearance,
         configuration: GameSimulation.Configuration,
+        environment: RacingEnvironmentSelection,
         resources: RacingWorldResources
     ) -> Entity {
         let world = Entity()
         world.name = worldName
 
-        world.addChild(makeEnvironment())
+        world.addChild(makeEnvironment(track: environment.track))
 
-        if let environment = resources.environment {
+        if let environmentResource = resources.environment {
             let imageLight = Entity()
             imageLight.name = "racing.imageLight"
             imageLight.components.set(
                 ImageBasedLightComponent(
-                    source: .single(environment),
-                    intensityExponent: 0.42
+                    source: .single(environmentResource),
+                    intensityExponent: imageLightIntensityExponent(
+                        for: environment.weather
+                    )
                 )
             )
             world.addChild(imageLight)
@@ -548,7 +790,8 @@ private enum RacingWorldFactory {
                     index: index,
                     asphaltTexture: resources.asphaltTexture,
                     asphaltNormalTexture: resources.asphaltNormalTexture,
-                    asphaltRoughnessTexture: resources.asphaltRoughnessTexture
+                    asphaltRoughnessTexture: resources.asphaltRoughnessTexture,
+                    environment: environment
                 )
             )
         }
@@ -600,7 +843,8 @@ private enum RacingWorldFactory {
         sun.name = "racing.sun"
         let sunlight = RacingSunlightModel.state(
             travel: snapshot.distance,
-            steering: steering
+            steering: steering,
+            environment: environment
         )
         sun.light.color = color(from: sunlight.color)
         sun.light.intensity = sunlight.intensity
@@ -620,7 +864,8 @@ private enum RacingWorldFactory {
             snapshot: snapshot,
             steering: steering,
             lastEvent: lastEvent,
-            configuration: configuration
+            configuration: configuration,
+            environment: environment
         )
         return world
     }
@@ -630,14 +875,20 @@ private enum RacingWorldFactory {
         snapshot: GameSnapshot,
         steering: Double,
         lastEvent: GameEvent?,
-        configuration: GameSimulation.Configuration
+        configuration: GameSimulation.Configuration,
+        environment: RacingEnvironmentSelection
     ) {
         let speedProgress = RacingWorldLayout.speedProgress(
             speed: snapshot.speed,
             initialSpeed: configuration.initialSpeed,
             maximumSpeed: configuration.maximumSpeed
         )
-        updateSunlight(in: world, snapshot: snapshot, steering: steering)
+        updateSunlight(
+            in: world,
+            snapshot: snapshot,
+            steering: steering,
+            environment: environment
+        )
         if let track = world.findEntity(named: trackName) {
             for index in 0..<RacingWorldLayout.trackTileCount {
                 guard let tile = track.findEntity(named: "\(tilePrefix)\(index)") else {
@@ -649,7 +900,8 @@ private enum RacingWorldFactory {
                 )
                 let placement = RacingWorldLayout.trackPlacement(
                     distance: distance,
-                    travel: snapshot.distance
+                    travel: snapshot.distance,
+                    track: environment.track
                 )
                 tile.position = placement.position
                 tile.orientation = placement.orientation
@@ -693,7 +945,8 @@ private enum RacingWorldFactory {
                 playerX: snapshot.playerX,
                 steering: steering,
                 speedProgress: speedProgress,
-                travel: snapshot.distance
+                travel: snapshot.distance,
+                track: environment.track
             )
             camera.camera.fieldOfViewInDegrees += (
                 pose.fieldOfView - camera.camera.fieldOfViewInDegrees
@@ -717,7 +970,8 @@ private enum RacingWorldFactory {
         updateSpeedEffects(
             in: world,
             snapshot: snapshot,
-            speedProgress: speedProgress
+            speedProgress: speedProgress,
+            track: environment.track
         )
 
         guard let obstacleRoot = world.findEntity(named: obstacleRootName) else {
@@ -739,7 +993,8 @@ private enum RacingWorldFactory {
             }
             let placement = RacingWorldLayout.obstaclePlacement(
                 obstacle,
-                travel: snapshot.distance
+                travel: snapshot.distance,
+                track: environment.track
             )
             entity.position = placement.position
             entity.orientation = placement.orientation
@@ -761,14 +1016,16 @@ private enum RacingWorldFactory {
     private static func updateSunlight(
         in world: Entity,
         snapshot: GameSnapshot,
-        steering: Double
+        steering: Double,
+        environment: RacingEnvironmentSelection
     ) {
         guard let sun = world.findEntity(named: "racing.sun") as? DirectionalLight else {
             return
         }
         let sunlight = RacingSunlightModel.state(
             travel: snapshot.distance,
-            steering: steering
+            steering: steering,
+            environment: environment
         )
         sun.light.color = color(from: sunlight.color)
         sun.light.intensity = sunlight.intensity
@@ -783,10 +1040,32 @@ private enum RacingWorldFactory {
         index: Int,
         asphaltTexture: TextureResource?,
         asphaltNormalTexture: TextureResource?,
-        asphaltRoughnessTexture: TextureResource?
+        asphaltRoughnessTexture: TextureResource?,
+        environment: RacingEnvironmentSelection
     ) -> Entity {
         let tile = Entity()
         tile.name = "\(tilePrefix)\(index)"
+        let wetSurface = environment.weather == .rain || environment.weather == .storm
+        let asphaltColor: UIColor = if wetSurface {
+            UIColor(red: 0.31, green: 0.34, blue: 0.39, alpha: 1)
+        } else {
+            switch environment.track {
+            case .coastal: UIColor(red: 0.66, green: 0.69, blue: 0.74, alpha: 1)
+            case .alpine: UIColor(red: 0.48, green: 0.52, blue: 0.57, alpha: 1)
+            case .desert: UIColor(red: 0.61, green: 0.56, blue: 0.50, alpha: 1)
+            }
+        }
+        let shoulderColor: UIColor = switch environment.track {
+        case .coastal: UIColor(red: 0.36, green: 0.39, blue: 0.33, alpha: 1)
+        case .alpine: UIColor(red: 0.20, green: 0.31, blue: 0.25, alpha: 1)
+        case .desert: UIColor(red: 0.52, green: 0.31, blue: 0.17, alpha: 1)
+        }
+        let asphaltRoughness: Float = switch environment.weather {
+        case .clear: 0.82
+        case .rain: 0.31
+        case .fog: 0.68
+        case .storm: 0.24
+        }
 
         tile.addChild(
             box(
@@ -797,7 +1076,7 @@ private enum RacingWorldFactory {
                     RacingWorldLayout.trackUnderlayLength
                 ),
                 position: SIMD3(0, -0.15, 0),
-                color: UIColor(red: 0.47, green: 0.50, blue: 0.54, alpha: 1),
+                color: asphaltColor.withAlphaComponent(1),
                 metallic: false,
                 roughness: 0.94,
                 cornerRadius: 0.025
@@ -813,9 +1092,9 @@ private enum RacingWorldFactory {
                     RacingWorldLayout.trackSurfaceLength
                 ),
                 position: SIMD3(0, -0.09, 0),
-                color: UIColor(red: 0.66, green: 0.69, blue: 0.74, alpha: 1),
+                color: asphaltColor,
                 metallic: false,
-                roughness: 0.82,
+                roughness: asphaltRoughness,
                 cornerRadius: 0.04,
                 texture: asphaltTexture,
                 normalTexture: asphaltNormalTexture,
@@ -830,7 +1109,7 @@ private enum RacingWorldFactory {
                     name: "shoulder",
                     size: SIMD3(1.9, 0.08, RacingWorldLayout.trackUnderlayLength),
                     position: SIMD3(side * (roadHalfWidth + 1), -0.12, 0),
-                    color: UIColor(red: 0.36, green: 0.39, blue: 0.33, alpha: 1),
+                    color: shoulderColor,
                     metallic: false,
                     roughness: 1
                 )
@@ -894,25 +1173,41 @@ private enum RacingWorldFactory {
             }
         }
 
-        if index.isMultiple(of: 2) {
-            tile.addChild(makePalm(position: SIMD3(-6.1, 0, -3.2)))
-            tile.addChild(makePalm(position: SIMD3(6.4, 0, 3.4)))
+        switch environment.track {
+        case .coastal:
+            if index.isMultiple(of: 2) {
+                tile.addChild(makePalm(position: SIMD3(-6.1, 0, -3.2)))
+                tile.addChild(makePalm(position: SIMD3(6.4, 0, 3.4)))
+            }
+            if index % 5 == 2 {
+                tile.addChild(makeGrandstand(position: SIMD3(8.6, 0, 0)))
+            }
+            if index == 4 {
+                tile.addChild(makePitBuilding(position: SIMD3(-10.4, 0, 0)))
+            }
+            if index == 7 {
+                tile.addChild(makeHotelTower(position: SIMD3(11.5, 0, 0)))
+            }
+        case .alpine:
+            if index.isMultiple(of: 2) {
+                tile.addChild(makePine(position: SIMD3(-6.5, 0, -3.0)))
+                tile.addChild(makePine(position: SIMD3(6.9, 0, 3.5)))
+            }
+            if index % 3 == 1 {
+                tile.addChild(makeRockCluster(position: SIMD3(-7.8, 0, 2.4)))
+            }
+        case .desert:
+            if index.isMultiple(of: 3) {
+                tile.addChild(makeCactus(position: SIMD3(-6.6, 0, -3.1)))
+                tile.addChild(makeCactus(position: SIMD3(7.2, 0, 3.2)))
+            }
+            if index % 4 == 1 {
+                tile.addChild(makeRockCluster(position: SIMD3(-8.1, 0, 2.4)))
+            }
         }
         if index.isMultiple(of: 3) {
             tile.addChild(makeRoadsideLight(position: SIMD3(-4.75, 0, 2.8)))
             tile.addChild(makeRoadsideLight(position: SIMD3(4.75, 0, -2.8)))
-        }
-        if index % 4 == 1 {
-            tile.addChild(makeRockCluster(position: SIMD3(-7.5, 0, 2.4)))
-        }
-        if index % 5 == 2 {
-            tile.addChild(makeGrandstand(position: SIMD3(8.6, 0, 0)))
-        }
-        if index == 4 {
-            tile.addChild(makePitBuilding(position: SIMD3(-10.4, 0, 0)))
-        }
-        if index == 7 {
-            tile.addChild(makeHotelTower(position: SIMD3(11.5, 0, 0)))
         }
         if index % 3 == 2 {
             tile.addChild(makeSkidMarks())
@@ -1297,7 +1592,8 @@ private enum RacingWorldFactory {
     private static func updateSpeedEffects(
         in world: Entity,
         snapshot: GameSnapshot,
-        speedProgress: Float
+        speedProgress: Float,
+        track: RacingTrack
     ) {
         guard let root = world.findEntity(named: speedEffectRootName) else {
             return
@@ -1316,7 +1612,8 @@ private enum RacingWorldFactory {
             let distance = Float(5.5 + phase)
             let placement = RacingWorldLayout.trackPlacement(
                 distance: distance,
-                travel: snapshot.distance
+                travel: snapshot.distance,
+                track: track
             )
             let side: Float = index.isMultiple(of: 2) ? -1 : 1
             let lateral = side * (roadHalfWidth + 0.62 + Float(index % 3) * 0.24)
@@ -1600,39 +1897,62 @@ private enum RacingWorldFactory {
         return marks
     }
 
-    private static func makeEnvironment() -> Entity {
+    private static func makeEnvironment(track: RacingTrack) -> Entity {
         let environment = Entity()
         environment.name = "racing.environment"
+        let groundColor: UIColor = switch track {
+        case .coastal: UIColor(red: 0.12, green: 0.29, blue: 0.20, alpha: 1)
+        case .alpine: UIColor(red: 0.10, green: 0.23, blue: 0.17, alpha: 1)
+        case .desert: UIColor(red: 0.48, green: 0.27, blue: 0.14, alpha: 1)
+        }
         environment.addChild(
             box(
                 name: "ground",
                 size: SIMD3(140, 0.12, 360),
                 position: SIMD3(0, -0.20, -150),
-                color: UIColor(red: 0.12, green: 0.29, blue: 0.20, alpha: 1),
+                color: groundColor,
                 metallic: false,
                 roughness: 1
             )
         )
 
         for (index, massif) in RacingWorldLayout.mountainMassifs.enumerated() {
-            environment.addChild(makeMountainMassif(massif, index: index))
+            environment.addChild(
+                makeMountainMassif(massif, index: index, track: track)
+            )
         }
         return environment
     }
 
     private static func makeMountainMassif(
         _ massif: RacingWorldLayout.MountainMassif,
-        index: Int
+        index: Int,
+        track: RacingTrack
     ) -> Entity {
         let root = Entity()
         root.name = "racing.mountain.\(index)"
         root.position = SIMD3(massif.x, 0, massif.z)
 
-        let baseColors = [
-            UIColor(red: 0.12, green: 0.29, blue: 0.24, alpha: 1),
-            UIColor(red: 0.17, green: 0.36, blue: 0.28, alpha: 1),
-            UIColor(red: 0.21, green: 0.41, blue: 0.31, alpha: 1),
-        ]
+        let baseColors: [UIColor] = switch track {
+        case .coastal:
+            [
+                UIColor(red: 0.12, green: 0.29, blue: 0.24, alpha: 1),
+                UIColor(red: 0.17, green: 0.36, blue: 0.28, alpha: 1),
+                UIColor(red: 0.21, green: 0.41, blue: 0.31, alpha: 1),
+            ]
+        case .alpine:
+            [
+                UIColor(red: 0.18, green: 0.25, blue: 0.25, alpha: 1),
+                UIColor(red: 0.24, green: 0.32, blue: 0.30, alpha: 1),
+                UIColor(red: 0.30, green: 0.37, blue: 0.35, alpha: 1),
+            ]
+        case .desert:
+            [
+                UIColor(red: 0.42, green: 0.19, blue: 0.11, alpha: 1),
+                UIColor(red: 0.55, green: 0.27, blue: 0.14, alpha: 1),
+                UIColor(red: 0.66, green: 0.36, blue: 0.18, alpha: 1),
+            ]
+        }
         let peakOffsets: [(x: Float, z: Float, radius: Float, height: Float)] = [
             (-0.48, 0.08, 0.58, 0.74),
             (0, -0.10, 0.74, 1),
@@ -1661,7 +1981,7 @@ private enum RacingWorldFactory {
             mountain.scale = SIMD3(1, 1, 0.82 + Float(peakIndex) * 0.08)
             root.addChild(mountain)
 
-            if height > 18 {
+            if track == .alpine, height > 16 {
                 let snowHeight = height * 0.23
                 let snow = ModelEntity(
                     mesh: .generateCone(height: snowHeight, radius: radius * 0.24),
@@ -1686,6 +2006,11 @@ private enum RacingWorldFactory {
 
         for ridgeIndex in 0..<4 {
             let side: Float = ridgeIndex.isMultiple(of: 2) ? -1 : 1
+            let ridgeColor: UIColor = switch track {
+            case .coastal: UIColor(red: 0.10, green: 0.24, blue: 0.21, alpha: 0.82)
+            case .alpine: UIColor(red: 0.14, green: 0.20, blue: 0.21, alpha: 0.86)
+            case .desert: UIColor(red: 0.37, green: 0.15, blue: 0.09, alpha: 0.88)
+            }
             let ridge = box(
                 name: "mountain.ridge.\(ridgeIndex)",
                 size: SIMD3(0.35, massif.height * 0.58, massif.radius * 0.48),
@@ -1694,7 +2019,7 @@ private enum RacingWorldFactory {
                     massif.height * 0.39,
                     Float(ridgeIndex - 2) * 0.9
                 ),
-                color: UIColor(red: 0.10, green: 0.24, blue: 0.21, alpha: 0.82),
+                color: ridgeColor,
                 metallic: false,
                 roughness: 1,
                 cornerRadius: 0.06
@@ -1742,6 +2067,83 @@ private enum RacingWorldFactory {
             palm.addChild(leaf)
         }
         return palm
+    }
+
+    private static func makePine(position: SIMD3<Float>) -> Entity {
+        let pine = Entity()
+        pine.name = "racing.pine"
+        pine.position = position
+
+        let trunk = ModelEntity(
+            mesh: .generateCylinder(height: 2.5, radius: 0.13),
+            materials: [
+                SimpleMaterial(
+                    color: UIColor(red: 0.26, green: 0.15, blue: 0.08, alpha: 1),
+                    roughness: 0.96,
+                    isMetallic: false
+                ),
+            ]
+        )
+        trunk.position.y = 1.25
+        pine.addChild(trunk)
+
+        for level in 0..<3 {
+            let foliage = ModelEntity(
+                mesh: .generateCone(
+                    height: 2.1 - Float(level) * 0.28,
+                    radius: 1.15 - Float(level) * 0.18
+                ),
+                materials: [
+                    pbrMaterial(
+                        color: UIColor(
+                            red: 0.06,
+                            green: 0.28 + CGFloat(level) * 0.035,
+                            blue: 0.19,
+                            alpha: 1
+                        ),
+                        metallic: 0,
+                        roughness: 0.92
+                    ),
+                ]
+            )
+            foliage.position.y = 2.0 + Float(level) * 0.72
+            pine.addChild(foliage)
+        }
+        return pine
+    }
+
+    private static func makeCactus(position: SIMD3<Float>) -> Entity {
+        let cactus = Entity()
+        cactus.name = "racing.cactus"
+        cactus.position = position
+        let material = pbrMaterial(
+            color: UIColor(red: 0.16, green: 0.42, blue: 0.22, alpha: 1),
+            metallic: 0,
+            roughness: 0.86
+        )
+
+        let trunk = ModelEntity(
+            mesh: .generateCylinder(height: 2.8, radius: 0.26),
+            materials: [material]
+        )
+        trunk.position.y = 1.4
+        cactus.addChild(trunk)
+        for side: Float in [-1, 1] {
+            let arm = ModelEntity(
+                mesh: .generateCylinder(height: 1.1, radius: 0.18),
+                materials: [material]
+            )
+            arm.position = SIMD3(side * 0.48, 1.55 + (side > 0 ? 0.22 : 0), 0)
+            cactus.addChild(arm)
+            let branch = ModelEntity(
+                mesh: .generateCylinder(height: 0.72, radius: 0.17),
+                materials: [material]
+            )
+            branch.position = SIMD3(side * 0.28, 1.22 + (side > 0 ? 0.22 : 0), 0)
+            branch.orientation = simd_quatf(angle: .pi / 2, axis: SIMD3(0, 0, 1))
+            cactus.addChild(branch)
+        }
+        return cactus
     }
 
     private static func makeObstacle(
@@ -2225,6 +2627,15 @@ private enum RacingWorldFactory {
         entity.name = name
         entity.position = position
         return entity
+    }
+
+    private static func imageLightIntensityExponent(for weather: RacingWeather) -> Float {
+        switch weather {
+        case .clear: 0.42
+        case .rain: 0.18
+        case .fog: 0.30
+        case .storm: -0.08
+        }
     }
 
     private static func color(from rgba: RGBAComponents) -> UIColor {
