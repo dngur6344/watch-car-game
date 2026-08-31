@@ -118,6 +118,7 @@ struct SG8RacingEnvironmentLaunchConfiguration: Equatable {
     let track: RacingTrack
     let weather: RacingWeather
     let tier: RacingEnvironmentQualityTier
+    let vehicle: VehicleID?
     let duration: TimeInterval
     let routeCycles: Int
     let triggersMemoryWarning: Bool
@@ -140,9 +141,21 @@ struct SG8RacingEnvironmentLaunchConfiguration: Equatable {
               (0...10).contains(routeCycles) else {
             return nil
         }
+        let vehicle: VehicleID?
+        if arguments.contains("--sg8-vehicle") {
+            guard let vehicleValue = Self.value(after: "--sg8-vehicle", in: arguments),
+                  let selectedVehicle = VehicleID(rawValue: vehicleValue) else {
+                return nil
+            }
+            vehicle = selectedVehicle
+        } else {
+            vehicle = nil
+        }
+
         self.track = track
         self.weather = weather
         self.tier = tier
+        self.vehicle = vehicle
         self.duration = duration
         self.routeCycles = routeCycles
         triggersMemoryWarning = arguments.contains("--sg8-trigger-memory-warning")
@@ -421,6 +434,16 @@ final class SG6AcceptanceCoordinator {
             weather: configuration.weather
         ) else {
             return racingEnvironmentFailure("environment_selection_failed")
+        }
+
+        if let vehicle = configuration.vehicle,
+           vehicle != flow.draftSelection.vehicleID {
+            flow.enterMaintenance()
+            guard flow.route == .maintenance,
+                  flow.selectVehicle(vehicle) else {
+                return racingEnvironmentFailure("vehicle_selection_failed")
+            }
+            flow.exitMaintenance()
         }
 
         let resources = await RacingEnvironmentAssetLibrary.shared.resources(

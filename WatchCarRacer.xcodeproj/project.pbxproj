@@ -111,6 +111,7 @@
 		040000000000000000000066 /* asphalt_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000066 /* asphalt_normal.png */; };
 		040000000000000000000067 /* asphalt_roughness.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000067 /* asphalt_roughness.png */; };
 		040000000000000000000068 /* gt_racer.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000068 /* gt_racer.usdz */; };
+		040000000000000000000090 /* gt_racer_v5.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000090 /* gt_racer_v5.usdz */; };
 		040000000000000000000069 /* angular_racer.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000069 /* angular_racer.usdz */; };
 		04000000000000000000006A /* traffic_sedan_3d.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006A /* traffic_sedan_3d.usdz */; };
 		04000000000000000000006B /* track_barrier.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006B /* track_barrier.usdz */; };
@@ -284,6 +285,7 @@
 		030000000000000000000066 /* asphalt_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = asphalt_normal.png; sourceTree = "<group>"; };
 		030000000000000000000067 /* asphalt_roughness.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = asphalt_roughness.png; sourceTree = "<group>"; };
 		030000000000000000000068 /* gt_racer.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = gt_racer.usdz; sourceTree = "<group>"; };
+		030000000000000000000090 /* gt_racer_v5.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = gt_racer_v5.usdz; sourceTree = "<group>"; };
 		030000000000000000000069 /* angular_racer.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = angular_racer.usdz; sourceTree = "<group>"; };
 		03000000000000000000006A /* traffic_sedan_3d.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = traffic_sedan_3d.usdz; sourceTree = "<group>"; };
 		03000000000000000000006B /* track_barrier.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = track_barrier.usdz; sourceTree = "<group>"; };
@@ -571,6 +573,7 @@
 			children = (
 				030000000000000000000065 /* rally_racer.usdz */,
 				030000000000000000000068 /* gt_racer.usdz */,
+				030000000000000000000090 /* gt_racer_v5.usdz */,
 				030000000000000000000069 /* angular_racer.usdz */,
 				03000000000000000000006A /* traffic_sedan_3d.usdz */,
 				03000000000000000000006B /* track_barrier.usdz */,
@@ -789,6 +792,7 @@
 				04000000000000000000007F /* desert_terrain_roughness.png in Resources */,
 				040000000000000000000065 /* rally_racer.usdz in Resources */,
 				040000000000000000000068 /* gt_racer.usdz in Resources */,
+				040000000000000000000090 /* gt_racer_v5.usdz in Resources */,
 				040000000000000000000069 /* angular_racer.usdz in Resources */,
 				04000000000000000000006A /* traffic_sedan_3d.usdz in Resources */,
 				04000000000000000000006B /* track_barrier.usdz in Resources */,

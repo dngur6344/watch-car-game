@@ -399,14 +399,16 @@ final class RacingWorldLayoutTests: XCTestCase {
 
     func testRacing3DAssetsMatchAuthoredHashesAndUSDZContract() throws {
         let expectedHashes = [
-            "rally_racer.usda": "78d050e14ced0f760bb9c9890ac07bb2a9e73078bc91a92e6304394a93396a7f",
-            "rally_racer.usdz": "be6c9cbe491dfb49d2ffb1f9df693801fbabbb2a6bd35bef36af293f85a802c7",
-            "gt_racer.usda": "d565b0533610899661397a2cd638ac9cce22988945d2f22adb7bd294a7896ccc",
-            "gt_racer.usdz": "a063100e6a9f3c98e14c7d1589a9b8fbbedffe3e9645ca7bd9ec8e8e2c820832",
-            "angular_racer.usda": "16387b335acda03874ae4000ede6b87944bfe561a5222ed1a73556fa176d30a3",
-            "angular_racer.usdz": "3534290018452fb5ff0c166e35f1b2e6581024bbf64eaa95c5b59240ec8e5ca6",
-            "traffic_sedan_3d.usda": "dd6e027c81a15be7c685f37bf908894ddb918cefadbe11ce26198a113a3e4327",
-            "traffic_sedan_3d.usdz": "e16125cf69a140ef44593d25028b57983e5d89bb94f5ce9711dcc88cb6f7fb26",
+            "rally_racer.usda": "32be3e7132259f469c6ec39ee272fe336754fb726ccb3042a03a2e6a3308fe93",
+            "rally_racer.usdz": "922cefaffc0ae6d470279ad469f838f05a5641631cefed64a7736532f7496e6d",
+            "gt_racer.usda": "9b35473ea8801d46f0889b1b3ad0a0eaa4e66eda327fd0e1d40e6b63f6b41dc8",
+            "gt_racer.usdz": "7f17d5a462c9db20447b39c385f0a7f9cfa8d9500b3c755b4dcc3e40a779f340",
+            "gt_racer_v5.usda": "51b69641cafd7e451941f202aef77b0f4efbbb49215eb8bd80dee1a4920bdf43",
+            "gt_racer_v5.usdz": "c367cdb805bdea64c2e003e06eba92f1c8f90cff7819f241b44e590d06eabbd4",
+            "angular_racer.usda": "04a3356cb53108c10254f2273799f7449b486117e536be129f9244f01686dc7b",
+            "angular_racer.usdz": "080bfba6f10438090b184b91570f469b438f03b58749e136edfcdedceffc256f",
+            "traffic_sedan_3d.usda": "3bc539e925336af826569dc64bf1a2ca28d6be963e64213ff3f3c7fdad70bf76",
+            "traffic_sedan_3d.usdz": "7cea2b6cf86e6a55592e50fb03450eda68b6f769d07d1a46a512a4cc63409db3",
             "track_barrier.usda": "2d5009eea05facd538fbf364a4e1a9c7a7618b70593df60f0b43bc68c3feb68f",
             "track_barrier.usdz": "911fc70d5e295cbd442a721af73d2b3e9a6369772aea24d075120833e36c57ea",
             "asphalt_normal.png": "c978c6d71292bb1bf012bd6e527cf74fe4ba758177fab50ad53f3634b8d9f571",
@@ -448,13 +450,32 @@ final class RacingWorldLayoutTests: XCTestCase {
                 package.range(of: Data("defaultPrim = \"\(contract.root)\"".utf8)),
                 filename
             )
-            let revision = filename == "track_barrier.usdz" ? 2 : 3
+            let revision = filename == "track_barrier.usdz" ? 2 : 4
             XCTAssertNotNil(
                 package.range(of: Data("productionRevision = \(revision)".utf8)),
                 filename
             )
         }
-        XCTAssertLessThan(packagedBytes, 512 * 1_024)
+
+        let gtV5Package = try Data(
+            contentsOf: racing3DDirectory.appendingPathComponent("gt_racer_v5.usdz")
+        )
+        let gtV5Source = try String(
+            contentsOf: racing3DDirectory.appendingPathComponent("gt_racer_v5.usda"),
+            encoding: .utf8
+        )
+        packagedBytes += gtV5Package.count
+        XCTAssertEqual(Array(gtV5Package.prefix(2)), [0x50, 0x4B])
+        XCTAssertLessThan(gtV5Package.count, 2 * 1_024 * 1_024)
+        XCTAssertNotNil(gtV5Package.range(of: Data("gt_racer_v5.usdc".utf8)))
+        XCTAssertTrue(gtV5Source.contains("defaultPrim = \"root\""))
+        XCTAssertTrue(gtV5Source.contains("def Xform \"GTRacerV5\""))
+        XCTAssertTrue(gtV5Source.contains("productionRevision = 5"))
+        XCTAssertTrue(gtV5Source.contains("gameForwardAxis = \"-Z\""))
+        XCTAssertTrue(gtV5Source.contains("def Xform \"paint_body_shell\""))
+        XCTAssertTrue(gtV5Source.contains("def Xform \"wheel_front_left\""))
+        XCTAssertTrue(gtV5Source.contains("def Xform \"wheel_rear_right\""))
+        XCTAssertLessThan(packagedBytes, 2_560 * 1_024)
     }
 
     func testAsphaltPBRMapsAreSRGBEightBitRGBA() throws {
@@ -495,7 +516,7 @@ final class RacingWorldLayoutTests: XCTestCase {
         )
 
         for filename in [
-            "rally_racer.usdz", "gt_racer.usdz", "angular_racer.usdz",
+            "rally_racer.usdz", "gt_racer.usdz", "gt_racer_v5.usdz", "angular_racer.usdz",
             "traffic_sedan_3d.usdz", "track_barrier.usdz",
             "asphalt_normal.png", "asphalt_roughness.png",
         ] {
@@ -512,15 +533,28 @@ final class RacingWorldLayoutTests: XCTestCase {
         }
         XCTAssertFalse(iosResources.contains(".usda in Resources"))
         XCTAssertFalse(iosResources.contains("premium_racer.usdz"))
+
+        let racingWorldSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "WatchCarRacer/iOS/Game/RacingWorldView.swift"
+            ),
+            encoding: .utf8
+        )
+        XCTAssertTrue(
+            racingWorldSource.contains(
+                "loadFirstEntity(named: [\"gt_racer_v5\", \"gt_racer\"])"
+            )
+        )
     }
 
     @MainActor
     func testEveryProductionUSDZLoadsAndExposesRequiredRuntimeParts() async throws {
         let contracts = [
-            "rally_racer": ["paint_body_shell", "glass_canopy", "wheel_front_left", "paint_spoiler", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
-            "gt_racer": ["paint_body_shell", "glass_canopy", "wheel_rear_right", "paint_ducktail", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
-            "angular_racer": ["paint_body_shell", "glass_canopy", "wheel_front_right", "paint_spoiler", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
-            "traffic_sedan_3d": ["paint_body_shell", "glass_canopy", "wheel_rear_left", "paint_rear_lip", "rear_light_recess", "tire_sidewall", "rim_outer"],
+            "rally_racer": ["paint_body_shell", "glass_canopy", "wheel_front_left", "paint_spoiler", "paint_roof_panel", "paint_rear_fascia", "paint_c_pillar_left", "rear_plate", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
+            "gt_racer": ["paint_body_shell", "glass_canopy", "wheel_rear_right", "paint_ducktail", "paint_roof_panel", "paint_rear_fascia", "paint_c_pillar_right", "rear_plate", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
+            "gt_racer_v5": ["paint_body_shell", "glass_canopy", "wheel_front_left", "wheel_rear_right", "paint_ducktail", "paint_roof_panel", "paint_rear_fascia", "rear_plate", "rear_light_recess", "tire", "rim_outer", "brake_disc", "caliper", "interior_cockpit"],
+            "angular_racer": ["paint_body_shell", "glass_canopy", "wheel_front_right", "paint_spoiler", "paint_roof_panel", "paint_rear_fascia", "paint_c_pillar_left", "rear_plate", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
+            "traffic_sedan_3d": ["paint_body_shell", "glass_canopy", "wheel_rear_left", "paint_rear_lip", "paint_roof_panel", "paint_rear_fascia", "paint_c_pillar_right", "rear_plate", "rear_light_recess", "tire_sidewall", "rim_outer"],
             "track_barrier": ["dark_base", "panel_0", "reflector_4", "foot_right"],
         ]
 

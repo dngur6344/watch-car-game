@@ -11,7 +11,7 @@ def Xform "TrafficSedan" (
         string assetRole = "traffic-vehicle"
         string authoringTool = "Scripts/build_production_racing_usd.swift"
         string license = "project-original"
-        int productionRevision = 3
+        int productionRevision = 4
     }
 )
 {
@@ -37,12 +37,12 @@ def Xform "TrafficSedan" (
             def Shader "Surface"
             {
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0.01200, 0.03500, 0.07000)
-                float inputs:metallic = 0.08000
-                float inputs:roughness = 0.05000
-                float inputs:clearcoat = 0.34000
+                color3f inputs:diffuseColor = (0.00800, 0.02200, 0.05200)
+                float inputs:metallic = 0.10000
+                float inputs:roughness = 0.07000
+                float inputs:clearcoat = 0.48000
                 float inputs:clearcoatRoughness = 0.03000
-                float inputs:opacity = 0.78000
+                float inputs:opacity = 0.98000
                 float inputs:ior = 1.46000
                 token outputs:surface
             }
@@ -128,6 +128,18 @@ def Xform "TrafficSedan" (
                 color3f inputs:diffuseColor = (0.16000, 0.18000, 0.20000)
                 float inputs:metallic = 0.98000
                 float inputs:roughness = 0.20000
+                token outputs:surface
+            }
+        }
+        def Material "Plate"
+        {
+            token outputs:surface.connect = </TrafficSedan/Materials/Plate/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.70000, 0.74000, 0.72000)
+                float inputs:metallic = 0.12000
+                float inputs:roughness = 0.34000
                 token outputs:surface
             }
         }
@@ -292,30 +304,30 @@ def Xform "TrafficSedan" (
             (0.61000, 0.30000, 1.31000),
             (0.57340, 0.22500, 1.31000),
             (0.45140, 0.18000, 1.31000),
-            (-0.41810, 0.19000, 1.37000),
-            (-0.53110, 0.23500, 1.37000),
-            (-0.56500, 0.31000, 1.37000),
-            (-0.56500, 0.47500, 1.37000),
-            (-0.50850, 0.50110, 1.37000),
-            (-0.35030, 0.52000, 1.37000),
-            (0.35030, 0.52000, 1.37000),
-            (0.50850, 0.50110, 1.37000),
-            (0.56500, 0.47500, 1.37000),
-            (0.56500, 0.31000, 1.37000),
-            (0.53110, 0.23500, 1.37000),
-            (0.41810, 0.19000, 1.37000),
-            (-0.38480, 0.20000, 1.43000),
-            (-0.48880, 0.24500, 1.43000),
-            (-0.52000, 0.32000, 1.43000),
-            (-0.52000, 0.45000, 1.43000),
-            (-0.46800, 0.47320, 1.43000),
-            (-0.32240, 0.49000, 1.43000),
-            (0.32240, 0.49000, 1.43000),
-            (0.46800, 0.47320, 1.43000),
-            (0.52000, 0.45000, 1.43000),
-            (0.52000, 0.32000, 1.43000),
-            (0.48880, 0.24500, 1.43000),
-            (0.38480, 0.20000, 1.43000)
+            (-0.44400, 0.19000, 1.37000),
+            (-0.56400, 0.23500, 1.37000),
+            (-0.60000, 0.31000, 1.37000),
+            (-0.60000, 0.47500, 1.37000),
+            (-0.54000, 0.50110, 1.37000),
+            (-0.37200, 0.52000, 1.37000),
+            (0.37200, 0.52000, 1.37000),
+            (0.54000, 0.50110, 1.37000),
+            (0.60000, 0.47500, 1.37000),
+            (0.60000, 0.31000, 1.37000),
+            (0.56400, 0.23500, 1.37000),
+            (0.44400, 0.19000, 1.37000),
+            (-0.43660, 0.20000, 1.43000),
+            (-0.55460, 0.24500, 1.43000),
+            (-0.59000, 0.32000, 1.43000),
+            (-0.59000, 0.45000, 1.43000),
+            (-0.53100, 0.47320, 1.43000),
+            (-0.36580, 0.49000, 1.43000),
+            (0.36580, 0.49000, 1.43000),
+            (0.53100, 0.47320, 1.43000),
+            (0.59000, 0.45000, 1.43000),
+            (0.59000, 0.32000, 1.43000),
+            (0.55460, 0.24500, 1.43000),
+            (0.43660, 0.20000, 1.43000)
         ]
         uniform token subdivisionScheme = "none"
         rel material:binding = </TrafficSedan/Materials/Paint>
@@ -414,26 +426,104 @@ def Xform "TrafficSedan" (
         uniform token subdivisionScheme = "none"
         rel material:binding = </TrafficSedan/Materials/Glass>
     }
-    def Sphere "paint_fender_front_left" (prepend apiSchemas = ["MaterialBindingAPI"])
+    def Mesh "paint_roof_panel" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
-        double radius = 1
-        double3 xformOp:translate = (-0.70000, 0.36000, -0.88000)
-        float3 xformOp:scale = (0.13000, 0.24640, 0.36400)
-        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
-        rel material:binding = </TrafficSedan/Materials/Paint>
-    }
-    def Sphere "paint_fender_rear_left" (prepend apiSchemas = ["MaterialBindingAPI"])
-    {
-        double radius = 1
-        double3 xformOp:translate = (-0.70000, 0.36000, 0.91000)
-        float3 xformOp:scale = (0.14000, 0.25200, 0.36960)
-        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        uniform bool doubleSided = 0
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 12, 12]
+        int[] faceVertexIndices = [0, 1, 13, 12, 1, 2, 14, 13, 2, 3, 15, 14, 3, 4, 16, 15, 4, 5, 17, 16, 5, 6, 18, 17, 6, 7, 19, 18, 7, 8, 20, 19, 8, 9, 21, 20, 9, 10, 22, 21, 10, 11, 23, 22, 11, 0, 12, 23, 12, 13, 25, 24, 13, 14, 26, 25, 14, 15, 27, 26, 15, 16, 28, 27, 16, 17, 29, 28, 17, 18, 30, 29, 18, 19, 31, 30, 19, 20, 32, 31, 20, 21, 33, 32, 21, 22, 34, 33, 22, 23, 35, 34, 23, 12, 24, 35, 24, 25, 37, 36, 25, 26, 38, 37, 26, 27, 39, 38, 27, 28, 40, 39, 28, 29, 41, 40, 29, 30, 42, 41, 30, 31, 43, 42, 31, 32, 44, 43, 32, 33, 45, 44, 33, 34, 46, 45, 34, 35, 47, 46, 35, 24, 36, 47, 36, 37, 49, 48, 37, 38, 50, 49, 38, 39, 51, 50, 39, 40, 52, 51, 40, 41, 53, 52, 41, 42, 54, 53, 42, 43, 55, 54, 43, 44, 56, 55, 44, 45, 57, 56, 45, 46, 58, 57, 46, 47, 59, 58, 47, 36, 48, 59, 48, 49, 61, 60, 49, 50, 62, 61, 50, 51, 63, 62, 51, 52, 64, 63, 52, 53, 65, 64, 53, 54, 66, 65, 54, 55, 67, 66, 55, 56, 68, 67, 56, 57, 69, 68, 57, 58, 70, 69, 58, 59, 71, 70, 59, 48, 60, 71, 60, 61, 73, 72, 61, 62, 74, 73, 62, 63, 75, 74, 63, 64, 76, 75, 64, 65, 77, 76, 65, 66, 78, 77, 66, 67, 79, 78, 67, 68, 80, 79, 68, 69, 81, 80, 69, 70, 82, 81, 70, 71, 83, 82, 71, 60, 72, 83, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72]
+        point3f[] points = [
+            (-0.29733, 0.86500, -0.52000),
+            (-0.37769, 0.91000, -0.52000),
+            (-0.40180, 0.98500, -0.52000),
+            (-0.40180, 0.90600, -0.52000),
+            (-0.36162, 0.91702, -0.52000),
+            (-0.24912, 0.92500, -0.52000),
+            (0.24912, 0.92500, -0.52000),
+            (0.36162, 0.91702, -0.52000),
+            (0.40180, 0.90600, -0.52000),
+            (0.40180, 0.98500, -0.52000),
+            (0.37769, 0.91000, -0.52000),
+            (0.29733, 0.86500, -0.52000),
+            (-0.31250, 0.92000, -0.38000),
+            (-0.39696, 0.96500, -0.38000),
+            (-0.42230, 1.04000, -0.38000),
+            (-0.42230, 0.96100, -0.38000),
+            (-0.38007, 0.97202, -0.38000),
+            (-0.26183, 0.98000, -0.38000),
+            (0.26183, 0.98000, -0.38000),
+            (0.38007, 0.97202, -0.38000),
+            (0.42230, 0.96100, -0.38000),
+            (0.42230, 1.04000, -0.38000),
+            (0.39696, 0.96500, -0.38000),
+            (0.31250, 0.92000, -0.38000),
+            (-0.32767, 0.97500, -0.24000),
+            (-0.41623, 1.02000, -0.24000),
+            (-0.44280, 1.09500, -0.24000),
+            (-0.44280, 1.01600, -0.24000),
+            (-0.39852, 1.02702, -0.24000),
+            (-0.27454, 1.03500, -0.24000),
+            (0.27454, 1.03500, -0.24000),
+            (0.39852, 1.02702, -0.24000),
+            (0.44280, 1.01600, -0.24000),
+            (0.44280, 1.09500, -0.24000),
+            (0.41623, 1.02000, -0.24000),
+            (0.32767, 0.97500, -0.24000),
+            (-0.33071, 0.97500, 0.15500),
+            (-0.42009, 1.02000, 0.15500),
+            (-0.44690, 1.09500, 0.15500),
+            (-0.44690, 1.01600, 0.15500),
+            (-0.40221, 1.02702, 0.15500),
+            (-0.27708, 1.03500, 0.15500),
+            (0.27708, 1.03500, 0.15500),
+            (0.40221, 1.02702, 0.15500),
+            (0.44690, 1.01600, 0.15500),
+            (0.44690, 1.09500, 0.15500),
+            (0.42009, 1.02000, 0.15500),
+            (0.33071, 0.97500, 0.15500),
+            (-0.33374, 0.97500, 0.55000),
+            (-0.42394, 1.02000, 0.55000),
+            (-0.45100, 1.09500, 0.55000),
+            (-0.45100, 1.01600, 0.55000),
+            (-0.40590, 1.02702, 0.55000),
+            (-0.27962, 1.03500, 0.55000),
+            (0.27962, 1.03500, 0.55000),
+            (0.40590, 1.02702, 0.55000),
+            (0.45100, 1.01600, 0.55000),
+            (0.45100, 1.09500, 0.55000),
+            (0.42394, 1.02000, 0.55000),
+            (0.33374, 0.97500, 0.55000),
+            (-0.31250, 0.91500, 0.69500),
+            (-0.39696, 0.96000, 0.69500),
+            (-0.42230, 1.03500, 0.69500),
+            (-0.42230, 0.95600, 0.69500),
+            (-0.38007, 0.96702, 0.69500),
+            (-0.26183, 0.97500, 0.69500),
+            (0.26183, 0.97500, 0.69500),
+            (0.38007, 0.96702, 0.69500),
+            (0.42230, 0.95600, 0.69500),
+            (0.42230, 1.03500, 0.69500),
+            (0.39696, 0.96000, 0.69500),
+            (0.31250, 0.91500, 0.69500),
+            (-0.29126, 0.85500, 0.84000),
+            (-0.36998, 0.90000, 0.84000),
+            (-0.39360, 0.97500, 0.84000),
+            (-0.39360, 0.89600, 0.84000),
+            (-0.35424, 0.90702, 0.84000),
+            (-0.24403, 0.91500, 0.84000),
+            (0.24403, 0.91500, 0.84000),
+            (0.35424, 0.90702, 0.84000),
+            (0.39360, 0.89600, 0.84000),
+            (0.39360, 0.97500, 0.84000),
+            (0.36998, 0.90000, 0.84000),
+            (0.29126, 0.85500, 0.84000)
+        ]
+        uniform token subdivisionScheme = "none"
         rel material:binding = </TrafficSedan/Materials/Paint>
     }
     def Cube "dark_side_skirt_left" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (-0.71500, 0.18000, 0.05000)
+        double3 xformOp:translate = (-0.72000, 0.18000, 0.05000)
         float3 xformOp:scale = (0.03500, 0.07000, 1.03824)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/Carbon>
@@ -441,7 +531,7 @@ def Xform "TrafficSedan" (
     def Cube "carbon_side_intake_left" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (-0.71800, 0.40000, 0.20000)
+        double3 xformOp:translate = (-0.74800, 0.40000, 0.20000)
         float xformOp:rotateX = 7.00000
         float3 xformOp:scale = (0.02500, 0.11500, 0.25000)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
@@ -450,7 +540,7 @@ def Xform "TrafficSedan" (
     def Cube "accent_sill_left" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (-0.74000, 0.25500, 0.06000)
+        double3 xformOp:translate = (-0.77500, 0.25500, 0.06000)
         float3 xformOp:scale = (0.01200, 0.01800, 0.66332)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/Accent>
@@ -458,41 +548,43 @@ def Xform "TrafficSedan" (
     def Cube "mirror_left" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (-0.76000, 0.74000, -0.30000)
+        double3 xformOp:translate = (-0.82000, 0.74000, -0.30000)
         float xformOp:rotateY = 8.00000
-        float3 xformOp:scale = (0.12000, 0.05500, 0.13000)
+        float3 xformOp:scale = (0.09000, 0.04500, 0.10000)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/Paint>
     }
     def Cube "glass_side_left_divider" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (-0.59000, 0.83000, 0.16000)
+        double3 xformOp:translate = (-0.56200, 0.84000, 0.16000)
         float xformOp:rotateX = -5.00000
-        float3 xformOp:scale = (0.01200, 0.19000, 0.02500)
+        float3 xformOp:scale = (0.01600, 0.17000, 0.02500)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/DarkMetal>
     }
-    def Sphere "paint_fender_front_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    def Cube "paint_c_pillar_left" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
-        double radius = 1
-        double3 xformOp:translate = (0.70000, 0.36000, -0.88000)
-        float3 xformOp:scale = (0.13000, 0.24640, 0.36400)
-        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        double size = 2
+        double3 xformOp:translate = (-0.42900, 0.83000, 0.74000)
+        float xformOp:rotateX = 18.00000
+        float3 xformOp:scale = (0.04200, 0.08640, 0.03800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/Paint>
     }
-    def Sphere "paint_fender_rear_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    def Cube "door_cutline_left" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
-        double radius = 1
-        double3 xformOp:translate = (0.70000, 0.36000, 0.91000)
-        float3 xformOp:scale = (0.14000, 0.25200, 0.36960)
-        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
-        rel material:binding = </TrafficSedan/Materials/Paint>
+        double size = 2
+        double3 xformOp:translate = (-0.75400, 0.46000, 0.18000)
+        float xformOp:rotateX = -8.00000
+        float3 xformOp:scale = (0.00900, 0.18000, 0.01200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/DarkMetal>
     }
     def Cube "dark_side_skirt_right" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (0.71500, 0.18000, 0.05000)
+        double3 xformOp:translate = (0.72000, 0.18000, 0.05000)
         float3 xformOp:scale = (0.03500, 0.07000, 1.03824)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/Carbon>
@@ -500,7 +592,7 @@ def Xform "TrafficSedan" (
     def Cube "carbon_side_intake_right" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (0.71800, 0.40000, 0.20000)
+        double3 xformOp:translate = (0.74800, 0.40000, 0.20000)
         float xformOp:rotateX = -7.00000
         float3 xformOp:scale = (0.02500, 0.11500, 0.25000)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
@@ -509,7 +601,7 @@ def Xform "TrafficSedan" (
     def Cube "accent_sill_right" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (0.74000, 0.25500, 0.06000)
+        double3 xformOp:translate = (0.77500, 0.25500, 0.06000)
         float3 xformOp:scale = (0.01200, 0.01800, 0.66332)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/Accent>
@@ -517,26 +609,52 @@ def Xform "TrafficSedan" (
     def Cube "mirror_right" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (0.76000, 0.74000, -0.30000)
+        double3 xformOp:translate = (0.82000, 0.74000, -0.30000)
         float xformOp:rotateY = -8.00000
-        float3 xformOp:scale = (0.12000, 0.05500, 0.13000)
+        float3 xformOp:scale = (0.09000, 0.04500, 0.10000)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/Paint>
     }
     def Cube "glass_side_right_divider" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (0.59000, 0.83000, 0.16000)
+        double3 xformOp:translate = (0.56200, 0.84000, 0.16000)
         float xformOp:rotateX = -5.00000
-        float3 xformOp:scale = (0.01200, 0.19000, 0.02500)
+        float3 xformOp:scale = (0.01600, 0.17000, 0.02500)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+    def Cube "paint_c_pillar_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.42900, 0.83000, 0.74000)
+        float xformOp:rotateX = 18.00000
+        float3 xformOp:scale = (0.04200, 0.08640, 0.03800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
+    }
+    def Cube "door_cutline_right" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.75400, 0.46000, 0.18000)
+        float xformOp:rotateX = -8.00000
+        float3 xformOp:scale = (0.00900, 0.18000, 0.01200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+    def Cube "paint_rear_fascia" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.46000, 1.44400)
+        float3 xformOp:scale = (0.56640, 0.18000, 0.03800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Paint>
     }
     def Cube "dark_rear_bumper" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
         double size = 2
-        double3 xformOp:translate = (0.00000, 0.28000, 1.44200)
-        float3 xformOp:scale = (0.62000, 0.09500, 0.05500)
+        double3 xformOp:translate = (0.00000, 0.25000, 1.45400)
+        float3 xformOp:scale = (0.59000, 0.07500, 0.06000)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/Carbon>
     }
@@ -544,9 +662,25 @@ def Xform "TrafficSedan" (
     {
         double size = 2
         double3 xformOp:translate = (0.00000, 0.49000, 1.45000)
-        float3 xformOp:scale = (0.67000, 0.10500, 0.02600)
+        float3 xformOp:scale = (0.54870, 0.08500, 0.02600)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         rel material:binding = </TrafficSedan/Materials/DarkMetal>
+    }
+    def Cube "rear_plate_recess" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.36500, 1.49600)
+        float3 xformOp:scale = (0.18000, 0.05000, 0.02600)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Carbon>
+    }
+    def Cube "rear_plate" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        double size = 2
+        double3 xformOp:translate = (0.00000, 0.36500, 1.52600)
+        float3 xformOp:scale = (0.12500, 0.03000, 0.00800)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        rel material:binding = </TrafficSedan/Materials/Plate>
     }
     def Cube "dark_front_splitter" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
@@ -610,7 +744,7 @@ def Xform "TrafficSedan" (
     }
     def Xform "wheel_front_left"
     {
-        double3 xformOp:translate = (-0.70000, 0.28000, -0.88000)
+        double3 xformOp:translate = (-0.62000, 0.28000, -0.88000)
         uniform token[] xformOpOrder = ["xformOp:translate"]
     def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
@@ -816,7 +950,7 @@ def Xform "TrafficSedan" (
     }
     def Xform "wheel_front_right"
     {
-        double3 xformOp:translate = (0.70000, 0.28000, -0.88000)
+        double3 xformOp:translate = (0.62000, 0.28000, -0.88000)
         uniform token[] xformOpOrder = ["xformOp:translate"]
     def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
@@ -1022,7 +1156,7 @@ def Xform "TrafficSedan" (
     }
     def Xform "wheel_rear_left"
     {
-        double3 xformOp:translate = (-0.70000, 0.28000, 0.91000)
+        double3 xformOp:translate = (-0.62000, 0.28000, 0.91000)
         uniform token[] xformOpOrder = ["xformOp:translate"]
     def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
     {
@@ -1228,7 +1362,7 @@ def Xform "TrafficSedan" (
     }
     def Xform "wheel_rear_right"
     {
-        double3 xformOp:translate = (0.70000, 0.28000, 0.91000)
+        double3 xformOp:translate = (0.62000, 0.28000, 0.91000)
         uniform token[] xformOpOrder = ["xformOp:translate"]
     def Cylinder "tire" (prepend apiSchemas = ["MaterialBindingAPI"])
     {

@@ -141,9 +141,9 @@ The six driving loops combine role-specific motor harmonics or shaped noise with
 | `Audio/color_select.wav` | `color_select` | 1040/1560 Hz color chirp and click | `3a0091c4d259985d276a63f916118090d80a88cfa178ddc85ddc2c48d10301e0` |
 | `Audio/drive_transition.wav` | `drive_transition` | rising 190-to-780 Hz tonal sweep and air-noise layer | `05f55d93e7d0749d9f820af522e9fd65bf50ce2a336c55189ecfa9c55f744ddb` |
 
-## Project-original RealityKit 3D/PBR production kit (2026-08-30, vehicle revision 3)
+## Project-original RealityKit 3D/PBR production kit (2026-08-30, vehicle revision 4)
 
-The racing view's production 3D kit is entirely project-authored and brand-neutral. Repository tool `Scripts/build_production_racing_usd.swift` vehicle revision 3 deterministically creates three distinct hero vehicles, a lower-complexity traffic sedan, and a modular track barrier. The Rally, GT, and Angular vehicles have independent lofted body profiles, canopy proportions, aero treatments, rear-light signatures, wheelbases, wheel diameters, and accent colors. Revision 3 refines every hero body between authored profile stations, increases each cross-section to twelve contour points, and adds clear-coated paint, translucent glass, visible cockpit forms, recessed rear lamps, side intakes, and slimmer aero surfaces. The open-face wheels use an annular lip and sidewall plus twelve spoke arms, hubs, brake discs, and visible calipers. The traffic asset retains the same material language with fewer body and cabin details for repeated rendering. Vehicle roots record production revision 3; the unchanged barrier remains revision 2. Every root records its project-original license, authoring tool, and asset role in USD custom data.
+The racing view's production 3D kit is entirely project-authored and brand-neutral. Repository tool `Scripts/build_production_racing_usd.swift` vehicle revision 4 deterministically creates three distinct hero vehicles, a lower-complexity traffic sedan, and a modular track barrier. Revision 4 replaces the exposed buggy-like composition with a closed automotive architecture: the wheels are tucked inside the body width, the detached ellipsoid fenders are removed, and a tinted canopy is joined to a broad roof, painted C-pillars, rear deck, tapered fascia, lamp recess, bumper, plate, and diffuser. Rally, GT, and Angular retain independent lofted profiles, aero treatments, rear-light signatures, wheelbases, wheel diameters, and accent colors. Each hero still uses twelve-point refined body sections, clear-coated paint, an authored cockpit, and open-face wheels with annular sidewalls, twelve spoke arms, brake discs, and visible calipers. The traffic asset uses the same recognizable closed-car construction with reduced cabin detail for repeated rendering. Vehicle roots record production revision 4; the unchanged barrier remains revision 2. Every root records its project-original license, authoring tool, and asset role in USD custom data.
 
 `/usr/bin/usdchecker` validates every editable USDA source, and `/usr/bin/usdzip --checkCompliance` stores each source without external dependencies in its runtime USDZ. The five runtime packages total less than 512 KiB and each package remains below 128 KiB. The app loads the selected vehicle's distinct USDZ, applies the chosen catalog color only to named paint and mirror surfaces, uses the lightweight traffic/barrier assets for obstacles, and retains in-code procedural geometry as a safe per-asset fallback.
 
@@ -151,20 +151,37 @@ The racing view's production 3D kit is entirely project-authored and brand-neutr
 
 | Production asset | Role | Source and processing | SHA-256 |
 | --- | --- | --- | --- |
-| `Racing3D/rally_racer.usda` | editable Rally hero source | refined short-wheelbase loft, rally wing, cockpit, recessed lamps, open-face wheel/brake detail | `78d050e14ced0f760bb9c9890ac07bb2a9e73078bc91a92e6304394a93396a7f` |
-| `Racing3D/rally_racer.usdz` | RealityKit Rally hero | compliant stored USDZ produced from the authored USDA | `be6c9cbe491dfb49d2ffb1f9df693801fbabbb2a6bd35bef36af293f85a802c7` |
-| `Racing3D/gt_racer.usda` | editable GT hero source | refined long low loft, ducktail, continuous recessed rear light, staggered hero wheels | `d565b0533610899661397a2cd638ac9cce22988945d2f22adb7bd294a7896ccc` |
-| `Racing3D/gt_racer.usdz` | RealityKit GT hero | compliant stored USDZ produced from the authored USDA | `a063100e6a9f3c98e14c7d1589a9b8fbbedffe3e9645ca7bd9ec8e8e2c820832` |
-| `Racing3D/angular_racer.usda` | editable Angular hero source | refined wedge loft, slim blade wing, cockpit, segmented recessed lamps, broad rear wheels | `16387b335acda03874ae4000ede6b87944bfe561a5222ed1a73556fa176d30a3` |
-| `Racing3D/angular_racer.usdz` | RealityKit Angular hero | compliant stored USDZ produced from the authored USDA | `3534290018452fb5ff0c166e35f1b2e6581024bbf64eaa95c5b59240ec8e5ca6` |
-| `Racing3D/traffic_sedan_3d.usda` | editable repeated-traffic source | refined lightweight sedan loft, clear-coated materials, recessed lamps, open-face wheels | `dd6e027c81a15be7c685f37bf908894ddb918cefadbe11ce26198a113a3e4327` |
-| `Racing3D/traffic_sedan_3d.usdz` | RealityKit traffic vehicle | compliant lightweight stored USDZ | `e16125cf69a140ef44593d25028b57983e5d89bb94f5ce9711dcc88cb6f7fb26` |
+| `Racing3D/rally_racer.usda` | editable Rally hero source | closed short-wheelbase loft, shaped roof/C-pillars, compact rally wing, wheel-covering rear quarters | `32be3e7132259f469c6ec39ee272fe336754fb726ccb3042a03a2e6a3308fe93` |
+| `Racing3D/rally_racer.usdz` | RealityKit Rally hero | compliant stored USDZ produced from the authored USDA | `922cefaffc0ae6d470279ad469f838f05a5641631cefed64a7736532f7496e6d` |
+| `Racing3D/gt_racer.usda` | editable GT hero source | closed long-low coupe loft, shaped cabin, ducktail, continuous recessed rear light, covered staggered wheels | `9b35473ea8801d46f0889b1b3ad0a0eaa4e66eda327fd0e1d40e6b63f6b41dc8` |
+| `Racing3D/gt_racer.usdz` | RealityKit GT hero | compliant stored USDZ produced from the authored USDA | `7f17d5a462c9db20447b39c385f0a7f9cfa8d9500b3c755b4dcc3e40a779f340` |
+| `Racing3D/angular_racer.usda` | editable Angular hero source | closed wedge coupe loft, shaped cabin, slim blade wing, segmented recessed lamps, covered rear wheels | `04a3356cb53108c10254f2273799f7449b486117e536be129f9244f01686dc7b` |
+| `Racing3D/angular_racer.usdz` | RealityKit Angular hero | compliant stored USDZ produced from the authored USDA | `080bfba6f10438090b184b91570f469b438f03b58749e136edfcdedceffc256f` |
+| `Racing3D/traffic_sedan_3d.usda` | editable repeated-traffic source | lightweight closed sedan loft, shaped roof/fascia, clear-coated materials, covered open-face wheels | `3bc539e925336af826569dc64bf1a2ca28d6be963e64213ff3f3c7fdad70bf76` |
+| `Racing3D/traffic_sedan_3d.usdz` | RealityKit traffic vehicle | compliant lightweight stored USDZ | `7cea2b6cf86e6a55592e50fb03450eda68b6f769d07d1a46a512a4cc63409db3` |
 | `Racing3D/track_barrier.usda` | editable obstacle source | five-panel modular barrier, feet, alternating materials, emissive reflectors | `2d5009eea05facd538fbf364a4e1a9c7a7618b70593df60f0b43bc68c3feb68f` |
 | `Racing3D/track_barrier.usdz` | RealityKit barrier | compliant lightweight stored USDZ | `911fc70d5e295cbd442a721af73d2b3e9a6369772aea24d075120833e36c57ea` |
 | `Racing3D/asphalt_normal.png` | asphalt tangent-space normal | deterministic wrapped gradient derived from `Backgrounds/asphalt.png` | `c978c6d71292bb1bf012bd6e527cf74fe4ba758177fab50ad53f3634b8d9f571` |
 | `Racing3D/asphalt_roughness.png` | asphalt scalar roughness | deterministic aggregate-aware curve derived from `Backgrounds/asphalt.png` | `44bbd02430d7f5ca8b3f9f9830689c6203ec7814542e6a8b4a31386667ed8509` |
 
-Generator SHA-256: `229481ecd63d5e796babdb5cdec675d4b3229b5bbc99d3c18c3cbb0e1e758709`.
+Generator SHA-256: `f78474bef8bbe0edcfd50ca81258bb4759297ca325cfd217fe67138ac664f23b`.
+
+## Project-original Blender GT hero vehicle (2026-08-31, vehicle revision 5)
+
+`gt_racer_v5` is the first DCC-authored vehicle quality bar for the game. It is an original, brand-neutral grand-touring supercar inspired only by the visual density and presentation standard of premium arcade racers; it does not reproduce a recognizable production vehicle, trademark, badge, logo, or downloaded model. Repository script `Scripts/build_gt_racer_v5_blender.py` authors the source in Blender 4.5.6 LTS with a continuous Catmull-Clark body loft, boolean wheel openings, a low glass canopy, roof panel and window belt, separated body/glass/carbon/metal/lamp materials, four named wheel assemblies, tires, rims, spokes, brake discs, calipers, cockpit, aero, fascia, diffuser, exhausts, and emissive front/rear lighting. The resulting source contains 85 scene objects, 13 materials, 21,698 mesh vertices, and 43,108 rendered triangles.
+
+The editable `.blend` master and preview render are retained under `docs/assets/sources/vehicle-v5/`. Blender exports an editable Y-up USDA with project-original license, production revision 5 metadata, and an explicit game-forward `-Z` contract. `/usr/bin/usdcat` converts that source to binary USDC before `/usr/bin/usdzip --checkCompliance` creates the runtime package, reducing the production package from the 8.5 MiB text representation to less than 2 MiB without changing geometry. `/usr/bin/usdchecker` validates both the editable source and final package. The app loads revision 5 for the GT selection first and retains revision 4 `gt_racer.usdz` as a runtime fallback. Paint and mirror nodes keep the established name prefixes, and wheel roots retain the animation contract used by the driving scene.
+
+All geometry, materials, lighting setup, and processing code are repository-authored. The temporary arm64 Blender runtime used for generation was downloaded from Blender Foundation's official Blender 4.5 release distribution and SHA-256 verified before execution; it is not bundled with the project. No third-party asset, texture, reference mesh, runtime library, or network dependency ships in the app.
+
+| Production/source asset | Role | SHA-256 |
+| --- | --- | --- |
+| `Racing3D/gt_racer_v5.usda` | editable Y-up GT revision 5 source | `51b69641cafd7e451941f202aef77b0f4efbbb49215eb8bd80dee1a4920bdf43` |
+| `Racing3D/gt_racer_v5.usdz` | RealityKit GT revision 5 binary package | `c367cdb805bdea64c2e003e06eba92f1c8f90cff7819f241b44e590d06eabbd4` |
+| `docs/assets/sources/vehicle-v5/gt_racer_v5.blend` | editable Blender source master | `55911efdbe9e5eff1278c81522c7f6a2b8b83866180b77179967f52847215f7f` |
+| `docs/assets/sources/vehicle-v5/gt_racer_v5_preview.png` | Blender Eevee rear three-quarter preview | `6fa41c8195023fac3d24dee564cfc5062a98a9decde652f01addfd456de088e3` |
+
+Blender authoring script SHA-256: `784a101eda4207a7d8059a5788ce221adedf94337baee8c9f3cef1fe0f4be7f4`.
 
 ## Project-original racing environment source and authoring contract (2026-08-30)
 

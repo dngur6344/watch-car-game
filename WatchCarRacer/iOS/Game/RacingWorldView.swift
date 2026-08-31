@@ -450,7 +450,7 @@ private struct RacingWorldResources {
         }
 
         async let rallyTemplate = loadEntity(named: "rally_racer")
-        async let gtTemplate = loadEntity(named: "gt_racer")
+        async let gtTemplate = loadFirstEntity(named: ["gt_racer_v5", "gt_racer"])
         async let angularTemplate = loadEntity(named: "angular_racer")
         async let trafficTemplate = loadEntity(named: "traffic_sedan_3d")
         async let barrierTemplate = loadEntity(named: "track_barrier")
@@ -491,6 +491,15 @@ private struct RacingWorldResources {
             return nil
         }
         return try? await Entity(contentsOf: url, withName: "racing.\(name)")
+    }
+
+    private static func loadFirstEntity(named names: [String]) async -> Entity? {
+        for name in names {
+            if let entity = await loadEntity(named: name) {
+                return entity
+            }
+        }
+        return nil
     }
 
     private static func loadTexture(

@@ -115,6 +115,9 @@ if [[ "$MODE" == "environment" ]]; then
     case "$SG8_TRACK" in coastal|alpine|desert) ;; *) echo "Invalid SG8_TRACK." >&2; exit 64 ;; esac
     case "$SG8_WEATHER" in clear|rain|fog|storm) ;; *) echo "Invalid SG8_WEATHER." >&2; exit 64 ;; esac
     case "$SG8_TIER" in baseline|enhanced) ;; *) echo "Invalid SG8_TIER." >&2; exit 64 ;; esac
+    if [[ -n "${SG8_VEHICLE:-}" ]]; then
+        case "$SG8_VEHICLE" in rally|gt|angular) ;; *) echo "Invalid SG8_VEHICLE." >&2; exit 64 ;; esac
+    fi
     if [[ ! "$SG8_DURATION" =~ ^([5-9]|[1-9][0-9]+)(\.[0-9]+)?$ ]]; then
         echo "SG8_DURATION must be a finite number of at least 5 seconds." >&2
         exit 64
@@ -131,6 +134,9 @@ if [[ "$MODE" == "environment" ]]; then
         --sg8-route-cycles "$SG8_ROUTE_CYCLES"
         "--watch-car-racer-environment-quality=$SG8_TIER"
     )
+    if [[ -n "${SG8_VEHICLE:-}" ]]; then
+        LAUNCH_ARGUMENTS+=(--sg8-vehicle "$SG8_VEHICLE")
+    fi
     if [[ "${SG8_TRIGGER_MEMORY_WARNING:-false}" == "true" ]]; then
         LAUNCH_ARGUMENTS+=(--sg8-trigger-memory-warning)
     fi

@@ -68,7 +68,7 @@ private let vehicles: [VehicleSpec] = [
             .init(z: 0.34, halfWidth: 0.81, bottom: 0.15, shoulder: 0.69, top: 0.75),
             .init(z: 0.92, halfWidth: 0.79, bottom: 0.16, shoulder: 0.67, top: 0.72),
             .init(z: 1.33, halfWidth: 0.71, bottom: 0.18, shoulder: 0.58, top: 0.63),
-            .init(z: 1.47, halfWidth: 0.58, bottom: 0.21, shoulder: 0.50, top: 0.54),
+            .init(z: 1.47, halfWidth: 0.66, bottom: 0.21, shoulder: 0.50, top: 0.54),
         ],
         canopyProfiles: [
             .init(z: -0.57, halfWidth: 0.53, bottom: 0.70, shoulder: 0.88, top: 0.99),
@@ -76,7 +76,7 @@ private let vehicles: [VehicleSpec] = [
             .init(z: 0.47, halfWidth: 0.58, bottom: 0.72, shoulder: 1.01, top: 1.09),
             .init(z: 0.76, halfWidth: 0.51, bottom: 0.70, shoulder: 0.89, top: 0.99),
         ],
-        wheelX: 0.80,
+        wheelX: 0.68,
         frontWheelZ: -0.90,
         rearWheelZ: 0.91,
         frontWheelRadius: 0.32,
@@ -97,7 +97,7 @@ private let vehicles: [VehicleSpec] = [
             .init(z: 0.38, halfWidth: 0.82, bottom: 0.12, shoulder: 0.63, top: 0.69),
             .init(z: 1.02, halfWidth: 0.80, bottom: 0.13, shoulder: 0.60, top: 0.66),
             .init(z: 1.50, halfWidth: 0.70, bottom: 0.16, shoulder: 0.51, top: 0.56),
-            .init(z: 1.67, halfWidth: 0.57, bottom: 0.19, shoulder: 0.45, top: 0.49),
+            .init(z: 1.67, halfWidth: 0.64, bottom: 0.19, shoulder: 0.45, top: 0.49),
         ],
         canopyProfiles: [
             .init(z: -0.67, halfWidth: 0.50, bottom: 0.64, shoulder: 0.79, top: 0.88),
@@ -105,7 +105,7 @@ private let vehicles: [VehicleSpec] = [
             .init(z: 0.48, halfWidth: 0.59, bottom: 0.67, shoulder: 0.92, top: 1.01),
             .init(z: 0.85, halfWidth: 0.51, bottom: 0.64, shoulder: 0.79, top: 0.88),
         ],
-        wheelX: 0.79,
+        wheelX: 0.69,
         frontWheelZ: -1.08,
         rearWheelZ: 1.08,
         frontWheelRadius: 0.30,
@@ -125,7 +125,7 @@ private let vehicles: [VehicleSpec] = [
             .init(z: -0.67, halfWidth: 0.82, bottom: 0.12, shoulder: 0.61, top: 0.68),
             .init(z: 0.46, halfWidth: 0.84, bottom: 0.12, shoulder: 0.65, top: 0.71),
             .init(z: 1.08, halfWidth: 0.81, bottom: 0.14, shoulder: 0.61, top: 0.67),
-            .init(z: 1.48, halfWidth: 0.64, bottom: 0.18, shoulder: 0.49, top: 0.54),
+            .init(z: 1.48, halfWidth: 0.68, bottom: 0.18, shoulder: 0.49, top: 0.54),
         ],
         canopyProfiles: [
             .init(z: -0.62, halfWidth: 0.47, bottom: 0.67, shoulder: 0.79, top: 0.86),
@@ -133,7 +133,7 @@ private let vehicles: [VehicleSpec] = [
             .init(z: 0.43, halfWidth: 0.59, bottom: 0.70, shoulder: 0.94, top: 1.01),
             .init(z: 0.78, halfWidth: 0.49, bottom: 0.66, shoulder: 0.79, top: 0.86),
         ],
-        wheelX: 0.82,
+        wheelX: 0.71,
         frontWheelZ: -0.96,
         rearWheelZ: 1.00,
         frontWheelRadius: 0.31,
@@ -153,7 +153,7 @@ private let vehicles: [VehicleSpec] = [
             .init(z: -0.57, halfWidth: 0.72, bottom: 0.15, shoulder: 0.61, top: 0.67),
             .init(z: 0.72, halfWidth: 0.73, bottom: 0.15, shoulder: 0.62, top: 0.68),
             .init(z: 1.31, halfWidth: 0.61, bottom: 0.18, shoulder: 0.50, top: 0.55),
-            .init(z: 1.43, halfWidth: 0.52, bottom: 0.20, shoulder: 0.45, top: 0.49),
+            .init(z: 1.43, halfWidth: 0.59, bottom: 0.20, shoulder: 0.45, top: 0.49),
         ],
         canopyProfiles: [
             .init(z: -0.52, halfWidth: 0.49, bottom: 0.66, shoulder: 0.82, top: 0.90),
@@ -161,7 +161,7 @@ private let vehicles: [VehicleSpec] = [
             .init(z: 0.55, halfWidth: 0.55, bottom: 0.68, shoulder: 0.94, top: 1.01),
             .init(z: 0.84, halfWidth: 0.48, bottom: 0.65, shoulder: 0.80, top: 0.89),
         ],
-        wheelX: 0.70,
+        wheelX: 0.62,
         frontWheelZ: -0.88,
         rearWheelZ: 0.91,
         frontWheelRadius: 0.28,
@@ -543,14 +543,14 @@ private func lamps(for spec: VehicleSpec, rearZ: Double, frontZ: Double) -> Stri
         for side in [-1.0, 1.0] {
             result += cube(
                 "tail_light_\(side < 0 ? "left" : "right")_upper",
-                scale: V3(x: 0.24, y: 0.045, z: 0.018),
-                at: V3(x: side * 0.41, y: 0.53, z: rearZ),
+                scale: V3(x: 0.18, y: 0.032, z: 0.018),
+                at: V3(x: side * 0.30, y: 0.53, z: rearZ),
                 material: "TailLight"
             )
             result += cube(
                 "tail_light_\(side < 0 ? "left" : "right")_vertical",
-                scale: V3(x: 0.045, y: 0.12, z: 0.019),
-                at: V3(x: side * 0.61, y: 0.44, z: rearZ + 0.002),
+                scale: V3(x: 0.030, y: 0.070, z: 0.019),
+                at: V3(x: side * 0.50, y: 0.47, z: rearZ + 0.002),
                 material: "TailLight"
             )
         }
@@ -608,19 +608,19 @@ private func aero(for spec: VehicleSpec, rearZ: Double) -> String {
     case .rallyWing:
         return cube(
             "paint_spoiler",
-            scale: V3(x: 0.68, y: 0.024, z: 0.10),
-            at: V3(x: 0, y: 1.04, z: rearZ - 0.20),
+            scale: V3(x: 0.62, y: 0.020, z: 0.075),
+            at: V3(x: 0, y: 0.94, z: rearZ - 0.18),
             material: "Paint",
             rotateX: -5
         ) + cube(
             "spoiler_post_left",
-            scale: V3(x: 0.026, y: 0.13, z: 0.034),
-            at: V3(x: -0.49, y: 0.90, z: rearZ - 0.22),
+            scale: V3(x: 0.022, y: 0.095, z: 0.028),
+            at: V3(x: -0.46, y: 0.84, z: rearZ - 0.20),
             material: "DarkMetal"
         ) + cube(
             "spoiler_post_right",
-            scale: V3(x: 0.026, y: 0.13, z: 0.034),
-            at: V3(x: 0.49, y: 0.90, z: rearZ - 0.22),
+            scale: V3(x: 0.022, y: 0.095, z: 0.028),
+            at: V3(x: 0.46, y: 0.84, z: rearZ - 0.20),
             material: "DarkMetal"
         )
     case .ducktail:
@@ -634,20 +634,20 @@ private func aero(for spec: VehicleSpec, rearZ: Double) -> String {
     case .bladeWing:
         return cube(
             "paint_spoiler",
-            scale: V3(x: 0.73, y: 0.022, z: 0.095),
-            at: V3(x: 0, y: 0.92, z: rearZ - 0.18),
+            scale: V3(x: 0.66, y: 0.020, z: 0.075),
+            at: V3(x: 0, y: 0.88, z: rearZ - 0.18),
             material: "Paint",
             rotateX: -3
         ) + cube(
             "spoiler_post_left",
-            scale: V3(x: 0.020, y: 0.19, z: 0.030),
-            at: V3(x: -0.51, y: 0.72, z: rearZ - 0.19),
+            scale: V3(x: 0.018, y: 0.14, z: 0.026),
+            at: V3(x: -0.49, y: 0.73, z: rearZ - 0.19),
             material: "DarkMetal",
             rotateZ: -12
         ) + cube(
             "spoiler_post_right",
-            scale: V3(x: 0.020, y: 0.19, z: 0.030),
-            at: V3(x: 0.51, y: 0.72, z: rearZ - 0.19),
+            scale: V3(x: 0.018, y: 0.14, z: 0.026),
+            at: V3(x: 0.49, y: 0.73, z: rearZ - 0.19),
             material: "DarkMetal",
             rotateZ: 12
         )
@@ -666,6 +666,24 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
     let frontZ = (spec.profiles.first?.z ?? -1.4) - 0.012
     let rearZ = (spec.profiles.last?.z ?? 1.4) + 0.012
     let subdivisions = spec.heroDetail ? 3 : 2
+    let bodyHalfWidth = spec.profiles.map { $0.halfWidth }.max() ?? 0.8
+    let rearHalfWidth = spec.profiles.last?.halfWidth ?? bodyHalfWidth
+    let canopyHalfWidth = spec.canopyProfiles.map { $0.halfWidth }.max() ?? 0.56
+    let canopyBottom = spec.canopyProfiles.map { $0.bottom }.min() ?? 0.66
+    let canopyTop = spec.canopyProfiles.map { $0.top }.max() ?? 1.0
+    let canopyFrontZ = spec.canopyProfiles.first?.z ?? -0.6
+    let canopyRearZ = spec.canopyProfiles.last?.z ?? 0.8
+    let canopyCenterZ = (canopyFrontZ + canopyRearZ) * 0.5
+    let canopyHalfLength = abs(canopyRearZ - canopyFrontZ) * 0.5
+    let roofProfiles = spec.canopyProfiles.map { profile in
+        BodyProfile(
+            z: profile.z,
+            halfWidth: profile.halfWidth * 0.82,
+            bottom: profile.top - 0.035,
+            shoulder: profile.top + 0.006,
+            top: profile.top + 0.025
+        )
+    }
     var body = ringMesh(
         name: "paint_body_shell",
         profiles: spec.profiles,
@@ -678,66 +696,96 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
         material: "Glass",
         subdivisions: subdivisions
     )
+    body += ringMesh(
+        name: "paint_roof_panel",
+        profiles: roofProfiles,
+        material: "Paint",
+        subdivisions: 2
+    )
 
     for side in [-1.0, 1.0] {
-        body += sphere(
-            "paint_fender_front_\(side < 0 ? "left" : "right")",
-            scale: V3(x: 0.13, y: spec.frontWheelRadius * 0.88, z: spec.frontWheelRadius * 1.30),
-            at: V3(x: side * spec.wheelX, y: spec.frontWheelRadius + 0.08, z: spec.frontWheelZ),
-            material: "Paint"
-        )
-        body += sphere(
-            "paint_fender_rear_\(side < 0 ? "left" : "right")",
-            scale: V3(x: 0.14, y: spec.rearWheelRadius * 0.90, z: spec.rearWheelRadius * 1.32),
-            at: V3(x: side * spec.wheelX, y: spec.rearWheelRadius + 0.08, z: spec.rearWheelZ),
-            material: "Paint"
-        )
         body += cube(
             "dark_side_skirt_\(side < 0 ? "left" : "right")",
             scale: V3(x: 0.035, y: 0.070, z: abs(rearZ - frontZ) * 0.36),
-            at: V3(x: side * (spec.wheelX + 0.015), y: 0.18, z: 0.05),
+            at: V3(x: side * (bodyHalfWidth - 0.01), y: 0.18, z: 0.05),
             material: "Carbon"
         )
         body += cube(
             "carbon_side_intake_\(side < 0 ? "left" : "right")",
             scale: V3(x: 0.025, y: 0.115, z: 0.25),
-            at: V3(x: side * (spec.wheelX + 0.018), y: 0.40, z: 0.20),
+            at: V3(x: side * (bodyHalfWidth + 0.018), y: 0.40, z: 0.20),
             material: "Carbon",
             rotateX: side * -7
         )
         body += cube(
             "accent_sill_\(side < 0 ? "left" : "right")",
             scale: V3(x: 0.012, y: 0.018, z: abs(rearZ - frontZ) * 0.23),
-            at: V3(x: side * (spec.wheelX + 0.040), y: 0.255, z: 0.06),
+            at: V3(x: side * (bodyHalfWidth + 0.045), y: 0.255, z: 0.06),
             material: "Accent"
         )
         body += cube(
             "mirror_\(side < 0 ? "left" : "right")",
-            scale: V3(x: 0.12, y: 0.055, z: 0.13),
-            at: V3(x: side * (spec.wheelX + 0.06), y: 0.74, z: -0.30),
+            scale: V3(x: 0.09, y: 0.045, z: 0.10),
+            at: V3(x: side * (bodyHalfWidth + 0.09), y: 0.74, z: -0.30),
             material: "Paint",
             rotateY: side * -8
         )
         body += cube(
             "glass_side_\(side < 0 ? "left" : "right")_divider",
-            scale: V3(x: 0.012, y: 0.19, z: 0.025),
-            at: V3(x: side * 0.59, y: 0.83, z: 0.16),
+            scale: V3(x: 0.016, y: 0.17, z: 0.025),
+            at: V3(x: side * (canopyHalfWidth + 0.012), y: 0.84, z: canopyCenterZ),
             material: "DarkMetal",
             rotateX: -5
+        )
+        body += cube(
+            "paint_c_pillar_\(side < 0 ? "left" : "right")",
+            scale: V3(x: 0.042, y: (canopyTop - canopyBottom) * 0.24, z: 0.038),
+            at: V3(
+                x: side * canopyHalfWidth * 0.78,
+                y: canopyBottom + (canopyTop - canopyBottom) * 0.50,
+                z: canopyRearZ - 0.10
+            ),
+            material: "Paint",
+            rotateX: 18
+        )
+        body += cube(
+            "door_cutline_\(side < 0 ? "left" : "right")",
+            scale: V3(x: 0.009, y: 0.18, z: 0.012),
+            at: V3(x: side * (bodyHalfWidth + 0.024), y: 0.46, z: 0.18),
+            material: "DarkMetal",
+            rotateX: -8
         )
     }
 
     body += cube(
+        "paint_rear_fascia",
+        scale: V3(x: rearHalfWidth * 0.96, y: 0.18, z: 0.038),
+        at: V3(x: 0, y: 0.46, z: rearZ + 0.002),
+        material: "Paint"
+    )
+    body += cube(
         "dark_rear_bumper",
-        scale: V3(x: 0.62, y: 0.095, z: 0.055),
-        at: V3(x: 0, y: 0.28, z: rearZ),
+        scale: V3(x: rearHalfWidth, y: 0.075, z: 0.060),
+        at: V3(x: 0, y: 0.25, z: rearZ + 0.012),
         material: "Carbon"
     )
     body += cube(
         "rear_light_recess",
-        scale: V3(x: 0.67, y: 0.105, z: 0.026),
+        scale: V3(x: rearHalfWidth * 0.93, y: 0.085, z: 0.026),
         at: V3(x: 0, y: 0.49, z: rearZ + 0.008),
         material: "DarkMetal"
+    )
+    body += cube(
+        "rear_plate_recess",
+        scale: V3(x: 0.18, y: 0.050, z: 0.026),
+        at: V3(x: 0, y: 0.365, z: rearZ + 0.054),
+        material: "Carbon"
+    )
+    body += cube(
+        "rear_plate",
+        scale: V3(x: 0.125, y: 0.030, z: 0.008),
+        at: V3(x: 0, y: 0.365, z: rearZ + 0.084),
+        material: "Plate"
     )
     body += cube(
         "dark_front_splitter",
@@ -758,15 +806,15 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
     if spec.roofScoop {
         body += cube(
             "paint_roof_scoop",
-            scale: V3(x: 0.16, y: 0.055, z: 0.30),
-            at: V3(x: 0, y: 1.12, z: 0.13),
+            scale: V3(x: 0.07, y: 0.014, z: 0.12),
+            at: V3(x: 0, y: canopyTop + 0.045, z: canopyCenterZ - 0.10),
             material: "Paint",
             rotateX: -4
         )
         body += cube(
             "roof_scoop_intake",
-            scale: V3(x: 0.12, y: 0.035, z: 0.025),
-            at: V3(x: 0, y: 1.16, z: -0.18),
+            scale: V3(x: 0.050, y: 0.010, z: 0.012),
+            at: V3(x: 0, y: canopyTop + 0.054, z: canopyCenterZ - 0.21),
             material: "Carbon"
         )
     }
@@ -774,23 +822,38 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
     if spec.heroDetail {
         body += cube(
             "interior_cockpit",
-            scale: V3(x: 0.47, y: 0.075, z: 0.54),
-            at: V3(x: 0, y: 0.69, z: 0.10),
+            scale: V3(x: canopyHalfWidth * 0.80, y: 0.055, z: canopyHalfLength * 0.78),
+            at: V3(x: 0, y: canopyBottom + 0.01, z: canopyCenterZ),
             material: "Interior"
         )
+        body += cube(
+            "interior_dashboard",
+            scale: V3(x: canopyHalfWidth * 0.72, y: 0.065, z: 0.11),
+            at: V3(x: 0, y: canopyBottom + 0.12, z: canopyFrontZ + 0.20),
+            material: "Interior",
+            rotateX: -8
+        )
         for side in [-1.0, 1.0] {
-            body += sphere(
-                "interior_seat_\(side < 0 ? "left" : "right")",
-                scale: V3(x: 0.18, y: 0.24, z: 0.14),
-                at: V3(x: side * 0.25, y: 0.80, z: 0.28),
-                material: "Interior"
+            body += cube(
+                "interior_seat_base_\(side < 0 ? "left" : "right")",
+                scale: V3(x: 0.15, y: 0.045, z: 0.18),
+                at: V3(x: side * 0.22, y: canopyBottom + 0.075, z: canopyCenterZ + 0.06),
+                material: "Interior",
+                rotateX: -8
             )
             body += cube(
-                "rear_deck_vent_\(side < 0 ? "left" : "right")",
-                scale: V3(x: 0.13, y: 0.008, z: 0.22),
-                at: V3(x: side * 0.25, y: spec.profiles[4].top + 0.024, z: 0.84),
-                material: "Carbon",
-                rotateX: -4
+                "interior_seat_back_\(side < 0 ? "left" : "right")",
+                scale: V3(x: 0.15, y: 0.18, z: 0.060),
+                at: V3(x: side * 0.22, y: canopyBottom + 0.23, z: canopyCenterZ + 0.20),
+                material: "Interior",
+                rotateX: -12
+            )
+            body += cube(
+                "interior_headrest_\(side < 0 ? "left" : "right")",
+                scale: V3(x: 0.10, y: 0.075, z: 0.052),
+                at: V3(x: side * 0.22, y: canopyBottom + 0.42, z: canopyCenterZ + 0.24),
+                material: "Interior",
+                rotateX: -8
             )
         }
         for x in [-0.39, -0.13, 0.13, 0.39] {
@@ -811,17 +874,6 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
                 at: V3(x: x, y: 0.25, z: rearZ + 0.08),
                 material: "Exhaust"
             )
-        }
-        for side in [-1.0, 1.0] {
-            for vent in 0..<2 {
-                body += cube(
-                    "hood_vent_\(side < 0 ? "left" : "right")_\(vent)",
-                    scale: V3(x: 0.095, y: 0.008, z: 0.20),
-                    at: V3(x: side * (0.25 + Double(vent) * 0.14), y: spec.profiles[1].top + 0.025, z: -0.89),
-                    material: "Carbon",
-                    rotateX: -3
-                )
-            }
         }
     }
 
@@ -852,7 +904,7 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
 
     let materials = [
         material("Paint", color: V3(x: 0.11, y: 0.60, z: 0.78), metallic: 0.48, roughness: 0.22, clearcoat: 0.96, clearcoatRoughness: 0.07),
-        material("Glass", color: V3(x: 0.012, y: 0.035, z: 0.070), metallic: 0.08, roughness: 0.05, clearcoat: 0.34, clearcoatRoughness: 0.03, opacity: 0.78, ior: 1.46),
+        material("Glass", color: V3(x: 0.008, y: 0.022, z: 0.052), metallic: 0.10, roughness: 0.07, clearcoat: 0.48, clearcoatRoughness: 0.03, opacity: 0.98, ior: 1.46),
         material("DarkMetal", color: V3(x: 0.025, y: 0.032, z: 0.045), metallic: 0.90, roughness: 0.24),
         material("Carbon", color: V3(x: 0.012, y: 0.016, z: 0.023), metallic: 0.48, roughness: 0.34),
         material("Interior", color: V3(x: 0.018, y: 0.022, z: 0.030), metallic: 0.10, roughness: 0.72),
@@ -860,6 +912,7 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
         material("Rim", color: V3(x: 0.44, y: 0.50, z: 0.55), metallic: 0.96, roughness: 0.18),
         material("Brake", color: V3(x: 0.20, y: 0.22, z: 0.24), metallic: 0.92, roughness: 0.28),
         material("Exhaust", color: V3(x: 0.16, y: 0.18, z: 0.20), metallic: 0.98, roughness: 0.20),
+        material("Plate", color: V3(x: 0.70, y: 0.74, z: 0.72), metallic: 0.12, roughness: 0.34),
         material("TailLight", color: V3(x: 0.52, y: 0.004, z: 0.012), metallic: 0.05, roughness: 0.10, emissive: V3(x: 1.0, y: 0.012, z: 0.024), clearcoat: 0.72, clearcoatRoughness: 0.05),
         material("HeadLight", color: V3(x: 0.62, y: 0.86, z: 1.0), metallic: 0.02, roughness: 0.08, emissive: V3(x: 0.68, y: 0.91, z: 1.0), clearcoat: 0.78, clearcoatRoughness: 0.04),
         material("Accent", color: spec.accentColor, metallic: 0.54, roughness: 0.18, emissive: V3(x: spec.accentColor.x * 0.28, y: spec.accentColor.y * 0.28, z: spec.accentColor.z * 0.28), clearcoat: 0.42, clearcoatRoughness: 0.08),
@@ -879,7 +932,7 @@ def Xform "\(spec.rootName)" (
         string assetRole = "\(spec.heroDetail ? "hero-vehicle" : "traffic-vehicle")"
         string authoringTool = "Scripts/build_production_racing_usd.swift"
         string license = "project-original"
-        int productionRevision = 3
+        int productionRevision = 4
     }
 )
 {

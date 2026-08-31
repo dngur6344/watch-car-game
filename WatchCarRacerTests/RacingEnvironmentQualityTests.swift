@@ -250,6 +250,7 @@ final class RacingEnvironmentQualityTests: XCTestCase {
             "--sg8-track", "desert",
             "--sg8-weather", "storm",
             "--sg8-tier", "enhanced",
+            "--sg8-vehicle", "gt",
             "--sg8-duration", "300",
             "--sg8-route-cycles", "10",
             "--sg8-trigger-memory-warning",
@@ -262,6 +263,7 @@ final class RacingEnvironmentQualityTests: XCTestCase {
         XCTAssertEqual(configuration.track, .desert)
         XCTAssertEqual(configuration.weather, .storm)
         XCTAssertEqual(configuration.tier, .enhanced)
+        XCTAssertEqual(configuration.vehicle, .gt)
         XCTAssertEqual(configuration.duration, 300)
         XCTAssertEqual(configuration.routeCycles, 10)
         XCTAssertTrue(configuration.triggersMemoryWarning)
@@ -281,6 +283,7 @@ final class RacingEnvironmentQualityTests: XCTestCase {
             replacingValue(after: "--sg8-duration", with: "nan"),
             replacingValue(after: "--sg8-route-cycles", with: "11"),
             replacingValue(after: "--sg8-track", with: "unknown"),
+            replacingValue(after: "--sg8-vehicle", with: "unknown"),
         ] {
             XCTAssertNil(
                 SG8RacingEnvironmentLaunchConfiguration(arguments: invalidArguments)
