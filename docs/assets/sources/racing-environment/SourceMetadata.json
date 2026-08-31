@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "generatedOn": "2026-08-30",
+  "tool": "Codex built-in image_gen",
+  "license": "project-original",
+  "hashAlgorithm": "SHA-256",
+  "sources": [
+    {
+      "trackID": "coastal",
+      "assetSlug": "ocean",
+      "filename": "ocean_terrain_source.png",
+      "sourceID": "exec-24ec8976-8a43-4415-8dde-ae56d793ed02",
+      "sha256": "fc62fba112a901ae41adfa497bbce2d889f1a32b432487074bfe650f65d42416",
+      "width": 1254,
+      "height": 1254,
+      "prompt": "Use case: stylized-concept. Asset type: source master for a production iOS racing-game terrain PBR atlas. Create a square, edge-to-edge, orthographic top-down material featuring pale weathered limestone, compacted warm sand, small gravel, sparse salt grass, and dark damp patches. Make it seamless-looking, with even macro variation and no central focal object. Use diffuse neutral studio light with minimal directional shadow and a production-polished stylized-realism treatment in an authored low-poly language. No road markings, cars, buildings, horizon, sky, text, logo, watermark, dramatic baked shadows, perspective, obvious repeating stamps, or isolated props."
+    },
+    {
+      "trackID": "alpine",
+      "assetSlug": "alpine",
+      "filename": "alpine_terrain_source.png",
+      "sourceID": "exec-508cc22c-ff7b-4908-96e1-06b94ea3661a",
+      "sha256": "735c36b4ab5f958fcb7afc691c9303ceb8086bf138bfde9ed34d58b4d628fba7",
+      "width": 1254,
+      "height": 1254,
+      "prompt": "Use case: stylized-concept. Asset type: source master for a production iOS racing-game terrain PBR atlas. Create a square, edge-to-edge, orthographic top-down material featuring cool fractured granite, compact gravel, dark soil, mountain grass, and tiny old snow in crevices. Make it seamless-looking, with even macro variation and no central focal object. Use diffuse neutral studio light with minimal directional shadow and a production-polished stylized-realism treatment in an authored low-poly language. No road markings, cars, buildings, horizon, sky, text, logo, watermark, dramatic baked shadows, perspective, obvious repeating stamps, or isolated props."
+    },
+    {
+      "trackID": "desert",
+      "assetSlug": "desert",
+      "filename": "desert_terrain_source.png",
+      "sourceID": "exec-0aaeffee-34be-4348-8b39-15377b0c2639",
+      "sha256": "062c6cc3a963d7c161947af2ed913fd450e007af469fecf177432694792bab54",
+      "width": 1254,
+      "height": 1254,
+      "prompt": "Use case: stylized-concept. Asset type: source master for a production iOS racing-game terrain PBR atlas. Create a square, edge-to-edge, orthographic top-down material featuring red sandstone, ochre sand, cracked clay, gravel, and dry scrub. Make it seamless-looking, with even macro variation and no central focal object. Use diffuse neutral studio light with minimal directional shadow and a production-polished stylized-realism treatment in an authored low-poly language. No road markings, cars, buildings, horizon, sky, text, logo, watermark, dramatic baked shadows, perspective, obvious repeating stamps, or isolated props."
+    }
+  ]
+}

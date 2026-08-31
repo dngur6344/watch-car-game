@@ -1,4 +1,5 @@
 import QuartzCore
+import UIKit
 
 @MainActor
 final class GameLoopDriver: NSObject {
@@ -16,13 +17,23 @@ final class GameLoopDriver: NSObject {
     func start() {
         guard displayLink == nil else { return }
         let link = CADisplayLink(target: self, selector: #selector(tick(_:)))
-        link.preferredFrameRateRange = CAFrameRateRange(
-            minimum: 50,
-            maximum: 60,
-            preferred: 60
+        link.preferredFrameRateRange = Self.preferredFrameRateRange(
+            maximumFramesPerSecond: UIScreen.main.maximumFramesPerSecond
         )
         link.add(to: .main, forMode: .common)
         displayLink = link
+    }
+
+    static func preferredFrameRateRange(
+        maximumFramesPerSecond: Int
+    ) -> CAFrameRateRange {
+        let supportedRate = max(min(maximumFramesPerSecond, 60), 1)
+        let requestedRate = Float(supportedRate)
+        return CAFrameRateRange(
+            minimum: requestedRate,
+            maximum: requestedRate,
+            preferred: requestedRate
+        )
     }
 
     func stop() {

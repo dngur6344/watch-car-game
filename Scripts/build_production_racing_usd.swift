@@ -183,11 +183,24 @@ private func material(
     color: V3,
     metallic: Double,
     roughness: Double,
-    emissive: V3? = nil
+    emissive: V3? = nil,
+    clearcoat: Double = 0,
+    clearcoatRoughness: Double = 0,
+    opacity: Double = 1,
+    ior: Double = 1.5
 ) -> String {
     let emissiveLine = emissive.map {
         "                color3f inputs:emissiveColor = \($0.usd)\n"
     } ?? ""
+    var surfaceLines = ""
+    if clearcoat > 0 {
+        surfaceLines += "                float inputs:clearcoat = \(format(clearcoat))\n"
+        surfaceLines += "                float inputs:clearcoatRoughness = \(format(clearcoatRoughness))\n"
+    }
+    if opacity < 1 {
+        surfaceLines += "                float inputs:opacity = \(format(opacity))\n"
+        surfaceLines += "                float inputs:ior = \(format(ior))\n"
+    }
     return """
         def Material "\(name)"
         {
@@ -198,7 +211,7 @@ private func material(
                 color3f inputs:diffuseColor = \(color.usd)
                 float inputs:metallic = \(format(metallic))
                 float inputs:roughness = \(format(roughness))
-\(emissiveLine)                token outputs:surface
+\(surfaceLines)\(emissiveLine)                token outputs:surface
             }
         }
 """
@@ -286,38 +299,138 @@ private func sphere(
 private func ringMesh(
     name: String,
     profiles: [BodyProfile],
-    material: String
+    material: String,
+    subdivisions: Int = 1
 ) -> String {
+    let profiles = refinedProfiles(profiles, subdivisions: subdivisions)
+    let ringPointCount = 12
     var points: [V3] = []
     for profile in profiles {
         let w = profile.halfWidth
+        let upperShoulder = profile.shoulder + (profile.top - profile.shoulder) * 0.58
         points += [
-            V3(x: -w * 0.79, y: profile.bottom, z: profile.z),
-            V3(x: -w, y: profile.bottom + 0.09, z: profile.z),
+            V3(x: -w * 0.74, y: profile.bottom, z: profile.z),
+            V3(x: -w * 0.94, y: profile.bottom + 0.045, z: profile.z),
+            V3(x: -w, y: profile.bottom + 0.12, z: profile.z),
             V3(x: -w, y: profile.shoulder, z: profile.z),
-            V3(x: -w * 0.76, y: profile.top, z: profile.z),
-            V3(x: w * 0.76, y: profile.top, z: profile.z),
+            V3(x: -w * 0.90, y: upperShoulder, z: profile.z),
+            V3(x: -w * 0.62, y: profile.top, z: profile.z),
+            V3(x: w * 0.62, y: profile.top, z: profile.z),
+            V3(x: w * 0.90, y: upperShoulder, z: profile.z),
             V3(x: w, y: profile.shoulder, z: profile.z),
-            V3(x: w, y: profile.bottom + 0.09, z: profile.z),
-            V3(x: w * 0.79, y: profile.bottom, z: profile.z),
+            V3(x: w, y: profile.bottom + 0.12, z: profile.z),
+            V3(x: w * 0.94, y: profile.bottom + 0.045, z: profile.z),
+            V3(x: w * 0.74, y: profile.bottom, z: profile.z),
         ]
     }
 
     var counts: [Int] = []
     var indices: [Int] = []
     for ring in 0..<(profiles.count - 1) {
-        let current = ring * 8
-        let next = (ring + 1) * 8
-        for edge in 0..<8 {
-            let following = (edge + 1) % 8
+        let current = ring * ringPointCount
+        let next = (ring + 1) * ringPointCount
+        for edge in 0..<ringPointCount {
+            let following = (edge + 1) % ringPointCount
             counts.append(4)
             indices += [current + edge, current + following, next + following, next + edge]
         }
     }
-    counts += [8, 8]
-    indices += Array(0..<8)
-    let last = (profiles.count - 1) * 8
-    indices += (0..<8).reversed().map { last + $0 }
+    counts += [ringPointCount, ringPointCount]
+    indices += Array(0..<ringPointCount)
+    let last = (profiles.count - 1) * ringPointCount
+    indices += (0..<ringPointCount).reversed().map { last + $0 }
+
+    let pointText = points.map { "            \($0.usd)" }.joined(separator: ",\n")
+    let countText = counts.map(String.init).joined(separator: ", ")
+    let indexText = indices.map(String.init).joined(separator: ", ")
+    return """
+    def Mesh "\(name)" (prepend apiSchemas = ["MaterialBindingAPI"])
+    {
+        uniform bool doubleSided = 0
+        int[] faceVertexCounts = [\(countText)]
+        int[] faceVertexIndices = [\(indexText)]
+        point3f[] points = [
+\(pointText)
+        ]
+        uniform token subdivisionScheme = "none"
+        rel material:binding = </__ROOT__/Materials/\(material)>
+    }
+
+"""
+}
+
+private func refinedProfiles(
+    _ source: [BodyProfile],
+    subdivisions: Int
+) -> [BodyProfile] {
+    let subdivisions = max(subdivisions, 1)
+    guard source.count > 1, subdivisions > 1 else { return source }
+    var result: [BodyProfile] = []
+    result.reserveCapacity((source.count - 1) * subdivisions + 1)
+
+    for index in 0..<(source.count - 1) {
+        let start = source[index]
+        let end = source[index + 1]
+        for step in 0..<subdivisions {
+            let t = Double(step) / Double(subdivisions)
+            let eased = t * t * (3 - 2 * t)
+            func blend(_ lhs: Double, _ rhs: Double, amount: Double) -> Double {
+                lhs + (rhs - lhs) * amount
+            }
+            result.append(
+                BodyProfile(
+                    z: blend(start.z, end.z, amount: t),
+                    halfWidth: blend(start.halfWidth, end.halfWidth, amount: eased),
+                    bottom: blend(start.bottom, end.bottom, amount: eased),
+                    shoulder: blend(start.shoulder, end.shoulder, amount: eased),
+                    top: blend(start.top, end.top, amount: eased)
+                )
+            )
+        }
+    }
+    result.append(source[source.count - 1])
+    return result
+}
+
+private func annulusMesh(
+    name: String,
+    outerRadius: Double,
+    innerRadius: Double,
+    depth: Double,
+    centerX: Double,
+    material: String,
+    segments: Int = 18
+) -> String {
+    var points: [V3] = []
+    for face in [-0.5, 0.5] {
+        let x = centerX + Double(face) * depth
+        for index in 0..<segments {
+            let angle = Double(index) * 2 * Double.pi / Double(segments)
+            points.append(V3(x: x, y: cos(angle) * outerRadius, z: sin(angle) * outerRadius))
+            points.append(V3(x: x, y: cos(angle) * innerRadius, z: sin(angle) * innerRadius))
+        }
+    }
+
+    let faceStride = segments * 2
+    var counts: [Int] = []
+    var indices: [Int] = []
+    for index in 0..<segments {
+        let next = (index + 1) % segments
+        let backOuter = index * 2
+        let backInner = backOuter + 1
+        let nextBackOuter = next * 2
+        let nextBackInner = nextBackOuter + 1
+        let frontOuter = faceStride + backOuter
+        let frontInner = frontOuter + 1
+        let nextFrontOuter = faceStride + nextBackOuter
+        let nextFrontInner = nextFrontOuter + 1
+
+        counts += [4, 4, 4, 4]
+        indices += [frontOuter, nextFrontOuter, nextFrontInner, frontInner]
+        indices += [backOuter, backInner, nextBackInner, nextBackOuter]
+        indices += [backOuter, nextBackOuter, nextFrontOuter, frontOuter]
+        indices += [backInner, frontInner, nextFrontInner, nextBackInner]
+    }
 
     let pointText = points.map { "            \($0.usd)" }.joined(separator: ",\n")
     let countText = counts.map(String.init).joined(separator: ", ")
@@ -344,52 +457,71 @@ private func wheel(
     radius: Double,
     heroDetail: Bool
 ) -> String {
+    let outward = position.x < 0 ? -1.0 : 1.0
+    let tireDepth = heroDetail ? 0.30 : 0.25
+    let faceX = outward * tireDepth * 0.52
     var children = cylinder(
         "tire",
         radius: radius,
-        height: heroDetail ? 0.29 : 0.25,
+        height: tireDepth,
         axis: "X",
         at: V3(x: 0, y: 0, z: 0),
         material: "Tire"
     )
+    children += annulusMesh(
+        name: "tire_sidewall",
+        outerRadius: radius * 0.985,
+        innerRadius: radius * 0.73,
+        depth: 0.018,
+        centerX: faceX,
+        material: "Tire"
+    )
     children += cylinder(
-        "rim_outer",
-        radius: radius * 0.64,
-        height: heroDetail ? 0.305 : 0.265,
+        "rim_barrel",
+        radius: radius * 0.68,
+        height: heroDetail ? 0.12 : 0.10,
         axis: "X",
-        at: V3(x: 0, y: 0, z: 0),
+        at: V3(x: outward * tireDepth * 0.30, y: 0, z: 0),
+        material: "DarkMetal"
+    )
+    children += annulusMesh(
+        name: "rim_outer",
+        outerRadius: radius * 0.70,
+        innerRadius: radius * 0.55,
+        depth: 0.028,
+        centerX: faceX + outward * 0.010,
         material: "Rim"
     )
     children += cylinder(
         "brake_disc",
         radius: radius * 0.47,
-        height: heroDetail ? 0.315 : 0.27,
+        height: 0.025,
         axis: "X",
-        at: V3(x: 0, y: 0, z: 0),
+        at: V3(x: faceX - outward * 0.018, y: 0, z: 0),
         material: "Brake"
     )
     children += cylinder(
         "hub",
         radius: radius * 0.13,
-        height: heroDetail ? 0.325 : 0.28,
+        height: 0.050,
         axis: "X",
-        at: V3(x: 0, y: 0, z: 0),
+        at: V3(x: faceX + outward * 0.014, y: 0, z: 0),
         material: "DarkMetal"
     )
     if heroDetail {
-        for index in 0..<10 {
+        for index in 0..<6 {
             children += cube(
                 "spoke_\(index)",
-                scale: V3(x: 0.018, y: radius * 0.39, z: 0.022),
-                at: V3(x: 0, y: 0, z: 0),
+                scale: V3(x: 0.012, y: radius * 0.39, z: 0.018),
+                at: V3(x: faceX + outward * 0.028, y: 0, z: 0),
                 material: "Rim",
-                rotateX: Double(index) * 36
+                rotateX: Double(index) * 30
             )
         }
         children += cube(
             "caliper",
-            scale: V3(x: 0.035, y: radius * 0.16, z: radius * 0.08),
-            at: V3(x: 0, y: 0, z: radius * 0.39),
+            scale: V3(x: 0.014, y: radius * 0.16, z: radius * 0.075),
+            at: V3(x: faceX + outward * 0.012, y: 0, z: radius * 0.38),
             material: "Accent"
         )
     }
@@ -476,25 +608,25 @@ private func aero(for spec: VehicleSpec, rearZ: Double) -> String {
     case .rallyWing:
         return cube(
             "paint_spoiler",
-            scale: V3(x: 0.70, y: 0.038, z: 0.14),
+            scale: V3(x: 0.68, y: 0.024, z: 0.10),
             at: V3(x: 0, y: 1.04, z: rearZ - 0.20),
             material: "Paint",
             rotateX: -5
         ) + cube(
             "spoiler_post_left",
-            scale: V3(x: 0.035, y: 0.13, z: 0.04),
+            scale: V3(x: 0.026, y: 0.13, z: 0.034),
             at: V3(x: -0.49, y: 0.90, z: rearZ - 0.22),
             material: "DarkMetal"
         ) + cube(
             "spoiler_post_right",
-            scale: V3(x: 0.035, y: 0.13, z: 0.04),
+            scale: V3(x: 0.026, y: 0.13, z: 0.034),
             at: V3(x: 0.49, y: 0.90, z: rearZ - 0.22),
             material: "DarkMetal"
         )
     case .ducktail:
         return cube(
             "paint_ducktail",
-            scale: V3(x: 0.67, y: 0.055, z: 0.17),
+            scale: V3(x: 0.67, y: 0.038, z: 0.14),
             at: V3(x: 0, y: 0.65, z: rearZ - 0.14),
             material: "Paint",
             rotateX: 13
@@ -502,19 +634,19 @@ private func aero(for spec: VehicleSpec, rearZ: Double) -> String {
     case .bladeWing:
         return cube(
             "paint_spoiler",
-            scale: V3(x: 0.75, y: 0.030, z: 0.13),
+            scale: V3(x: 0.73, y: 0.022, z: 0.095),
             at: V3(x: 0, y: 0.92, z: rearZ - 0.18),
             material: "Paint",
             rotateX: -3
         ) + cube(
             "spoiler_post_left",
-            scale: V3(x: 0.025, y: 0.20, z: 0.035),
+            scale: V3(x: 0.020, y: 0.19, z: 0.030),
             at: V3(x: -0.51, y: 0.72, z: rearZ - 0.19),
             material: "DarkMetal",
             rotateZ: -12
         ) + cube(
             "spoiler_post_right",
-            scale: V3(x: 0.025, y: 0.20, z: 0.035),
+            scale: V3(x: 0.020, y: 0.19, z: 0.030),
             at: V3(x: 0.51, y: 0.72, z: rearZ - 0.19),
             material: "DarkMetal",
             rotateZ: 12
@@ -533,8 +665,19 @@ private func aero(for spec: VehicleSpec, rearZ: Double) -> String {
 private func makeVehicle(_ spec: VehicleSpec) -> String {
     let frontZ = (spec.profiles.first?.z ?? -1.4) - 0.012
     let rearZ = (spec.profiles.last?.z ?? 1.4) + 0.012
-    var body = ringMesh(name: "paint_body_shell", profiles: spec.profiles, material: "Paint")
-    body += ringMesh(name: "glass_canopy", profiles: spec.canopyProfiles, material: "Glass")
+    let subdivisions = spec.heroDetail ? 3 : 2
+    var body = ringMesh(
+        name: "paint_body_shell",
+        profiles: spec.profiles,
+        material: "Paint",
+        subdivisions: subdivisions
+    )
+    body += ringMesh(
+        name: "glass_canopy",
+        profiles: spec.canopyProfiles,
+        material: "Glass",
+        subdivisions: subdivisions
+    )
 
     for side in [-1.0, 1.0] {
         body += sphere(
@@ -554,6 +697,19 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
             scale: V3(x: 0.035, y: 0.070, z: abs(rearZ - frontZ) * 0.36),
             at: V3(x: side * (spec.wheelX + 0.015), y: 0.18, z: 0.05),
             material: "Carbon"
+        )
+        body += cube(
+            "carbon_side_intake_\(side < 0 ? "left" : "right")",
+            scale: V3(x: 0.025, y: 0.115, z: 0.25),
+            at: V3(x: side * (spec.wheelX + 0.018), y: 0.40, z: 0.20),
+            material: "Carbon",
+            rotateX: side * -7
+        )
+        body += cube(
+            "accent_sill_\(side < 0 ? "left" : "right")",
+            scale: V3(x: 0.012, y: 0.018, z: abs(rearZ - frontZ) * 0.23),
+            at: V3(x: side * (spec.wheelX + 0.040), y: 0.255, z: 0.06),
+            material: "Accent"
         )
         body += cube(
             "mirror_\(side < 0 ? "left" : "right")",
@@ -578,6 +734,12 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
         material: "Carbon"
     )
     body += cube(
+        "rear_light_recess",
+        scale: V3(x: 0.67, y: 0.105, z: 0.026),
+        at: V3(x: 0, y: 0.49, z: rearZ + 0.008),
+        material: "DarkMetal"
+    )
+    body += cube(
         "dark_front_splitter",
         scale: V3(x: 0.62, y: 0.035, z: 0.14),
         at: V3(x: 0, y: 0.16, z: frontZ + 0.08),
@@ -586,11 +748,11 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
     )
     body += cube(
         "accent_center_spine",
-        scale: V3(x: 0.038, y: 0.010, z: abs(rearZ - frontZ) * 0.35),
+        scale: V3(x: 0.026, y: 0.009, z: abs(rearZ - frontZ) * 0.34),
         at: V3(x: 0, y: spec.profiles[2].top + 0.018, z: -0.15),
         material: "Accent"
     )
-    body += lamps(for: spec, rearZ: rearZ, frontZ: frontZ)
+    body += lamps(for: spec, rearZ: rearZ + 0.038, frontZ: frontZ)
     body += aero(for: spec, rearZ: rearZ)
 
     if spec.roofScoop {
@@ -610,6 +772,27 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
     }
 
     if spec.heroDetail {
+        body += cube(
+            "interior_cockpit",
+            scale: V3(x: 0.47, y: 0.075, z: 0.54),
+            at: V3(x: 0, y: 0.69, z: 0.10),
+            material: "Interior"
+        )
+        for side in [-1.0, 1.0] {
+            body += sphere(
+                "interior_seat_\(side < 0 ? "left" : "right")",
+                scale: V3(x: 0.18, y: 0.24, z: 0.14),
+                at: V3(x: side * 0.25, y: 0.80, z: 0.28),
+                material: "Interior"
+            )
+            body += cube(
+                "rear_deck_vent_\(side < 0 ? "left" : "right")",
+                scale: V3(x: 0.13, y: 0.008, z: 0.22),
+                at: V3(x: side * 0.25, y: spec.profiles[4].top + 0.024, z: 0.84),
+                material: "Carbon",
+                rotateX: -4
+            )
+        }
         for x in [-0.39, -0.13, 0.13, 0.39] {
             body += cube(
                 "diffuser_fin_\(Int((x + 0.4) * 100))",
@@ -668,17 +851,18 @@ private func makeVehicle(_ spec: VehicleSpec) -> String {
     )
 
     let materials = [
-        material("Paint", color: V3(x: 0.11, y: 0.60, z: 0.78), metallic: 0.78, roughness: 0.20),
-        material("Glass", color: V3(x: 0.012, y: 0.035, z: 0.070), metallic: 0.38, roughness: 0.07),
+        material("Paint", color: V3(x: 0.11, y: 0.60, z: 0.78), metallic: 0.48, roughness: 0.22, clearcoat: 0.96, clearcoatRoughness: 0.07),
+        material("Glass", color: V3(x: 0.012, y: 0.035, z: 0.070), metallic: 0.08, roughness: 0.05, clearcoat: 0.34, clearcoatRoughness: 0.03, opacity: 0.78, ior: 1.46),
         material("DarkMetal", color: V3(x: 0.025, y: 0.032, z: 0.045), metallic: 0.90, roughness: 0.24),
         material("Carbon", color: V3(x: 0.012, y: 0.016, z: 0.023), metallic: 0.48, roughness: 0.34),
+        material("Interior", color: V3(x: 0.018, y: 0.022, z: 0.030), metallic: 0.10, roughness: 0.72),
         material("Tire", color: V3(x: 0.006, y: 0.007, z: 0.009), metallic: 0, roughness: 0.94),
         material("Rim", color: V3(x: 0.44, y: 0.50, z: 0.55), metallic: 0.96, roughness: 0.18),
         material("Brake", color: V3(x: 0.20, y: 0.22, z: 0.24), metallic: 0.92, roughness: 0.28),
         material("Exhaust", color: V3(x: 0.16, y: 0.18, z: 0.20), metallic: 0.98, roughness: 0.20),
-        material("TailLight", color: V3(x: 0.52, y: 0.004, z: 0.012), metallic: 0.05, roughness: 0.10, emissive: V3(x: 1.0, y: 0.012, z: 0.024)),
-        material("HeadLight", color: V3(x: 0.62, y: 0.86, z: 1.0), metallic: 0.02, roughness: 0.08, emissive: V3(x: 0.68, y: 0.91, z: 1.0)),
-        material("Accent", color: spec.accentColor, metallic: 0.54, roughness: 0.18, emissive: V3(x: spec.accentColor.x * 0.28, y: spec.accentColor.y * 0.28, z: spec.accentColor.z * 0.28)),
+        material("TailLight", color: V3(x: 0.52, y: 0.004, z: 0.012), metallic: 0.05, roughness: 0.10, emissive: V3(x: 1.0, y: 0.012, z: 0.024), clearcoat: 0.72, clearcoatRoughness: 0.05),
+        material("HeadLight", color: V3(x: 0.62, y: 0.86, z: 1.0), metallic: 0.02, roughness: 0.08, emissive: V3(x: 0.68, y: 0.91, z: 1.0), clearcoat: 0.78, clearcoatRoughness: 0.04),
+        material("Accent", color: spec.accentColor, metallic: 0.54, roughness: 0.18, emissive: V3(x: spec.accentColor.x * 0.28, y: spec.accentColor.y * 0.28, z: spec.accentColor.z * 0.28), clearcoat: 0.42, clearcoatRoughness: 0.08),
     ].joined(separator: "\n").replacingOccurrences(of: "__ROOT__", with: spec.rootName)
 
     return """
@@ -695,7 +879,7 @@ def Xform "\(spec.rootName)" (
         string assetRole = "\(spec.heroDetail ? "hero-vehicle" : "traffic-vehicle")"
         string authoringTool = "Scripts/build_production_racing_usd.swift"
         string license = "project-original"
-        int productionRevision = 2
+        int productionRevision = 3
     }
 )
 {

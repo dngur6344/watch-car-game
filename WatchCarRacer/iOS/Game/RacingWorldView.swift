@@ -112,10 +112,10 @@ struct RacingWorldLayout {
         let height: Float
     }
 
-    static let trackTileLength: Float = 12
+    static let trackTileLength = RacingEnvironmentLayout.trackTileLength
     static let trackSurfaceLength: Float = 12.18
     static let trackUnderlayLength: Float = 12.92
-    static let trackTileCount = 18
+    static let trackTileCount = RacingEnvironmentLayout.trackTileCount
     static let mountainClearance: Float = 15
     static let mountainMassifs = [
         MountainMassif(x: -30, z: -126, radius: 13, height: 17),
@@ -124,13 +124,12 @@ struct RacingWorldLayout {
         MountainMassif(x: 51, z: -164, radius: 19, height: 25),
     ]
 
+    static func trackTileState(index: Int, travel: Double) -> TrackTileState {
+        RacingEnvironmentLayout.trackTileState(index: index, travel: travel)
+    }
+
     static func trackTileDistance(index: Int, travel: Double) -> Float {
-        let safeTravel = travel.isFinite ? max(travel, 0) : 0
-        let cycleLength = Double(trackTileLength) * Double(trackTileCount)
-        let minimumDistance = -Double(trackTileLength)
-        let unwrappedDistance = Double(index - 1) * Double(trackTileLength) - safeTravel
-        let cycle = floor((unwrappedDistance - minimumDistance) / cycleLength)
-        return Float(unwrappedDistance - cycle * cycleLength)
+        trackTileState(index: index, travel: travel).distance
     }
 
     static func trackPlacement(
@@ -207,14 +206,14 @@ struct RacingWorldLayout {
         let progress = min(max(speedProgress.isFinite ? speedProgress : 0, 0), 1)
         let safeTravel = Float(travel.isFinite ? travel : 0)
         let roadFrequency = safeTravel * 0.34
-        let suspensionAmplitude: Float = 0.004 + progress * 0.010
-        let lateralLoad = safeSteering * (0.018 + progress * 0.038)
+        let suspensionAmplitude: Float = 0.004 + progress * 0.014
+        let lateralLoad = safeSteering * (0.022 + progress * 0.050)
 
         return VehicleDynamicsPose(
             heave: sin(roadFrequency) * suspensionAmplitude,
-            yaw: -safeSteering * (0.075 + progress * 0.035),
+            yaw: -safeSteering * (0.078 + progress * 0.048),
             roll: -lateralLoad,
-            pitch: cos(roadFrequency * 0.57) * (0.003 + progress * 0.007)
+            pitch: cos(roadFrequency * 0.57) * (0.004 + progress * 0.010)
         )
     }
 
@@ -253,22 +252,37 @@ struct RacingWorldLayout {
             travel: travel,
             track: track
         ).position
-        let roadPulse = Float(sin((travel.isFinite ? travel : 0) * 0.24))
+        let safeTravel = Float(travel.isFinite ? travel : 0)
+        let roadPulse = sin(safeTravel * 0.24)
+        let highSpeedDrift = sin(safeTravel * 0.91) * progress * 0.018
 
         return CameraPose(
             position: SIMD3(
-                safePlayerX * 0.20 - safeSteering * 0.10,
-                2.48 + progress * 0.14 + roadPulse * 0.025,
-                5.52 - progress * 0.34
+                safePlayerX * 0.22 - safeSteering * 0.14 + highSpeedDrift,
+                2.36 + progress * 0.12 + roadPulse * (0.018 + progress * 0.020),
+                5.32 - progress * 0.52
             ),
             target: SIMD3(
-                safePlayerX * 0.42 + curveFocus.x * 0.56,
-                0.66 + curveFocus.y * 0.34,
-                -9.2
+                safePlayerX * 0.38 + curveFocus.x * 0.62,
+                0.58 + curveFocus.y * 0.38,
+                -9.8 - progress * 3.0
             ),
-            fieldOfView: 53 + progress * 8,
-            roll: -safeSteering * (0.010 + progress * 0.012)
+            fieldOfView: 53 + progress * 12,
+            roll: -safeSteering * (0.014 + progress * 0.020)
         )
+    }
+
+    static func cinematicSpeedIntensity(
+        speedProgress: Float,
+        effectLevel: SensoryAccessibilityPolicy.DecorativeEffectLevel
+    ) -> Float {
+        let progress = min(max(speedProgress.isFinite ? speedProgress : 0, 0), 1)
+        let eased = pow(max((progress - 0.12) / 0.88, 0), 1.45)
+        return switch effectLevel {
+        case .balanced: eased
+        case .reduced: eased * 0.45
+        case .off: 0
+        }
     }
 
     private static func trackCenter(
@@ -312,6 +326,9 @@ struct RacingSunlightModel {
         let target: SIMD3<Float>
         let color: SIMD3<Float>
         let intensity: Float
+        let rimSourcePosition: SIMD3<Float>
+        let rimColor: SIMD3<Float>
+        let rimIntensity: Float
         let glarePosition: SIMD2<Float>
         let glareOpacity: Float
 
@@ -351,6 +368,17 @@ struct RacingSunlightModel {
         case .fog: 0.14
         case .storm: 0.06
         }
+        let rimColor: SIMD3<Float> = switch environment.track {
+        case .coastal: SIMD3(0.36, 0.88, 1)
+        case .alpine: SIMD3(0.62, 0.82, 1)
+        case .desert: SIMD3(1, 0.42, 0.18)
+        }
+        let rimWeatherMultiplier: Float = switch environment.weather {
+        case .clear: 1
+        case .rain: 0.74
+        case .fog: 0.54
+        case .storm: 0.88
+        }
 
         return State(
             sourcePosition: SIMD3(
@@ -364,7 +392,14 @@ struct RacingSunlightModel {
                 .zero,
                 SIMD3(repeating: 1)
             ),
-            intensity: (18_400 + verticalDrift * 1_100) * weatherIntensity,
+            intensity: (15_200 + verticalDrift * 900) * weatherIntensity,
+            rimSourcePosition: SIMD3(
+                13.5 - horizontalDrift * 2.2,
+                8.8 + verticalDrift * 0.5,
+                5.8
+            ),
+            rimColor: rimColor,
+            rimIntensity: (3_600 + verticalDrift * 280) * rimWeatherMultiplier,
             glarePosition: SIMD2(
                 min(max(0.18 + horizontalDrift * 0.045 - safeSteering * 0.012, 0.10), 0.30),
                 min(max(0.17 - verticalDrift * 0.018, 0.12), 0.23)
@@ -384,8 +419,13 @@ private struct RacingWorldResources {
     let vehicleTemplates: [VehicleID: Entity]
     let trafficTemplate: Entity?
     let barrierTemplate: Entity?
+    let racingEnvironmentTrack: RacingTrack
+    let racingEnvironmentTier: RacingEnvironmentQualityTier
 
-    static func load() async -> RacingWorldResources {
+    static func load(
+        for selection: RacingEnvironmentSelection,
+        tier: RacingEnvironmentQualityTier
+    ) async -> RacingWorldResources {
         async let asphaltTexture = loadTexture(
             named: "asphalt",
             semantic: .color
@@ -433,7 +473,16 @@ private struct RacingWorldResources {
             environment: environment,
             vehicleTemplates: vehicleTemplates,
             trafficTemplate: trafficTemplate,
-            barrierTemplate: barrierTemplate
+            barrierTemplate: barrierTemplate,
+            racingEnvironmentTrack: selection.track,
+            racingEnvironmentTier: tier
+        )
+    }
+
+    func loadRacingEnvironment() async -> RacingEnvironmentResources {
+        await RacingEnvironmentAssetLibrary.shared.resources(
+            for: racingEnvironmentTrack,
+            tier: racingEnvironmentTier
         )
     }
 
@@ -463,22 +512,43 @@ private struct RacingWorldResources {
 }
 
 struct RacingWorldView: View {
-    @Environment(\.accessibilityReduceTransparency) private var accessibilityReduceTransparency
-
     let snapshot: GameSnapshot
     let steering: Double
     let lastEvent: GameEvent?
+    let feedback: GameFeedback?
     let appearance: VehicleAppearance
     let configuration: GameSimulation.Configuration
     let environment: RacingEnvironmentSelection
+    let qualityTier: RacingEnvironmentQualityTier
+    let accessibilityPolicy: SensoryAccessibilityPolicy
 
     var body: some View {
+        let tier = qualityTier
+        let speedProgress = RacingWorldLayout.speedProgress(
+            speed: snapshot.speed,
+            initialSpeed: configuration.initialSpeed,
+            maximumSpeed: configuration.maximumSpeed
+        )
+        let cinematicIntensity = RacingWorldLayout.cinematicSpeedIntensity(
+            speedProgress: speedProgress,
+            effectLevel: accessibilityPolicy.streaks
+        )
+        let weatherState = RacingEnvironmentWeather.presentationState(
+            track: environment.track,
+            weather: environment.weather,
+            travel: snapshot.distance,
+            tier: tier,
+            accessibilityPolicy: accessibilityPolicy
+        )
         ZStack {
             skyBackground
 
             RealityView { content in
                 content.camera = .virtual
-                let resources = await RacingWorldResources.load()
+                let resources = await RacingWorldResources.load(
+                    for: environment,
+                    tier: tier
+                )
                 let world = RacingWorldFactory.makeWorld(
                     snapshot: snapshot,
                     steering: steering,
@@ -486,9 +556,24 @@ struct RacingWorldView: View {
                     appearance: appearance,
                     configuration: configuration,
                     environment: environment,
-                    resources: resources
+                    qualityTier: tier,
+                    resources: resources,
+                    weatherState: weatherState
                 )
                 content.add(world)
+                Task { @MainActor [weak world] in
+                    let racingEnvironment = await resources.loadRacingEnvironment()
+                    guard let world else { return }
+                    world.components.set(
+                        RacingEnvironmentResourcesComponent(resources: racingEnvironment)
+                    )
+                    RacingEnvironmentScene.install(
+                        in: world,
+                        resources: racingEnvironment,
+                        travel: snapshot.distance,
+                        weatherState: weatherState
+                    )
+                }
             } update: { content in
                 guard let world = content.entities.first(where: {
                     $0.name == RacingWorldFactory.worldName
@@ -501,7 +586,15 @@ struct RacingWorldView: View {
                     steering: steering,
                     lastEvent: lastEvent,
                     configuration: configuration,
-                    environment: environment
+                    environment: environment,
+                    qualityTier: tier,
+                    weatherState: weatherState
+                )
+                RacingEnvironmentScene.applyQualityTier(
+                    tier,
+                    in: world,
+                    travel: snapshot.distance,
+                    weatherState: weatherState
                 )
             }
 
@@ -511,18 +604,54 @@ struct RacingWorldView: View {
                     steering: steering,
                     environment: environment
                 ),
-                reducesTransparency: accessibilityReduceTransparency
+                reducesTransparency: accessibilityPolicy.usesOpaqueFeedback
             )
 
             RacingWeatherOverlay(
-                weather: environment.weather,
-                distance: snapshot.distance,
-                reducesTransparency: accessibilityReduceTransparency
+                state: weatherState
             )
+
+            RacingSpeedLensOverlay(
+                intensity: cinematicIntensity,
+                distance: snapshot.distance,
+                track: environment.track,
+                usesOpaqueTreatment: accessibilityPolicy.usesOpaqueFeedback
+            )
+
+            if let collisionEventID {
+                RacingImpactLensOverlay(
+                    effectLevel: accessibilityPolicy.camera,
+                    usesOpaqueTreatment: accessibilityPolicy.usesOpaqueFeedback
+                )
+                .id(collisionEventID)
+            }
+
+            if let nearMissFeedback {
+                RacingNearMissOverlay(
+                    feedback: nearMissFeedback,
+                    accessibilityPolicy: accessibilityPolicy
+                )
+                .id(nearMissFeedback.eventID)
+            }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Three dimensional racing track")
         .accessibilityIdentifier("game.racingWorld3D")
+    }
+
+    private var nearMissFeedback: GameFeedback? {
+        guard let feedback, case .nearMiss = feedback.kind else {
+            return nil
+        }
+        return feedback
+    }
+
+    private var collisionEventID: UInt64? {
+        guard snapshot.phase == .crashed,
+              case let .collision(obstacleID, _) = lastEvent else {
+            return nil
+        }
+        return obstacleID
     }
 
     @ViewBuilder
@@ -576,27 +705,76 @@ struct RacingWorldView: View {
     }
 }
 
+private struct RacingNearMissOverlay: View {
+    let feedback: GameFeedback
+    let accessibilityPolicy: SensoryAccessibilityPolicy
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                if let side = feedback.spatialContext?.side, side != .center {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(edgeColor)
+                        .frame(width: accessibilityPolicy.usesOpaqueFeedback ? 9 : 6)
+                        .padding(.vertical, proxy.size.height * 0.16)
+                        .frame(maxWidth: .infinity, alignment: side == .left ? .leading : .trailing)
+                        .padding(.horizontal, 8)
+                }
+
+                if case let .nearMiss(bonus) = feedback.kind {
+                    Text("NEAR MISS +\(bonus)")
+                        .font(.system(size: 18, weight: .black, design: .rounded))
+                        .foregroundStyle(accessibilityPolicy.usesOpaqueFeedback ? .white : edgeColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            accessibilityPolicy.usesOpaqueFeedback
+                                ? Color.black
+                                : Color.black.opacity(0.46),
+                            in: Capsule()
+                        )
+                        .position(x: proxy.size.width / 2, y: proxy.size.height * 0.42)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var edgeColor: Color {
+        feedback.nearMissGrade == .strong
+            ? Color(red: 0.40, green: 1, blue: 0.88)
+            : Color(red: 1, green: 0.72, blue: 0.24)
+    }
+}
+
 private struct RacingWeatherOverlay: View {
-    let weather: RacingWeather
-    let distance: Double
-    let reducesTransparency: Bool
+    let state: WeatherPresentationState
 
     var body: some View {
         ZStack {
-            switch weather {
+            switch state.weather {
             case .clear:
                 EmptyView()
             case .rain:
                 Color(red: 0.05, green: 0.12, blue: 0.20)
-                    .opacity(reducesTransparency ? 0.08 : 0.15)
-                rain(opacity: reducesTransparency ? 0.20 : 0.42)
+                    .opacity(state.overlay.darkWashOpacity)
+                rain(
+                    opacity: state.overlay.rainOpacity,
+                    count: state.overlay.rainDropCount,
+                    phase: state.overlay.rainPhase
+                )
             case .fog:
-                fog(opacity: reducesTransparency ? 0.18 : 0.42)
+                fog(opacity: state.overlay.fogOpacity)
             case .storm:
                 Color(red: 0.015, green: 0.035, blue: 0.09)
-                    .opacity(reducesTransparency ? 0.18 : 0.34)
-                rain(opacity: reducesTransparency ? 0.28 : 0.58)
-                Color.white.opacity(lightningOpacity)
+                    .opacity(state.overlay.darkWashOpacity)
+                rain(
+                    opacity: state.overlay.rainOpacity,
+                    count: state.overlay.rainDropCount,
+                    phase: state.overlay.rainPhase
+                )
+                Color.white.opacity(state.overlay.lightningOpacity)
             }
         }
         .ignoresSafeArea()
@@ -604,15 +782,14 @@ private struct RacingWeatherOverlay: View {
         .accessibilityHidden(true)
     }
 
-    private func rain(opacity: Double) -> some View {
+    private func rain(opacity: Double, count: Int, phase: Double) -> some View {
         Canvas { context, size in
-            let safeDistance = distance.isFinite ? max(distance, 0) : 0
-            let phase = CGFloat(safeDistance * 7.4)
-            for index in 0..<54 {
+            let finitePhase = CGFloat(phase.isFinite ? phase : 0)
+            for index in 0..<max(count, 0) {
                 let seed = CGFloat(index)
-                let x = (seed * 73 + phase * (0.72 + CGFloat(index % 5) * 0.07))
+                let x = (seed * 73 + finitePhase * (0.72 + CGFloat(index % 5) * 0.07))
                     .truncatingRemainder(dividingBy: size.width + 80) - 40
-                let y = (seed * 47 + phase * 2.1)
+                let y = (seed * 47 + finitePhase * 2.1)
                     .truncatingRemainder(dividingBy: size.height + 70) - 35
                 var drop = Path()
                 drop.move(to: CGPoint(x: x, y: y))
@@ -643,9 +820,117 @@ private struct RacingWeatherOverlay: View {
         )
     }
 
-    private var lightningOpacity: Double {
-        let safeDistance = distance.isFinite ? max(distance, 0) : 0
-        return pow(max(sin(safeDistance * 0.024 - 1.1), 0), 34) * 0.22
+}
+
+private struct RacingSpeedLensOverlay: View {
+    let intensity: Float
+    let distance: Double
+    let track: RacingTrack
+    let usesOpaqueTreatment: Bool
+
+    var body: some View {
+        GeometryReader { proxy in
+            let amount = Double(min(max(intensity, 0), 1))
+            ZStack {
+                RadialGradient(
+                    colors: [
+                        .clear,
+                        .clear,
+                        Color.black.opacity(
+                            amount * (usesOpaqueTreatment ? 0.16 : 0.25)
+                        ),
+                    ],
+                    center: UnitPoint(x: 0.5, y: 0.47),
+                    startRadius: min(proxy.size.width, proxy.size.height) * 0.18,
+                    endRadius: max(proxy.size.width, proxy.size.height) * 0.72
+                )
+                .blendMode(.multiply)
+
+                Canvas { context, size in
+                    let center = CGPoint(x: size.width * 0.5, y: size.height * 0.43)
+                    let phase = CGFloat(
+                        (distance.isFinite ? distance : 0)
+                            .truncatingRemainder(dividingBy: 1)
+                    )
+                    for index in 0..<16 {
+                        let side: CGFloat = index.isMultiple(of: 2) ? -1 : 1
+                        let lane = CGFloat(index / 2) / 7
+                        let edgeX = side < 0
+                            ? -size.width * (0.02 + lane * 0.07)
+                            : size.width * (1.02 + lane * 0.07)
+                        let edgeY = size.height * (0.38 + lane * 0.62)
+                        let motion = (phase + lane).truncatingRemainder(dividingBy: 1)
+                        let start = CGPoint(
+                            x: center.x + (edgeX - center.x) * (0.38 + motion * 0.14),
+                            y: center.y + (edgeY - center.y) * (0.38 + motion * 0.14)
+                        )
+                        let end = CGPoint(
+                            x: center.x + (edgeX - center.x) * (0.78 + motion * 0.20),
+                            y: center.y + (edgeY - center.y) * (0.78 + motion * 0.20)
+                        )
+                        var streak = Path()
+                        streak.move(to: start)
+                        streak.addLine(to: end)
+                        context.stroke(
+                            streak,
+                            with: .color(streakColor.opacity(amount * (0.14 + lane * 0.15))),
+                            lineWidth: 0.8 + lane * 1.5
+                        )
+                    }
+                }
+                .blendMode(.plusLighter)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var streakColor: Color {
+        switch track {
+        case .coastal: Color(red: 0.30, green: 0.94, blue: 1)
+        case .alpine: Color(red: 0.68, green: 0.84, blue: 1)
+        case .desert: Color(red: 1, green: 0.50, blue: 0.18)
+        }
+    }
+}
+
+private struct RacingImpactLensOverlay: View {
+    let effectLevel: SensoryAccessibilityPolicy.DecorativeEffectLevel
+    let usesOpaqueTreatment: Bool
+    @State private var hasExpanded = false
+
+    var body: some View {
+        ZStack {
+            RadialGradient(
+                colors: [
+                    Color.white.opacity(hasExpanded ? 0 : 0.32),
+                    Color(red: 1, green: 0.42, blue: 0.06)
+                        .opacity(hasExpanded ? 0.05 : 0.48),
+                    .clear,
+                ],
+                center: .center,
+                startRadius: 0,
+                endRadius: hasExpanded ? 280 : 26
+            )
+            Rectangle()
+                .strokeBorder(
+                    Color(red: 1, green: 0.48, blue: 0.10)
+                        .opacity(hasExpanded ? 0.08 : 0.72),
+                    lineWidth: usesOpaqueTreatment ? 8 : 13
+                )
+        }
+        .scaleEffect(effectLevel == .off ? 1 : (hasExpanded ? 1.08 : 0.92))
+        .onAppear {
+            guard effectLevel != .off else {
+                hasExpanded = true
+                return
+            }
+            withAnimation(.easeOut(duration: 0.46)) {
+                hasExpanded = true
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
@@ -735,6 +1020,7 @@ private enum RacingWorldFactory {
     private static let trackName = "racing.track"
     private static let obstacleRootName = "racing.obstacles"
     private static let speedEffectRootName = "racing.speedEffects"
+    private static let wakeEffectRootName = "racing.wakeEffects"
     private static let impactRootName = "racing.impactEffects"
     private static let templateRootName = "racing.templates"
     private static let trafficTemplateName = "racing.template.traffic"
@@ -743,6 +1029,7 @@ private enum RacingWorldFactory {
     private static let tilePrefix = "racing.track.tile."
     private static let obstaclePrefix = "racing.obstacle."
     private static let speedStreakPrefix = "racing.speedStreak."
+    private static let wakeParticlePrefix = "racing.wakeParticle."
     private static let impactSparkPrefix = "racing.impact.spark."
     private static let impactDebrisPrefix = "racing.impact.debris."
     private static let impactCoreName = "racing.impact.core"
@@ -751,6 +1038,34 @@ private enum RacingWorldFactory {
     private static let roadHalfWidth: Float = 3.35
     private static let laneSeparatorX: [Float] = [-1.1, 1.1]
 
+    private final class VehicleAnimationRuntime {
+        struct Wheel {
+            let entity: Entity
+            let isFront: Bool
+            let isImported: Bool
+        }
+
+        let wheels: [Wheel]
+        let exhausts: [Entity]
+
+        init(wheels: [Wheel], exhausts: [Entity]) {
+            self.wheels = wheels
+            self.exhausts = exhausts
+        }
+    }
+
+    private struct VehicleAnimationRuntimeComponent: Component {
+        let runtime: VehicleAnimationRuntime
+    }
+
+    private struct SunShadowQualityComponent: Component {
+        var tier: RacingEnvironmentQualityTier
+    }
+
+    private static func directChild(named name: String, in parent: Entity) -> Entity? {
+        parent.children.first { $0.name == name }
+    }
+
     static func makeWorld(
         snapshot: GameSnapshot,
         steering: Double,
@@ -758,7 +1073,9 @@ private enum RacingWorldFactory {
         appearance: VehicleAppearance,
         configuration: GameSimulation.Configuration,
         environment: RacingEnvironmentSelection,
-        resources: RacingWorldResources
+        qualityTier: RacingEnvironmentQualityTier,
+        resources: RacingWorldResources,
+        weatherState: WeatherPresentationState
     ) -> Entity {
         let world = Entity()
         world.name = worldName
@@ -791,7 +1108,8 @@ private enum RacingWorldFactory {
                     asphaltTexture: resources.asphaltTexture,
                     asphaltNormalTexture: resources.asphaltNormalTexture,
                     asphaltRoughnessTexture: resources.asphaltRoughnessTexture,
-                    environment: environment
+                    environment: environment,
+                    weatherState: weatherState
                 )
             )
         }
@@ -826,6 +1144,7 @@ private enum RacingWorldFactory {
         world.addChild(obstacles)
 
         world.addChild(makeSpeedEffects())
+        world.addChild(makeWakeEffects(environment: environment))
         world.addChild(makeImpactEffects())
 
         let camera = PerspectiveCamera()
@@ -848,10 +1167,7 @@ private enum RacingWorldFactory {
         )
         sun.light.color = color(from: sunlight.color)
         sun.light.intensity = sunlight.intensity
-        sun.shadow = DirectionalLightComponent.Shadow(
-            shadowProjection: .automatic(maximumDistance: 150),
-            depthBias: 1.2
-        )
+        applySunShadowQuality(qualityTier, to: sun)
         sun.look(
             at: sunlight.target,
             from: sunlight.sourcePosition,
@@ -859,13 +1175,26 @@ private enum RacingWorldFactory {
         )
         world.addChild(sun)
 
+        let rim = DirectionalLight()
+        rim.name = "racing.rim"
+        rim.light.color = color(from: sunlight.rimColor)
+        rim.light.intensity = sunlight.rimIntensity
+        rim.look(
+            at: SIMD3(0, 0.65, -5.5),
+            from: sunlight.rimSourcePosition,
+            relativeTo: world
+        )
+        world.addChild(rim)
+
         update(
             world: world,
             snapshot: snapshot,
             steering: steering,
             lastEvent: lastEvent,
             configuration: configuration,
-            environment: environment
+            environment: environment,
+            qualityTier: qualityTier,
+            weatherState: weatherState
         )
         return world
     }
@@ -876,7 +1205,9 @@ private enum RacingWorldFactory {
         steering: Double,
         lastEvent: GameEvent?,
         configuration: GameSimulation.Configuration,
-        environment: RacingEnvironmentSelection
+        environment: RacingEnvironmentSelection,
+        qualityTier: RacingEnvironmentQualityTier,
+        weatherState: WeatherPresentationState
     ) {
         let speedProgress = RacingWorldLayout.speedProgress(
             speed: snapshot.speed,
@@ -887,19 +1218,20 @@ private enum RacingWorldFactory {
             in: world,
             snapshot: snapshot,
             steering: steering,
-            environment: environment
+            environment: environment,
+            qualityTier: qualityTier
         )
-        if let track = world.findEntity(named: trackName) {
+        if let track = directChild(named: trackName, in: world) {
             for index in 0..<RacingWorldLayout.trackTileCount {
-                guard let tile = track.findEntity(named: "\(tilePrefix)\(index)") else {
+                guard let tile = directChild(named: "\(tilePrefix)\(index)", in: track) else {
                     continue
                 }
-                let distance = RacingWorldLayout.trackTileDistance(
+                let tileState = RacingWorldLayout.trackTileState(
                     index: index,
                     travel: snapshot.distance
                 )
                 let placement = RacingWorldLayout.trackPlacement(
-                    distance: distance,
+                    distance: tileState.distance,
                     travel: snapshot.distance,
                     track: environment.track
                 )
@@ -907,7 +1239,6 @@ private enum RacingWorldFactory {
                 tile.orientation = placement.orientation
             }
         }
-
         let collisionID: UInt64? = if case let .collision(obstacleID, _) = lastEvent {
             obstacleID
         } else {
@@ -921,7 +1252,7 @@ private enum RacingWorldFactory {
             resetImpactEffects(in: world)
         }
 
-        if let player = world.findEntity(named: playerName), !impactIsAnimating {
+        if let player = directChild(named: playerName, in: world), !impactIsAnimating {
             let dynamics = RacingWorldLayout.vehicleDynamicsPose(
                 steering: steering,
                 speedProgress: speedProgress,
@@ -940,7 +1271,7 @@ private enum RacingWorldFactory {
             )
         }
 
-        if let camera = world.findEntity(named: cameraName) as? PerspectiveCamera {
+        if let camera = directChild(named: cameraName, in: world) as? PerspectiveCamera {
             let pose = RacingWorldLayout.cameraPose(
                 playerX: snapshot.playerX,
                 steering: steering,
@@ -971,10 +1302,17 @@ private enum RacingWorldFactory {
             in: world,
             snapshot: snapshot,
             speedProgress: speedProgress,
-            track: environment.track
+            track: environment.track,
+            qualityTier: qualityTier
+        )
+        updateWakeEffects(
+            in: world,
+            snapshot: snapshot,
+            speedProgress: speedProgress,
+            weatherState: weatherState
         )
 
-        guard let obstacleRoot = world.findEntity(named: obstacleRootName) else {
+        guard let obstacleRoot = directChild(named: obstacleRootName, in: world) else {
             return
         }
         let visibleNames = Set(snapshot.obstacles.map { "\(obstaclePrefix)\($0.id)" })
@@ -985,7 +1323,7 @@ private enum RacingWorldFactory {
         for obstacle in snapshot.obstacles {
             let name = "\(obstaclePrefix)\(obstacle.id)"
             let entity: Entity
-            if let existing = obstacleRoot.findEntity(named: name) {
+            if let existing = directChild(named: name, in: obstacleRoot) {
                 entity = existing
             } else {
                 entity = makeObstacle(obstacle, name: name, world: world)
@@ -1017,9 +1355,10 @@ private enum RacingWorldFactory {
         in world: Entity,
         snapshot: GameSnapshot,
         steering: Double,
-        environment: RacingEnvironmentSelection
+        environment: RacingEnvironmentSelection,
+        qualityTier: RacingEnvironmentQualityTier
     ) {
-        guard let sun = world.findEntity(named: "racing.sun") as? DirectionalLight else {
+        guard let sun = directChild(named: "racing.sun", in: world) as? DirectionalLight else {
             return
         }
         let sunlight = RacingSunlightModel.state(
@@ -1029,11 +1368,39 @@ private enum RacingWorldFactory {
         )
         sun.light.color = color(from: sunlight.color)
         sun.light.intensity = sunlight.intensity
+        applySunShadowQuality(qualityTier, to: sun)
         sun.look(
             at: sunlight.target,
             from: sunlight.sourcePosition,
             relativeTo: world
         )
+        if let rim = directChild(named: "racing.rim", in: world) as? DirectionalLight {
+            rim.light.color = color(from: sunlight.rimColor)
+            rim.light.intensity = sunlight.rimIntensity
+            rim.look(
+                at: SIMD3(Float(snapshot.playerX), 0.62, -5.5),
+                from: sunlight.rimSourcePosition,
+                relativeTo: world
+            )
+        }
+    }
+
+    private static func applySunShadowQuality(
+        _ tier: RacingEnvironmentQualityTier,
+        to sun: DirectionalLight
+    ) {
+        if sun.components[SunShadowQualityComponent.self]?.tier == tier {
+            return
+        }
+        if tier == .enhanced {
+            sun.shadow = DirectionalLightComponent.Shadow(
+                shadowProjection: .automatic(maximumDistance: 150),
+                depthBias: 1.2
+            )
+        } else {
+            sun.shadow = nil
+        }
+        sun.components.set(SunShadowQualityComponent(tier: tier))
     }
 
     private static func makeTrackTile(
@@ -1041,18 +1408,19 @@ private enum RacingWorldFactory {
         asphaltTexture: TextureResource?,
         asphaltNormalTexture: TextureResource?,
         asphaltRoughnessTexture: TextureResource?,
-        environment: RacingEnvironmentSelection
+        environment: RacingEnvironmentSelection,
+        weatherState: WeatherPresentationState
     ) -> Entity {
         let tile = Entity()
         tile.name = "\(tilePrefix)\(index)"
-        let wetSurface = environment.weather == .rain || environment.weather == .storm
+        let wetSurface = weatherState.usesWetMaterials
         let asphaltColor: UIColor = if wetSurface {
-            UIColor(red: 0.31, green: 0.34, blue: 0.39, alpha: 1)
+            UIColor(red: 0.16, green: 0.19, blue: 0.24, alpha: 1)
         } else {
             switch environment.track {
-            case .coastal: UIColor(red: 0.66, green: 0.69, blue: 0.74, alpha: 1)
-            case .alpine: UIColor(red: 0.48, green: 0.52, blue: 0.57, alpha: 1)
-            case .desert: UIColor(red: 0.61, green: 0.56, blue: 0.50, alpha: 1)
+            case .coastal: UIColor(red: 0.34, green: 0.38, blue: 0.44, alpha: 1)
+            case .alpine: UIColor(red: 0.29, green: 0.33, blue: 0.37, alpha: 1)
+            case .desert: UIColor(red: 0.38, green: 0.33, blue: 0.29, alpha: 1)
             }
         }
         let shoulderColor: UIColor = switch environment.track {
@@ -1060,12 +1428,7 @@ private enum RacingWorldFactory {
         case .alpine: UIColor(red: 0.20, green: 0.31, blue: 0.25, alpha: 1)
         case .desert: UIColor(red: 0.52, green: 0.31, blue: 0.17, alpha: 1)
         }
-        let asphaltRoughness: Float = switch environment.weather {
-        case .clear: 0.82
-        case .rain: 0.31
-        case .fog: 0.68
-        case .storm: 0.24
-        }
+        let asphaltRoughness = weatherState.terrainRoughness
 
         tile.addChild(
             box(
@@ -1183,10 +1546,10 @@ private enum RacingWorldFactory {
                 tile.addChild(makeGrandstand(position: SIMD3(8.6, 0, 0)))
             }
             if index == 4 {
-                tile.addChild(makePitBuilding(position: SIMD3(-10.4, 0, 0)))
+                tile.addChild(makePitBuilding(position: SIMD3(-14.2, 0, 0)))
             }
             if index == 7 {
-                tile.addChild(makeHotelTower(position: SIMD3(11.5, 0, 0)))
+                tile.addChild(makeHotelTower(position: SIMD3(15.4, 0, 0)))
             }
         case .alpine:
             if index.isMultiple(of: 2) {
@@ -1213,7 +1576,7 @@ private enum RacingWorldFactory {
             tile.addChild(makeSkidMarks())
         }
         if index == 9 {
-            tile.addChild(makeTrackArch())
+            tile.addChild(makeTrackArch(track: environment.track))
         }
 
         return tile
@@ -1285,7 +1648,7 @@ private enum RacingWorldFactory {
     private static func makeSpeedEffects() -> Entity {
         let root = Entity()
         root.name = speedEffectRootName
-        for index in 0..<12 {
+        for index in 0..<18 {
             let color = index.isMultiple(of: 2)
                 ? UIColor(red: 0.18, green: 0.94, blue: 1, alpha: 0.82)
                 : UIColor(red: 1, green: 0.45, blue: 0.16, alpha: 0.76)
@@ -1302,6 +1665,32 @@ private enum RacingWorldFactory {
         return root
     }
 
+    private static func makeWakeEffects(
+        environment: RacingEnvironmentSelection
+    ) -> Entity {
+        let root = Entity()
+        root.name = wakeEffectRootName
+        let color: UIColor = switch (environment.track, environment.weather) {
+        case (.desert, .storm):
+            UIColor(red: 1, green: 0.42, blue: 0.14, alpha: 0.76)
+        case (_, .rain), (_, .storm):
+            UIColor(red: 0.68, green: 0.90, blue: 1, alpha: 0.72)
+        default:
+            UIColor(red: 0.76, green: 0.70, blue: 0.58, alpha: 0.42)
+        }
+        for index in 0..<12 {
+            let particle = ModelEntity(
+                mesh: .generateSphere(radius: 0.055 + Float(index % 3) * 0.018),
+                materials: [UnlitMaterial(color: color)]
+            )
+            particle.name = "\(wakeParticlePrefix)\(index)"
+            particle.components.set(OpacityComponent(opacity: 0))
+            particle.isEnabled = false
+            root.addChild(particle)
+        }
+        return root
+    }
+
     private static func makeImpactEffects() -> Entity {
         let root = Entity()
         root.name = impactRootName
@@ -1309,7 +1698,7 @@ private enum RacingWorldFactory {
         for index in 0..<18 {
             let spark = unlitBox(
                 name: "\(impactSparkPrefix)\(index)",
-                size: SIMD3(0.032, 0.032, index.isMultiple(of: 3) ? 0.78 : 0.52),
+                size: SIMD3(0.038, 0.038, index.isMultiple(of: 3) ? 1.02 : 0.68),
                 position: .zero,
                 color: index.isMultiple(of: 4)
                     ? UIColor(red: 1, green: 0.96, blue: 0.72, alpha: 1)
@@ -1351,19 +1740,20 @@ private enum RacingWorldFactory {
         let flash = PointLight()
         flash.name = impactFlashName
         flash.light.color = UIColor(red: 1, green: 0.48, blue: 0.08, alpha: 1)
-        flash.light.intensity = 7_500
-        flash.light.attenuationRadius = 5.5
+        flash.light.intensity = 11_500
+        flash.light.attenuationRadius = 7.2
         flash.isEnabled = false
         root.addChild(flash)
         return root
     }
 
     private static func hasPresentedImpact(obstacleID: UInt64, in world: Entity) -> Bool {
-        world.findEntity(named: "racing.impact.marker.\(obstacleID)") != nil
+        guard let root = directChild(named: impactRootName, in: world) else { return false }
+        return directChild(named: "racing.impact.marker.\(obstacleID)", in: root) != nil
     }
 
     private static func resetImpactEffects(in world: Entity) {
-        guard let root = world.findEntity(named: impactRootName),
+        guard let root = directChild(named: impactRootName, in: world),
               root.children.contains(where: { $0.name.hasPrefix("racing.impact.marker.") }) else {
             return
         }
@@ -1387,10 +1777,12 @@ private enum RacingWorldFactory {
         snapshot: GameSnapshot,
         world: Entity
     ) {
-        guard let root = world.findEntity(named: impactRootName),
-              let player = world.findEntity(named: playerName),
-              let obstacleEntity = world.findEntity(
-                named: "\(obstaclePrefix)\(obstacle.id)"
+        guard let root = directChild(named: impactRootName, in: world),
+              let player = directChild(named: playerName, in: world),
+              let obstacleRoot = directChild(named: obstacleRootName, in: world),
+              let obstacleEntity = directChild(
+                named: "\(obstaclePrefix)\(obstacle.id)",
+                in: obstacleRoot
               ) else {
             return
         }
@@ -1412,7 +1804,7 @@ private enum RacingWorldFactory {
         root.position = impactOrigin
 
         for index in 0..<18 {
-            guard let spark = root.findEntity(named: "\(impactSparkPrefix)\(index)") else {
+            guard let spark = directChild(named: "\(impactSparkPrefix)\(index)", in: root) else {
                 continue
             }
             let angle = Float(index) * 2.399_963 + Float(obstacle.id % 7) * 0.31
@@ -1444,7 +1836,7 @@ private enum RacingWorldFactory {
         }
 
         for index in 0..<7 {
-            guard let debris = root.findEntity(named: "\(impactDebrisPrefix)\(index)") else {
+            guard let debris = directChild(named: "\(impactDebrisPrefix)\(index)", in: root) else {
                 continue
             }
             let side = index.isMultiple(of: 2) ? response.recoilDirection : -response.recoilDirection
@@ -1476,7 +1868,7 @@ private enum RacingWorldFactory {
             )
         }
 
-        if let core = root.findEntity(named: impactCoreName) {
+        if let core = directChild(named: impactCoreName, in: root) {
             core.isEnabled = true
             core.position = .zero
             core.scale = SIMD3(repeating: 1.35)
@@ -1490,7 +1882,7 @@ private enum RacingWorldFactory {
             )
         }
 
-        if let flash = root.findEntity(named: impactFlashName) {
+        if let flash = directChild(named: impactFlashName, in: root) {
             flash.isEnabled = true
             Task { @MainActor [weak flash] in
                 try? await Task.sleep(for: .milliseconds(85))
@@ -1535,7 +1927,7 @@ private enum RacingWorldFactory {
             timingFunction: .easeOut
         )
 
-        if let camera = world.findEntity(named: cameraName) {
+        if let camera = directChild(named: cameraName, in: world) {
             var cameraKick = camera.transform
             cameraKick.translation += SIMD3(
                 -response.recoilDirection * 0.10,
@@ -1556,7 +1948,8 @@ private enum RacingWorldFactory {
 
         Task { @MainActor [weak root, weak player] in
             try? await Task.sleep(for: .milliseconds(135))
-            guard root?.findEntity(named: "racing.impact.marker.\(obstacle.id)") != nil,
+            guard let root,
+                  directChild(named: "racing.impact.marker.\(obstacle.id)", in: root) != nil,
                   let player else {
                 return
             }
@@ -1578,7 +1971,7 @@ private enum RacingWorldFactory {
         Task { @MainActor [weak root] in
             try? await Task.sleep(for: .milliseconds(470))
             guard let root,
-                  root.findEntity(named: "racing.impact.marker.\(obstacle.id)") != nil else {
+                  directChild(named: "racing.impact.marker.\(obstacle.id)", in: root) != nil else {
                 return
             }
             for child in Array(root.children)
@@ -1593,17 +1986,19 @@ private enum RacingWorldFactory {
         in world: Entity,
         snapshot: GameSnapshot,
         speedProgress: Float,
-        track: RacingTrack
+        track: RacingTrack,
+        qualityTier: RacingEnvironmentQualityTier
     ) {
-        guard let root = world.findEntity(named: speedEffectRootName) else {
+        guard let root = directChild(named: speedEffectRootName, in: world) else {
             return
         }
         let cycle = 92.0
-        for index in 0..<12 {
-            guard let streak = root.findEntity(named: "\(speedStreakPrefix)\(index)") else {
+        let activeCount = qualityTier == .enhanced ? 18 : 12
+        for index in 0..<18 {
+            guard let streak = directChild(named: "\(speedStreakPrefix)\(index)", in: root) else {
                 continue
             }
-            streak.isEnabled = speedProgress > 0.16
+            streak.isEnabled = index < activeCount && speedProgress > 0.16
             var phase = (Double(index) * 8.4 - snapshot.distance * 2.35)
                 .truncatingRemainder(dividingBy: cycle)
             if phase < 0 {
@@ -1616,11 +2011,56 @@ private enum RacingWorldFactory {
                 track: track
             )
             let side: Float = index.isMultiple(of: 2) ? -1 : 1
-            let lateral = side * (roadHalfWidth + 0.62 + Float(index % 3) * 0.24)
+            let lateral = side * (roadHalfWidth + 0.52 + Float(index % 4) * 0.22)
             streak.position = placement.position
-                + placement.orientation.act(SIMD3(lateral, 0.16, 0))
+                + placement.orientation.act(
+                    SIMD3(lateral, 0.10 + Float(index % 3) * 0.09, 0)
+                )
             streak.orientation = placement.orientation
-            streak.scale = SIMD3(1, 1, 0.72 + speedProgress * 2.4)
+            streak.scale = SIMD3(1, 1, 0.68 + speedProgress * 3.8)
+        }
+    }
+
+    private static func updateWakeEffects(
+        in world: Entity,
+        snapshot: GameSnapshot,
+        speedProgress: Float,
+        weatherState: WeatherPresentationState
+    ) {
+        guard let root = directChild(named: wakeEffectRootName, in: world) else { return }
+        let weatherIntensity: Float = switch weatherState.weather {
+        case .clear: weatherState.track == .desert ? 0.18 : 0.06
+        case .fog: 0.12
+        case .rain: 0.72
+        case .storm: 1
+        }
+        let activeIntensity = speedProgress * weatherIntensity
+        for index in 0..<12 {
+            guard let particle = directChild(
+                named: "\(wakeParticlePrefix)\(index)",
+                in: root
+            ) else {
+                continue
+            }
+            let phase = Float(
+                (snapshot.distance * (0.31 + Double(index % 4) * 0.035)
+                    + Double(index) * 0.083)
+                    .truncatingRemainder(dividingBy: 1)
+            )
+            let side: Float = index.isMultiple(of: 2) ? -1 : 1
+            let opacity = max(0, (1 - phase) * activeIntensity * 0.72)
+            particle.isEnabled = opacity > 0.015
+            particle.position = SIMD3(
+                Float(snapshot.playerX) + side * (0.48 + phase * 0.24),
+                0.12 + phase * (0.42 + activeIntensity * 0.28),
+                1.15 + phase * (2.1 + activeIntensity * 1.7)
+            )
+            let scale = 0.72 + phase * (2.2 + activeIntensity)
+            particle.scale = SIMD3(scale * 1.15, scale * 0.68, scale * 1.5)
+            if var opacityComponent = particle.components[OpacityComponent.self] {
+                opacityComponent.opacity = opacity
+                particle.components.set(opacityComponent)
+            }
         }
     }
 
@@ -1629,11 +2069,11 @@ private enum RacingWorldFactory {
         speedProgress: Float,
         distance: Double
     ) {
+        guard let runtime = player.components[VehicleAnimationRuntimeComponent.self]?.runtime else {
+            return
+        }
         let pulse = 0.90 + Float(sin(distance * 0.42)) * 0.10
-        for side in ["left", "right"] {
-            guard let flame = player.findEntity(named: "racing.exhaust.\(side)") else {
-                continue
-            }
+        for flame in runtime.exhausts {
             flame.isEnabled = speedProgress > 0.08
             flame.scale = SIMD3(
                 0.72 + speedProgress * 0.42,
@@ -1643,28 +2083,55 @@ private enum RacingWorldFactory {
         }
     }
 
-    private static func makeTrackArch() -> Entity {
+    private static func makeTrackArch(track: RacingTrack) -> Entity {
         let arch = Entity()
         arch.name = "racing.track.arch"
+        let accents: (UIColor, UIColor, UIColor) = switch track {
+        case .coastal:
+            (.systemTeal, .systemPink, UIColor(red: 0.72, green: 1, blue: 0.94, alpha: 1))
+        case .alpine:
+            (UIColor(red: 0.30, green: 0.68, blue: 1, alpha: 1), .white,
+             UIColor(red: 0.68, green: 0.86, blue: 1, alpha: 1))
+        case .desert:
+            (UIColor(red: 1, green: 0.34, blue: 0.10, alpha: 1),
+             UIColor(red: 1, green: 0.76, blue: 0.18, alpha: 1),
+             UIColor(red: 1, green: 0.90, blue: 0.52, alpha: 1))
+        }
         for side: Float in [-1, 1] {
             arch.addChild(
                 box(
                     name: "arch.post",
                     size: SIMD3(0.22, 4.2, 0.24),
                     position: SIMD3(side * 4.35, 2.1, 0),
-                    color: side < 0 ? .systemPink : .systemTeal,
+                    color: side < 0 ? accents.0 : accents.1,
                     metallic: true,
                     roughness: 0.28,
                     cornerRadius: 0.06
                 )
             )
+            let brace = box(
+                name: "arch.brace",
+                size: SIMD3(0.15, 2.15, 0.18),
+                position: SIMD3(side * 3.62, 3.12, 0.04),
+                color: accents.2,
+                metallic: true,
+                roughness: 0.22,
+                cornerRadius: 0.04,
+                clearcoat: 0.38,
+                clearcoatRoughness: 0.12
+            )
+            brace.orientation = simd_quatf(
+                angle: side * 0.60,
+                axis: SIMD3(0, 0, 1)
+            )
+            arch.addChild(brace)
         }
         arch.addChild(
             box(
                 name: "arch.beam",
                 size: SIMD3(8.9, 0.34, 0.30),
                 position: SIMD3(0, 4.12, 0),
-                color: .white,
+                color: accents.2,
                 metallic: true,
                 roughness: 0.24,
                 cornerRadius: 0.07
@@ -1675,7 +2142,7 @@ private enum RacingWorldFactory {
                 name: "arch.sign",
                 size: SIMD3(2.7, 0.76, 0.10),
                 position: SIMD3(0, 3.82, 0.20),
-                color: UIColor(red: 0.08, green: 0.92, blue: 0.78, alpha: 1),
+                color: accents.0,
                 cornerRadius: 0.08
             )
         )
@@ -1796,21 +2263,23 @@ private enum RacingWorldFactory {
         building.addChild(
             box(
                 name: "pitBuilding.shell",
-                size: SIMD3(7.4, 2.8, 4.8),
-                position: SIMD3(0, 1.4, 0),
-                color: UIColor(red: 0.055, green: 0.075, blue: 0.105, alpha: 1),
+                size: SIMD3(3.4, 2.3, 6.4),
+                position: SIMD3(0, 1.15, 0),
+                color: UIColor(red: 0.24, green: 0.32, blue: 0.42, alpha: 1),
                 metallic: true,
-                roughness: 0.38,
-                cornerRadius: 0.12
+                roughness: 0.34,
+                cornerRadius: 0.18,
+                clearcoat: 0.30,
+                clearcoatRoughness: 0.16
             )
         )
         for bay in 0..<5 {
             building.addChild(
                 box(
                     name: "pitBuilding.glassBay",
-                    size: SIMD3(1.18, 1.36, 0.05),
-                    position: SIMD3(-2.52 + Float(bay) * 1.26, 1.36, -2.43),
-                    color: UIColor(red: 0.025, green: 0.15, blue: 0.20, alpha: 1),
+                    size: SIMD3(0.05, 1.12, 0.96),
+                    position: SIMD3(1.73, 1.20, -2.16 + Float(bay) * 1.08),
+                    color: UIColor(red: 0.06, green: 0.42, blue: 0.52, alpha: 1),
                     metallic: true,
                     roughness: 0.10,
                     cornerRadius: 0.04,
@@ -1822,13 +2291,25 @@ private enum RacingWorldFactory {
         building.addChild(
             unlitBox(
                 name: "pitBuilding.lightRibbon",
-                size: SIMD3(7.0, 0.10, 0.08),
-                position: SIMD3(0, 2.58, -2.48),
+                size: SIMD3(0.08, 0.12, 6.1),
+                position: SIMD3(1.78, 2.13, 0),
                 color: UIColor(red: 0.12, green: 0.92, blue: 1, alpha: 1),
                 cornerRadius: 0.03
             )
         )
-        building.orientation = simd_quatf(angle: .pi / 2, axis: SIMD3(0, 1, 0))
+        building.addChild(
+            box(
+                name: "pitBuilding.canopy",
+                size: SIMD3(1.55, 0.16, 6.9),
+                position: SIMD3(1.45, 2.48, 0),
+                color: UIColor(red: 0.82, green: 0.90, blue: 0.94, alpha: 1),
+                metallic: true,
+                roughness: 0.24,
+                cornerRadius: 0.08,
+                clearcoat: 0.42,
+                clearcoatRoughness: 0.12
+            )
+        )
         return building
     }
 
@@ -1836,17 +2317,31 @@ private enum RacingWorldFactory {
         let tower = Entity()
         tower.name = "racing.hotelTower"
         tower.position = position
-        tower.addChild(
-            box(
-                name: "hotelTower.shell",
-                size: SIMD3(5.6, 8.8, 4.0),
-                position: SIMD3(0, 4.4, 0),
-                color: UIColor(red: 0.075, green: 0.085, blue: 0.14, alpha: 1),
-                metallic: true,
-                roughness: 0.31,
-                cornerRadius: 0.22
+        let shellColors = [
+            UIColor(red: 0.20, green: 0.25, blue: 0.42, alpha: 1),
+            UIColor(red: 0.25, green: 0.20, blue: 0.45, alpha: 1),
+            UIColor(red: 0.31, green: 0.19, blue: 0.43, alpha: 1),
+        ]
+        for section in 0..<3 {
+            let height: Float = 3.05 - Float(section) * 0.22
+            tower.addChild(
+                box(
+                    name: "hotelTower.shell.\(section)",
+                    size: SIMD3(4.0 - Float(section) * 0.30, height, 5.6),
+                    position: SIMD3(
+                        Float(section) * 0.18,
+                        1.52 + Float(section) * 2.72,
+                        Float(section - 1) * 0.24
+                    ),
+                    color: shellColors[section],
+                    metallic: true,
+                    roughness: 0.30,
+                    cornerRadius: 0.24,
+                    clearcoat: 0.34,
+                    clearcoatRoughness: 0.14
+                )
             )
-        )
+        }
         for floor in 0..<7 {
             for column in 0..<4 {
                 let color = (floor + column).isMultiple(of: 3)
@@ -1855,11 +2350,11 @@ private enum RacingWorldFactory {
                 tower.addChild(
                     unlitBox(
                         name: "hotelTower.window",
-                        size: SIMD3(0.72, 0.42, 0.05),
+                        size: SIMD3(0.05, 0.42, 0.72),
                         position: SIMD3(
-                            -1.62 + Float(column) * 1.08,
+                            -2.04,
                             1.10 + Float(floor) * 1.02,
-                            -2.03
+                            -1.62 + Float(column) * 1.08
                         ),
                         color: color.withAlphaComponent(0.88),
                         cornerRadius: 0.035
@@ -1870,13 +2365,25 @@ private enum RacingWorldFactory {
         tower.addChild(
             unlitBox(
                 name: "hotelTower.crown",
-                size: SIMD3(4.4, 0.16, 0.12),
-                position: SIMD3(0, 8.48, -2.08),
-                color: UIColor(red: 0.72, green: 0.20, blue: 1, alpha: 1),
+                size: SIMD3(0.12, 0.18, 4.8),
+                position: SIMD3(-2.10, 8.48, 0),
+                color: UIColor(red: 0.22, green: 0.94, blue: 1, alpha: 1),
                 cornerRadius: 0.05
             )
         )
-        tower.orientation = simd_quatf(angle: -.pi / 2, axis: SIMD3(0, 1, 0))
+        for fin in 0..<4 {
+            tower.addChild(
+                box(
+                    name: "hotelTower.fin.\(fin)",
+                    size: SIMD3(0.10, 8.2, 0.16),
+                    position: SIMD3(-2.12, 4.2, -2.1 + Float(fin) * 1.4),
+                    color: UIColor(red: 0.60, green: 0.68, blue: 0.84, alpha: 1),
+                    metallic: true,
+                    roughness: 0.24,
+                    cornerRadius: 0.025
+                )
+            )
+        }
         return tower
     }
 
@@ -1954,16 +2461,36 @@ private enum RacingWorldFactory {
             ]
         }
         let peakOffsets: [(x: Float, z: Float, radius: Float, height: Float)] = [
-            (-0.48, 0.08, 0.58, 0.74),
-            (0, -0.10, 0.74, 1),
-            (0.50, 0.14, 0.61, 0.82),
+            (-0.35, 0.08, 0.72, 0.74),
+            (0, -0.10, 0.86, 1),
+            (0.37, 0.14, 0.74, 0.82),
         ]
+
+        let foundationHeight = massif.height * 0.42
+        let foundation = ModelEntity(
+            mesh: .generateSphere(radius: 1),
+            materials: [
+                pbrMaterial(
+                    color: baseColors[index % baseColors.count],
+                    metallic: 0,
+                    roughness: 0.98
+                ),
+            ]
+        )
+        foundation.name = "mountain.foundation"
+        foundation.position = SIMD3(0, foundationHeight * 0.50 - 0.18, 0.8)
+        foundation.scale = SIMD3(
+            massif.radius * 1.05,
+            foundationHeight * 0.50,
+            massif.radius * 0.88
+        )
+        root.addChild(foundation)
 
         for (peakIndex, peak) in peakOffsets.enumerated() {
             let height = massif.height * peak.height
             let radius = massif.radius * peak.radius
             let mountain = ModelEntity(
-                mesh: .generateCone(height: height, radius: radius),
+                mesh: .generateSphere(radius: 1),
                 materials: [
                     pbrMaterial(
                         color: baseColors[(index + peakIndex) % baseColors.count],
@@ -1978,13 +2505,17 @@ private enum RacingWorldFactory {
                 height * 0.50 - 0.12,
                 peak.z * massif.radius
             )
-            mountain.scale = SIMD3(1, 1, 0.82 + Float(peakIndex) * 0.08)
+            mountain.scale = SIMD3(
+                radius,
+                height * 0.50,
+                radius * (0.78 + Float(peakIndex) * 0.06)
+            )
             root.addChild(mountain)
 
             if track == .alpine, height > 16 {
                 let snowHeight = height * 0.23
                 let snow = ModelEntity(
-                    mesh: .generateCone(height: snowHeight, radius: radius * 0.24),
+                    mesh: .generateSphere(radius: 1),
                     materials: [
                         pbrMaterial(
                             color: UIColor(red: 0.82, green: 0.91, blue: 0.90, alpha: 1),
@@ -1999,42 +2530,20 @@ private enum RacingWorldFactory {
                     height - snowHeight * 0.50 - 0.12,
                     peak.z * massif.radius
                 )
-                snow.scale.z = mountain.scale.z
+                snow.scale = SIMD3(
+                    radius * 0.30,
+                    snowHeight * 0.50,
+                    radius * 0.25
+                )
                 root.addChild(snow)
             }
-        }
-
-        for ridgeIndex in 0..<4 {
-            let side: Float = ridgeIndex.isMultiple(of: 2) ? -1 : 1
-            let ridgeColor: UIColor = switch track {
-            case .coastal: UIColor(red: 0.10, green: 0.24, blue: 0.21, alpha: 0.82)
-            case .alpine: UIColor(red: 0.14, green: 0.20, blue: 0.21, alpha: 0.86)
-            case .desert: UIColor(red: 0.37, green: 0.15, blue: 0.09, alpha: 0.88)
-            }
-            let ridge = box(
-                name: "mountain.ridge.\(ridgeIndex)",
-                size: SIMD3(0.35, massif.height * 0.58, massif.radius * 0.48),
-                position: SIMD3(
-                    side * massif.radius * (0.12 + Float(ridgeIndex) * 0.035),
-                    massif.height * 0.39,
-                    Float(ridgeIndex - 2) * 0.9
-                ),
-                color: ridgeColor,
-                metallic: false,
-                roughness: 1,
-                cornerRadius: 0.06
-            )
-            ridge.orientation = simd_quatf(
-                angle: side * (0.30 + Float(ridgeIndex) * 0.05),
-                axis: SIMD3(0, 0, 1)
-            )
-            root.addChild(ridge)
         }
         return root
     }
 
     private static func makePalm(position: SIMD3<Float>) -> Entity {
         let palm = Entity()
+        palm.name = "racing.palm"
         palm.position = position
 
         let trunk = ModelEntity(
@@ -2215,6 +2724,7 @@ private enum RacingWorldFactory {
             }
             addContactShadow(to: car, isPlayer: isPlayer)
             car.scale = SIMD3(repeating: visualScale)
+            installVehicleAnimationRuntime(on: car)
             return car
         }
 
@@ -2385,7 +2895,38 @@ private enum RacingWorldFactory {
         }
         addContactShadow(to: car, isPlayer: isPlayer)
         car.scale = SIMD3(repeating: visualScale)
+        installVehicleAnimationRuntime(on: car)
         return car
+    }
+
+    private static func installVehicleAnimationRuntime(on car: Entity) {
+        let wheelNames = [
+            ("front", "left"),
+            ("front", "right"),
+            ("rear", "left"),
+            ("rear", "right"),
+        ]
+        let wheels = wheelNames.compactMap { axleName, side -> VehicleAnimationRuntime.Wheel? in
+            let proceduralName = "car.wheel.\(axleName).\(side)"
+            let importedName = "wheel_\(axleName)_\(side)"
+            guard let wheel = car.findEntity(named: proceduralName)
+                ?? car.findEntity(named: importedName) else {
+                return nil
+            }
+            return VehicleAnimationRuntime.Wheel(
+                entity: wheel,
+                isFront: axleName == "front",
+                isImported: wheel.name.hasPrefix("wheel_")
+            )
+        }
+        let exhausts = ["left", "right"].compactMap {
+            directChild(named: "racing.exhaust.\($0)", in: car)
+        }
+        car.components.set(
+            VehicleAnimationRuntimeComponent(
+                runtime: VehicleAnimationRuntime(wheels: wheels, exhausts: exhausts)
+            )
+        )
     }
 
     private static func applyVehiclePaint(to entity: Entity, color: UIColor) {
@@ -2516,26 +3057,21 @@ private enum RacingWorldFactory {
         distance: Double,
         steering: Float
     ) {
+        guard let runtime = car.components[VehicleAnimationRuntimeComponent.self]?.runtime else {
+            return
+        }
         let finiteDistance = Float(distance.isFinite ? distance : 0)
         let angle = finiteDistance.truncatingRemainder(dividingBy: .pi * 0.58) / 0.29
         let proceduralSpin = simd_quatf(angle: angle, axis: SIMD3(0, 1, 0))
         let importedSpin = simd_quatf(angle: angle, axis: SIMD3(1, 0, 0))
         let axle = simd_quatf(angle: .pi / 2, axis: SIMD3(0, 0, 1))
-        for side in ["left", "right"] {
-            for axleName in ["front", "rear"] {
-                let proceduralName = "car.wheel.\(axleName).\(side)"
-                let importedName = "wheel_\(axleName)_\(side)"
-                guard let wheel = car.findEntity(named: proceduralName)
-                    ?? car.findEntity(named: importedName) else {
-                    continue
-                }
-                let steer = axleName == "front"
-                    ? simd_quatf(angle: -steering * 0.16, axis: SIMD3(0, 1, 0))
-                    : simd_quatf()
-                wheel.orientation = wheel.name.hasPrefix("wheel_")
-                    ? steer * importedSpin
-                    : steer * axle * proceduralSpin
-            }
+        for wheel in runtime.wheels {
+            let steer = wheel.isFront
+                ? simd_quatf(angle: -steering * 0.16, axis: SIMD3(0, 1, 0))
+                : simd_quatf()
+            wheel.entity.orientation = wheel.isImported
+                ? steer * importedSpin
+                : steer * axle * proceduralSpin
         }
     }
 

@@ -114,6 +114,33 @@
 		040000000000000000000069 /* angular_racer.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000069 /* angular_racer.usdz */; };
 		04000000000000000000006A /* traffic_sedan_3d.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006A /* traffic_sedan_3d.usdz */; };
 		04000000000000000000006B /* track_barrier.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006B /* track_barrier.usdz */; };
+		04000000000000000000006C /* RacingEnvironmentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006C /* RacingEnvironmentCatalog.swift */; };
+		04000000000000000000006D /* RacingEnvironmentLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006D /* RacingEnvironmentLayout.swift */; };
+		04000000000000000000006E /* RacingEnvironmentLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006E /* RacingEnvironmentLayoutTests.swift */; };
+		04000000000000000000006F /* RacingEnvironmentAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006F /* RacingEnvironmentAssetTests.swift */; };
+		040000000000000000000080 /* RacingEnvironmentAssetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000080 /* RacingEnvironmentAssetLibrary.swift */; };
+		040000000000000000000081 /* RacingEnvironmentQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000081 /* RacingEnvironmentQuality.swift */; };
+		040000000000000000000082 /* RacingEnvironmentQualityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000082 /* RacingEnvironmentQualityTests.swift */; };
+		040000000000000000000083 /* RacingEnvironmentScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000083 /* RacingEnvironmentScene.swift */; };
+		040000000000000000000084 /* RacingEnvironmentSceneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000084 /* RacingEnvironmentSceneTests.swift */; };
+		040000000000000000000085 /* RacingEnvironmentWeather.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000085 /* RacingEnvironmentWeather.swift */; };
+		040000000000000000000086 /* RacingEnvironmentWeatherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000086 /* RacingEnvironmentWeatherTests.swift */; };
+		040000000000000000000070 /* RacingEnvironmentAssetManifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000070 /* RacingEnvironmentAssetManifest.json */; };
+		040000000000000000000071 /* ocean_environment_base.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000071 /* ocean_environment_base.usdz */; };
+		040000000000000000000072 /* ocean_environment_enhanced.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000072 /* ocean_environment_enhanced.usdz */; };
+		040000000000000000000073 /* alpine_environment_base.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000073 /* alpine_environment_base.usdz */; };
+		040000000000000000000074 /* alpine_environment_enhanced.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000074 /* alpine_environment_enhanced.usdz */; };
+		040000000000000000000075 /* desert_environment_base.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000075 /* desert_environment_base.usdz */; };
+		040000000000000000000076 /* desert_environment_enhanced.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000076 /* desert_environment_enhanced.usdz */; };
+		040000000000000000000077 /* ocean_terrain_basecolor.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000077 /* ocean_terrain_basecolor.png */; };
+		040000000000000000000078 /* ocean_terrain_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000078 /* ocean_terrain_normal.png */; };
+		040000000000000000000079 /* ocean_terrain_roughness.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000079 /* ocean_terrain_roughness.png */; };
+		04000000000000000000007A /* alpine_terrain_basecolor.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007A /* alpine_terrain_basecolor.png */; };
+		04000000000000000000007B /* alpine_terrain_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007B /* alpine_terrain_normal.png */; };
+		04000000000000000000007C /* alpine_terrain_roughness.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007C /* alpine_terrain_roughness.png */; };
+		04000000000000000000007D /* desert_terrain_basecolor.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007D /* desert_terrain_basecolor.png */; };
+		04000000000000000000007E /* desert_terrain_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007E /* desert_terrain_normal.png */; };
+		04000000000000000000007F /* desert_terrain_roughness.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007F /* desert_terrain_roughness.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -260,6 +287,33 @@
 		030000000000000000000069 /* angular_racer.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = angular_racer.usdz; sourceTree = "<group>"; };
 		03000000000000000000006A /* traffic_sedan_3d.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = traffic_sedan_3d.usdz; sourceTree = "<group>"; };
 		03000000000000000000006B /* track_barrier.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = track_barrier.usdz; sourceTree = "<group>"; };
+		03000000000000000000006C /* RacingEnvironmentCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentCatalog.swift; sourceTree = "<group>"; };
+		03000000000000000000006D /* RacingEnvironmentLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentLayout.swift; sourceTree = "<group>"; };
+		03000000000000000000006E /* RacingEnvironmentLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentLayoutTests.swift; sourceTree = "<group>"; };
+		03000000000000000000006F /* RacingEnvironmentAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentAssetTests.swift; sourceTree = "<group>"; };
+		030000000000000000000080 /* RacingEnvironmentAssetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentAssetLibrary.swift; sourceTree = "<group>"; };
+		030000000000000000000081 /* RacingEnvironmentQuality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentQuality.swift; sourceTree = "<group>"; };
+		030000000000000000000082 /* RacingEnvironmentQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentQualityTests.swift; sourceTree = "<group>"; };
+		030000000000000000000083 /* RacingEnvironmentScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentScene.swift; sourceTree = "<group>"; };
+		030000000000000000000084 /* RacingEnvironmentSceneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentSceneTests.swift; sourceTree = "<group>"; };
+		030000000000000000000085 /* RacingEnvironmentWeather.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentWeather.swift; sourceTree = "<group>"; };
+		030000000000000000000086 /* RacingEnvironmentWeatherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentWeatherTests.swift; sourceTree = "<group>"; };
+		030000000000000000000070 /* RacingEnvironmentAssetManifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = RacingEnvironmentAssetManifest.json; sourceTree = "<group>"; };
+		030000000000000000000071 /* ocean_environment_base.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = ocean_environment_base.usdz; sourceTree = "<group>"; };
+		030000000000000000000072 /* ocean_environment_enhanced.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = ocean_environment_enhanced.usdz; sourceTree = "<group>"; };
+		030000000000000000000073 /* alpine_environment_base.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = alpine_environment_base.usdz; sourceTree = "<group>"; };
+		030000000000000000000074 /* alpine_environment_enhanced.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = alpine_environment_enhanced.usdz; sourceTree = "<group>"; };
+		030000000000000000000075 /* desert_environment_base.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = desert_environment_base.usdz; sourceTree = "<group>"; };
+		030000000000000000000076 /* desert_environment_enhanced.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = desert_environment_enhanced.usdz; sourceTree = "<group>"; };
+		030000000000000000000077 /* ocean_terrain_basecolor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ocean_terrain_basecolor.png; sourceTree = "<group>"; };
+		030000000000000000000078 /* ocean_terrain_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ocean_terrain_normal.png; sourceTree = "<group>"; };
+		030000000000000000000079 /* ocean_terrain_roughness.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ocean_terrain_roughness.png; sourceTree = "<group>"; };
+		03000000000000000000007A /* alpine_terrain_basecolor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = alpine_terrain_basecolor.png; sourceTree = "<group>"; };
+		03000000000000000000007B /* alpine_terrain_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = alpine_terrain_normal.png; sourceTree = "<group>"; };
+		03000000000000000000007C /* alpine_terrain_roughness.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = alpine_terrain_roughness.png; sourceTree = "<group>"; };
+		03000000000000000000007D /* desert_terrain_basecolor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = desert_terrain_basecolor.png; sourceTree = "<group>"; };
+		03000000000000000000007E /* desert_terrain_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = desert_terrain_normal.png; sourceTree = "<group>"; };
+		03000000000000000000007F /* desert_terrain_roughness.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = desert_terrain_roughness.png; sourceTree = "<group>"; };
 		0300000000000000000000F1 /* WatchCarRacer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F2 /* WatchCarRacerWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacerWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F3 /* WatchCarRacerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WatchCarRacerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -385,6 +439,11 @@
 				030000000000000000000060 /* GameScenePresentationTests.swift */,
 				030000000000000000000061 /* SG8SensoryAcceptanceTests.swift */,
 				030000000000000000000063 /* RacingWorldLayoutTests.swift */,
+				03000000000000000000006E /* RacingEnvironmentLayoutTests.swift */,
+				03000000000000000000006F /* RacingEnvironmentAssetTests.swift */,
+				030000000000000000000082 /* RacingEnvironmentQualityTests.swift */,
+				030000000000000000000084 /* RacingEnvironmentSceneTests.swift */,
+				030000000000000000000086 /* RacingEnvironmentWeatherTests.swift */,
 			);
 			path = WatchCarRacerTests;
 			sourceTree = "<group>";
@@ -445,6 +504,12 @@
 				03000000000000000000001D /* GameAssetLibrary.swift */,
 				030000000000000000000028 /* VehicleSpriteNode.swift */,
 				030000000000000000000062 /* RacingWorldView.swift */,
+				03000000000000000000006C /* RacingEnvironmentCatalog.swift */,
+				03000000000000000000006D /* RacingEnvironmentLayout.swift */,
+				030000000000000000000080 /* RacingEnvironmentAssetLibrary.swift */,
+				030000000000000000000081 /* RacingEnvironmentQuality.swift */,
+				030000000000000000000083 /* RacingEnvironmentScene.swift */,
+				030000000000000000000085 /* RacingEnvironmentWeather.swift */,
 				030000000000000000000064 /* GameLoopDriver.swift */,
 			);
 			path = Game;
@@ -483,6 +548,7 @@
 				030000000000000000000021 /* Environment.atlas */,
 				020000000000000000000013 /* Backgrounds */,
 				020000000000000000000018 /* Racing3D */,
+				020000000000000000000019 /* RacingEnvironment3D */,
 				030000000000000000000024 /* AssetManifest.json */,
 				030000000000000000000037 /* PresentationAssetManifest.json */,
 				020000000000000000000015 /* Presentation */,
@@ -512,6 +578,29 @@
 				030000000000000000000067 /* asphalt_roughness.png */,
 			);
 			path = Racing3D;
+			sourceTree = "<group>";
+		};
+		020000000000000000000019 /* RacingEnvironment3D */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000070 /* RacingEnvironmentAssetManifest.json */,
+				030000000000000000000071 /* ocean_environment_base.usdz */,
+				030000000000000000000072 /* ocean_environment_enhanced.usdz */,
+				030000000000000000000073 /* alpine_environment_base.usdz */,
+				030000000000000000000074 /* alpine_environment_enhanced.usdz */,
+				030000000000000000000075 /* desert_environment_base.usdz */,
+				030000000000000000000076 /* desert_environment_enhanced.usdz */,
+				030000000000000000000077 /* ocean_terrain_basecolor.png */,
+				030000000000000000000078 /* ocean_terrain_normal.png */,
+				030000000000000000000079 /* ocean_terrain_roughness.png */,
+				03000000000000000000007A /* alpine_terrain_basecolor.png */,
+				03000000000000000000007B /* alpine_terrain_normal.png */,
+				03000000000000000000007C /* alpine_terrain_roughness.png */,
+				03000000000000000000007D /* desert_terrain_basecolor.png */,
+				03000000000000000000007E /* desert_terrain_normal.png */,
+				03000000000000000000007F /* desert_terrain_roughness.png */,
+			);
+			path = RacingEnvironment3D;
 			sourceTree = "<group>";
 		};
 		020000000000000000000014 /* Presentation */ = {
@@ -682,6 +771,22 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				040000000000000000000070 /* RacingEnvironmentAssetManifest.json in Resources */,
+				040000000000000000000071 /* ocean_environment_base.usdz in Resources */,
+				040000000000000000000072 /* ocean_environment_enhanced.usdz in Resources */,
+				040000000000000000000073 /* alpine_environment_base.usdz in Resources */,
+				040000000000000000000074 /* alpine_environment_enhanced.usdz in Resources */,
+				040000000000000000000075 /* desert_environment_base.usdz in Resources */,
+				040000000000000000000076 /* desert_environment_enhanced.usdz in Resources */,
+				040000000000000000000077 /* ocean_terrain_basecolor.png in Resources */,
+				040000000000000000000078 /* ocean_terrain_normal.png in Resources */,
+				040000000000000000000079 /* ocean_terrain_roughness.png in Resources */,
+				04000000000000000000007A /* alpine_terrain_basecolor.png in Resources */,
+				04000000000000000000007B /* alpine_terrain_normal.png in Resources */,
+				04000000000000000000007C /* alpine_terrain_roughness.png in Resources */,
+				04000000000000000000007D /* desert_terrain_basecolor.png in Resources */,
+				04000000000000000000007E /* desert_terrain_normal.png in Resources */,
+				04000000000000000000007F /* desert_terrain_roughness.png in Resources */,
 				040000000000000000000065 /* rally_racer.usdz in Resources */,
 				040000000000000000000068 /* gt_racer.usdz in Resources */,
 				040000000000000000000069 /* angular_racer.usdz in Resources */,
@@ -766,6 +871,12 @@
 				04000000000000000000005C /* AudioMixModel.swift in Sources */,
 				04000000000000000000005D /* GameAudioDirector.swift in Sources */,
 				040000000000000000000062 /* RacingWorldView.swift in Sources */,
+				04000000000000000000006C /* RacingEnvironmentCatalog.swift in Sources */,
+				04000000000000000000006D /* RacingEnvironmentLayout.swift in Sources */,
+				040000000000000000000080 /* RacingEnvironmentAssetLibrary.swift in Sources */,
+				040000000000000000000081 /* RacingEnvironmentQuality.swift in Sources */,
+				040000000000000000000083 /* RacingEnvironmentScene.swift in Sources */,
+				040000000000000000000085 /* RacingEnvironmentWeather.swift in Sources */,
 				040000000000000000000064 /* GameLoopDriver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -812,6 +923,11 @@
 				040000000000000000000060 /* GameScenePresentationTests.swift in Sources */,
 				040000000000000000000061 /* SG8SensoryAcceptanceTests.swift in Sources */,
 				040000000000000000000063 /* RacingWorldLayoutTests.swift in Sources */,
+				04000000000000000000006E /* RacingEnvironmentLayoutTests.swift in Sources */,
+				04000000000000000000006F /* RacingEnvironmentAssetTests.swift in Sources */,
+				040000000000000000000082 /* RacingEnvironmentQualityTests.swift in Sources */,
+				040000000000000000000084 /* RacingEnvironmentSceneTests.swift in Sources */,
+				040000000000000000000086 /* RacingEnvironmentWeatherTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

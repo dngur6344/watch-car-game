@@ -8,6 +8,10 @@ struct GameRootView: View {
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Environment(\.accessibilityReduceTransparency) private var accessibilityReduceTransparency
+#if DEBUG
+    @Environment(\.sg8AccessibilityAcceptanceOverride)
+    private var accessibilityAcceptanceOverride
+#endif
     @AccessibilityFocusState private var presentationFocus: PresentationAccessibilityFocus?
 
     let gameSession: GameSessionController
@@ -24,9 +28,12 @@ struct GameRootView: View {
                     snapshot: gameSession.renderSnapshot,
                     steering: gameSession.steeringSnapshot.value,
                     lastEvent: gameSession.lastEvent,
+                    feedback: gameSession.nearMissFeedbackPresentation,
                     appearance: gameSession.appearance,
                     configuration: gameSession.scene.configuration,
-                    environment: environment
+                    environment: environment,
+                    qualityTier: gameSession.environmentQualityTier,
+                    accessibilityPolicy: sceneAccessibilityPolicy
                 )
                 .ignoresSafeArea()
 
@@ -42,18 +49,26 @@ struct GameRootView: View {
                 case let .countdown(value):
                     countdownOverlay(value: value)
                         .transition(
-                            accessibilityReduceMotion
+                            effectiveReduceMotion
                                 ? .opacity
                                 : .scale(scale: 0.90).combined(with: .opacity)
                         )
                 case .racing:
-                    EmptyView()
+                    Color.clear
+                        .frame(width: 1, height: 1)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+#if DEBUG
+                        .onAppear {
+                            SG6AcceptanceProbe.recordRacingRendered()
+                        }
+#endif
                 case .collision:
                     collisionOverlay
                 case let .result(result):
                     resultOverlay(result)
                         .transition(
-                            accessibilityReduceMotion
+                            effectiveReduceMotion
                                 ? .opacity
                                 : .scale(scale: 0.90).combined(with: .opacity)
                         )
@@ -65,7 +80,7 @@ struct GameRootView: View {
                         opacity: cue.opacity(
                             for: sensorySettings.settings.effectIntensity
                         ),
-                        reduceMotion: accessibilityReduceMotion,
+                        reduceMotion: effectiveReduceMotion,
                         onCueVisible: gameSession.startCueDidBecomeVisible
                     )
                     .id(cue.id)
@@ -91,7 +106,7 @@ struct GameRootView: View {
                 }
             }
             .animation(
-                accessibilityReduceMotion ? nil : .easeOut(duration: 0.20),
+                effectiveReduceMotion ? nil : .easeOut(duration: 0.20),
                 value: gameSession.presentationPhase
             )
         }
@@ -126,9 +141,25 @@ struct GameRootView: View {
     private var sceneAccessibilityPolicy: SensoryAccessibilityPolicy {
         SensoryAccessibilityPolicy(
             settings: sensorySettings.settings,
-            reduceMotion: accessibilityReduceMotion,
-            reduceTransparency: accessibilityReduceTransparency
+            reduceMotion: effectiveReduceMotion,
+            reduceTransparency: effectiveReduceTransparency
         )
+    }
+
+    private var effectiveReduceMotion: Bool {
+#if DEBUG
+        accessibilityAcceptanceOverride.reduceMotion ?? accessibilityReduceMotion
+#else
+        accessibilityReduceMotion
+#endif
+    }
+
+    private var effectiveReduceTransparency: Bool {
+#if DEBUG
+        accessibilityAcceptanceOverride.reduceTransparency ?? accessibilityReduceTransparency
+#else
+        accessibilityReduceTransparency
+#endif
     }
 
     private var hud: some View {
@@ -276,7 +307,7 @@ struct GameRootView: View {
                 value: value,
                 cue: activeCountdownCue(for: value),
                 accentOpacity: sensorySettings.settings.effectIntensity == .balanced ? 1 : 0.55,
-                reduceMotion: accessibilityReduceMotion,
+                reduceMotion: effectiveReduceMotion,
                 onCueVisible: gameSession.startCueDidBecomeVisible
             )
             .id(value)
@@ -313,7 +344,7 @@ struct GameRootView: View {
             .padding(.vertical, 9)
             .padding(.horizontal, 18)
             .background(.black.opacity(0.58), in: Capsule())
-            .transition(accessibilityReduceMotion ? .opacity : .scale.combined(with: .opacity))
+            .transition(effectiveReduceMotion ? .opacity : .scale.combined(with: .opacity))
             .allowsHitTesting(false)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Impact")

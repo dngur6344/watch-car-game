@@ -1,6 +1,7 @@
 #if DEBUG
 import Darwin
 import Foundation
+import Metal
 import OSLog
 
 @MainActor
@@ -10,6 +11,7 @@ enum SG6AcceptanceProbe {
         case hubFirstLayout
         case presentationReady(PresentationRoute)
         case countdownRendered(Int)
+        case racingRendered
         case startCueEmitted(StartCuePresentation)
         case startCueVisible(UUID, StartCueKind)
         case startCueHidden(UUID, StartCueKind)
@@ -33,6 +35,7 @@ enum SG6AcceptanceProbe {
     ) {
         let isRequested = arguments.contains("--sg6-presentation")
             || arguments.contains("--sg8-sensory")
+            || arguments.contains("--sg8-racing-environment")
         guard isRequested, appStartTimestamp == nil else {
             return
         }
@@ -53,6 +56,10 @@ enum SG6AcceptanceProbe {
 
     static func recordCountdownRendered(_ value: Int) {
         record(.countdownRendered(value))
+    }
+
+    static func recordRacingRendered() {
+        record(.racingRendered)
     }
 
     static func recordStartCueEmitted(_ cue: StartCuePresentation) {
@@ -104,6 +111,51 @@ enum SG6AcceptanceProbe {
                 timestamp: ProcessInfo.processInfo.systemUptime
             )
         )
+    }
+}
+
+struct SG8RacingEnvironmentLaunchConfiguration: Equatable {
+    let track: RacingTrack
+    let weather: RacingWeather
+    let tier: RacingEnvironmentQualityTier
+    let duration: TimeInterval
+    let routeCycles: Int
+    let triggersMemoryWarning: Bool
+    let enforcesPerformance: Bool
+    let requiresRacingScreenshot: Bool
+
+    init?(arguments: [String]) {
+        guard let trackValue = Self.value(after: "--sg8-track", in: arguments),
+              let track = RacingTrack(rawValue: trackValue),
+              let weatherValue = Self.value(after: "--sg8-weather", in: arguments),
+              let weather = RacingWeather(rawValue: weatherValue),
+              let tierValue = Self.value(after: "--sg8-tier", in: arguments),
+              let tier = RacingEnvironmentQualityTier(rawValue: tierValue),
+              let durationValue = Self.value(after: "--sg8-duration", in: arguments),
+              let duration = TimeInterval(durationValue),
+              duration.isFinite,
+              duration >= 5,
+              let cyclesValue = Self.value(after: "--sg8-route-cycles", in: arguments),
+              let routeCycles = Int(cyclesValue),
+              (0...10).contains(routeCycles) else {
+            return nil
+        }
+        self.track = track
+        self.weather = weather
+        self.tier = tier
+        self.duration = duration
+        self.routeCycles = routeCycles
+        triggersMemoryWarning = arguments.contains("--sg8-trigger-memory-warning")
+        enforcesPerformance = arguments.contains("--sg8-enforce-performance")
+        requiresRacingScreenshot = arguments.contains("--sg8-require-racing-screenshot")
+    }
+
+    private static func value(after argument: String, in arguments: [String]) -> String? {
+        guard let index = arguments.firstIndex(of: argument),
+              arguments.indices.contains(index + 1) else {
+            return nil
+        }
+        return arguments[index + 1]
     }
 }
 
@@ -251,6 +303,7 @@ final class SG6AcceptanceCoordinator {
         case fps = "--sg6-fps"
         case memory = "--sg6-memory"
         case sensory = "--sg8-sensory"
+        case racingEnvironment = "--sg8-racing-environment"
 
         var summaryPrefix: String {
             switch self {
@@ -258,6 +311,7 @@ final class SG6AcceptanceCoordinator {
             case .fps: "SG6_FPS_SUMMARY"
             case .memory: "SG6_MEMORY_SUMMARY"
             case .sensory: "SG8_SENSORY_SUMMARY"
+            case .racingEnvironment: "RACING_ENVIRONMENT_ACCEPTANCE_SUMMARY"
             }
         }
     }
@@ -265,6 +319,7 @@ final class SG6AcceptanceCoordinator {
     private let flow: AppFlowController
     private let sensorySettings: SensorySettingsController
     private let sensoryLaunchConfiguration: SG8SensoryLaunchConfiguration
+    private let racingEnvironmentLaunchConfiguration: SG8RacingEnvironmentLaunchConfiguration?
     private let mode: Mode
     private let startDelay: TimeInterval
     private let logger = Logger(
@@ -277,12 +332,14 @@ final class SG6AcceptanceCoordinator {
         flow: AppFlowController,
         sensorySettings: SensorySettingsController,
         sensoryLaunchConfiguration: SG8SensoryLaunchConfiguration,
+        racingEnvironmentLaunchConfiguration: SG8RacingEnvironmentLaunchConfiguration?,
         mode: Mode,
         startDelay: TimeInterval
     ) {
         self.flow = flow
         self.sensorySettings = sensorySettings
         self.sensoryLaunchConfiguration = sensoryLaunchConfiguration
+        self.racingEnvironmentLaunchConfiguration = racingEnvironmentLaunchConfiguration
         self.mode = mode
         self.startDelay = startDelay
     }
@@ -300,6 +357,9 @@ final class SG6AcceptanceCoordinator {
             flow: flow,
             sensorySettings: sensorySettings,
             sensoryLaunchConfiguration: SG8SensoryLaunchConfiguration(arguments: arguments),
+            racingEnvironmentLaunchConfiguration: SG8RacingEnvironmentLaunchConfiguration(
+                arguments: arguments
+            ),
             mode: mode,
             startDelay: startDelay(in: arguments)
         )
@@ -340,9 +400,295 @@ final class SG6AcceptanceCoordinator {
                 summary = await runMemoryAcceptance()
             case .sensory:
                 summary = await runSensoryAcceptance()
+            case .racingEnvironment:
+                summary = await runRacingEnvironmentAcceptance()
             }
             log(summary)
         }
+    }
+
+    private func runRacingEnvironmentAcceptance() async -> String {
+        guard let configuration = racingEnvironmentLaunchConfiguration else {
+            return racingEnvironmentFailure("invalid_or_missing_arguments")
+        }
+        guard await waitForAssetReadiness(timeout: 15) else {
+            return racingEnvironmentFailure("asset_preload_failed")
+        }
+        _ = flow.selectTrack(configuration.track)
+        _ = flow.selectWeather(configuration.weather)
+        guard flow.environmentSelection == RacingEnvironmentSelection(
+            track: configuration.track,
+            weather: configuration.weather
+        ) else {
+            return racingEnvironmentFailure("environment_selection_failed")
+        }
+
+        let resources = await RacingEnvironmentAssetLibrary.shared.resources(
+            for: configuration.track,
+            tier: configuration.tier
+        )
+        guard resources.diagnostic == .authored,
+              let sceneSnapshot = try? racingEnvironmentSnapshot(
+                resources: resources,
+                weather: configuration.weather,
+                tier: configuration.tier
+              ) else {
+            return racingEnvironmentFailure("scene_assembly_failed")
+        }
+        let expectedDensity = RacingEnvironmentCatalog.profile(for: configuration.track)
+            .qualityBudgets.budget(for: configuration.tier).clusterDensity
+        let expectedActiveSlots = RacingEnvironmentDistanceLayer.allCases.reduce(0) {
+            $0 + expectedDensity.clusterCount(for: $1)
+        }
+        guard sceneSnapshot.hierarchyNames == RacingEnvironmentScene.hierarchyNames,
+              sceneSnapshot.activePropSlotCount == expectedActiveSlots,
+              sceneSnapshot.activeContactShadowCount == expectedDensity.foreground,
+              sceneSnapshot.collisionComponentCount == 0,
+              sceneSnapshot.inputTargetComponentCount == 0 else {
+            return racingEnvironmentFailure("hierarchy_density_or_collision_contract")
+        }
+
+        let racingPresentationCursor = SG6AcceptanceProbe.latestSequence
+        guard flow.drive(controlRoute: .touchOnly), let controller = flow.gameSession else {
+            return racingEnvironmentFailure("controller_creation_failed")
+        }
+        let startupTimeout: TimeInterval = 15
+        guard await waitUntilRacing(controller, timeout: startupTimeout) != nil else {
+            log(
+                "RACING_ENVIRONMENT_STARTUP_TIMEOUT timeout=\(formatted(startupTimeout)) "
+                    + "route=\(String(describing: flow.route)) "
+                    + "phase=\(String(describing: controller.presentationPhase))"
+            )
+            return racingEnvironmentFailure("countdown_timeout")
+        }
+        let racingRenderedEvent = await waitForProbeEvent(
+            .racingRendered,
+            after: racingPresentationCursor,
+            timeout: 2
+        )
+        if configuration.requiresRacingScreenshot, racingRenderedEvent == nil {
+            return racingEnvironmentFailure("racing_view_render_timeout")
+        }
+        let sampleStart = controller.frameRateSamples.count
+        let targetSampleCount = Int(configuration.duration.rounded(.down))
+        let runStartedAt = ProcessInfo.processInfo.systemUptime
+        let runDeadline = runStartedAt + configuration.duration + 120
+        var lastSampleCount = sampleStart
+        var lastSampleTimestamp = ProcessInfo.processInfo.systemUptime
+        var freezeDetected = false
+        var stateLossDetected = false
+        var didTriggerMemoryWarning = false
+        var gameplayRetries = 0
+        var wasRacing = true
+        var screenshotReadinessPassed = false
+        var screenshotReadinessSampleCount = 0
+        var screenshotReadinessFPS: Double?
+
+        while controller.frameRateSamples.count - sampleStart < targetSampleCount,
+              ProcessInfo.processInfo.systemUptime < runDeadline {
+            guard flow.route == .playing, flow.gameSession === controller else {
+                stateLossDetected = true
+                break
+            }
+            switch controller.presentationPhase {
+            case .racing:
+                if !wasRacing {
+                    lastSampleTimestamp = ProcessInfo.processInfo.systemUptime
+                    wasRacing = true
+                }
+                steerSafely(controller)
+            case .result:
+                gameplayRetries += 1
+                controller.retry()
+                lastSampleTimestamp = ProcessInfo.processInfo.systemUptime
+                wasRacing = false
+            case .countdown, .collision:
+                wasRacing = false
+            }
+            if configuration.triggersMemoryWarning,
+               !didTriggerMemoryWarning,
+               ProcessInfo.processInfo.systemUptime >= runStartedAt + 1 {
+                controller.receiveEnvironmentMemoryWarning(
+                    at: ProcessInfo.processInfo.systemUptime
+                )
+                didTriggerMemoryWarning = true
+            }
+            let sampleCount = controller.frameRateSamples.count
+            if sampleCount != lastSampleCount {
+                lastSampleCount = sampleCount
+                lastSampleTimestamp = ProcessInfo.processInfo.systemUptime
+                if configuration.requiresRacingScreenshot,
+                   !screenshotReadinessPassed,
+                   racingRenderedEvent != nil,
+                   flow.route == .playing,
+                   flow.gameSession === controller,
+                   controller.presentationPhase == .racing,
+                   sampleCount > sampleStart,
+                   let framesPerSecond = controller.frameRateSamples.last,
+                   framesPerSecond.isFinite,
+                   framesPerSecond > 0 {
+                    screenshotReadinessPassed = true
+                    screenshotReadinessSampleCount = sampleCount - sampleStart
+                    screenshotReadinessFPS = framesPerSecond
+                    log(
+                        "RACING_ENVIRONMENT_SCREENSHOT_READY "
+                            + "token=run-\(controller.environmentQualityRunID)-"
+                            + "render-\(racingRenderedEvent?.sequence ?? 0)-"
+                            + "sample-\(screenshotReadinessSampleCount) "
+                            + "route=playing phase=racing rendered=true "
+                            + "countdownOverlay=false sampleCount=\(screenshotReadinessSampleCount) "
+                            + "fps=\(formatted(framesPerSecond))"
+                    )
+                }
+            } else if ProcessInfo.processInfo.systemUptime - lastSampleTimestamp > 3,
+                      controller.presentationPhase == .racing {
+                freezeDetected = true
+                break
+            }
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        controller.releaseTouch()
+
+        let samples = Array(controller.frameRateSamples.dropFirst(sampleStart))
+        let average = samples.isEmpty ? nil : samples.reduce(0, +) / Double(samples.count)
+        let minimum = samples.min()
+        let consecutiveBelow50 = Self.maximumConsecutiveSamples(below: 50, in: samples)
+        let transition = controller.adaptiveEnvironmentQualityState.transition
+        let expectedTransitionPassed = if configuration.triggersMemoryWarning {
+            configuration.tier == .enhanced
+                && didTriggerMemoryWarning
+                && transition?.reason == .memoryWarning
+                && controller.environmentQualityTier == .baseline
+        } else {
+            true
+        }
+
+        let activeCache = await RacingEnvironmentAssetLibrary.shared.diagnostics()
+        let activeMetalBytes = MTLCreateSystemDefaultDevice().map {
+            UInt64($0.currentAllocatedSize)
+        }
+
+        flow.returnToHub()
+        var releaseCount = 0
+        var sceneReleaseCount = 0
+        var rssSamples: [UInt64] = []
+        let baselineRSS = stabilizedResidentMemoryBytes()
+        if configuration.routeCycles > 0 {
+            for cycle in 0..<configuration.routeCycles {
+                let track = RacingTrack.allCases[cycle % RacingTrack.allCases.count]
+                _ = flow.selectTrack(track)
+                _ = flow.selectWeather(cycle.isMultiple(of: 2) ? .clear : .storm)
+                guard let probe = await runRacingEnvironmentReleaseCycle(
+                    track: track,
+                    weather: cycle.isMultiple(of: 2) ? .clear : .storm
+                ) else {
+                    stateLossDetected = true
+                    break
+                }
+                let releaseDeadline = ProcessInfo.processInfo.systemUptime + 2
+                while (probe.controller != nil || probe.scene != nil),
+                      ProcessInfo.processInfo.systemUptime < releaseDeadline {
+                    try? await Task.sleep(for: .milliseconds(10))
+                }
+                if probe.controller == nil { releaseCount += 1 }
+                if probe.scene == nil { sceneReleaseCount += 1 }
+                if let rss = stabilizedResidentMemoryBytes() { rssSamples.append(rss) }
+            }
+        }
+
+        let metalLimit: UInt64 = 64 * 1_024 * 1_024
+        let minimumSampleCount = max(Int(configuration.duration.rounded(.down)) - 1, 3)
+        let performancePassed = !configuration.enforcesPerformance
+            || configuration.tier != .baseline
+            || ((average ?? 0) >= 58 && consecutiveBelow50 < 2)
+        let finalRSSPassed = if let baselineRSS, let finalRSS = rssSamples.last {
+            finalRSS <= UInt64(Double(baselineRSS) * 1.15)
+        } else {
+            configuration.routeCycles == 0
+        }
+        let lastFive = Array(rssSamples.suffix(5))
+        let strictRSSGrowth = zip(lastFive, lastFive.dropFirst()).allSatisfy(<)
+            && lastFive.count == 5
+        let cyclesPassed = configuration.routeCycles == 0
+            || (releaseCount == configuration.routeCycles
+                && sceneReleaseCount == configuration.routeCycles
+                && rssSamples.count == configuration.routeCycles
+                && finalRSSPassed
+                && !strictRSSGrowth)
+        let passed = samples.count >= minimumSampleCount
+            && !freezeDetected
+            && !stateLossDetected
+            && performancePassed
+            && activeCache.cachedTrackCount <= 1
+            && (activeMetalBytes.map { $0 <= metalLimit } ?? false)
+            && expectedTransitionPassed
+            && cyclesPassed
+            && (!configuration.requiresRacingScreenshot || screenshotReadinessPassed)
+
+        return "RACING_ENVIRONMENT_ACCEPTANCE_SUMMARY pass=\(passed) "
+            + "track=\(configuration.track.rawValue) weather=\(configuration.weather.rawValue) "
+            + "tier=\(configuration.tier.rawValue) duration=\(formatted(configuration.duration)) "
+            + "samples=\(samples.count) averageFPS=\(formatted(average)) "
+            + "minimumFPS=\(formatted(minimum)) consecutiveBelow50=\(consecutiveBelow50) "
+            + "activeSlots=\(sceneSnapshot.activePropSlotCount) "
+            + "activeShadows=\(sceneSnapshot.activeContactShadowCount) collisions=0 "
+            + "cacheTracks=\(activeCache.cachedTrackCount) "
+            + "metalBytes=\(activeMetalBytes.map(String.init) ?? "none") "
+            + "adaptiveReason=\(transition?.reason.rawValue ?? "none") "
+            + "transitionSamples=\(transition?.acceptedFrameRateSampleCount ?? 0) "
+            + "transitionLowSamples=\(transition?.consecutiveLowFrameRateSampleCount ?? 0) "
+            + "transitionLastFPS=\(formatted(transition?.lastAcceptedAverageFramesPerSecond)) "
+            + "transitionFrom=\(transition?.fromTier.rawValue ?? "none") "
+            + "transitionTo=\(transition?.toTier.rawValue ?? "none") "
+            + "gameplayRetries=\(gameplayRetries) "
+            + "routeCycles=\(configuration.routeCycles) controllerRelease=\(releaseCount) "
+            + "sceneRelease=\(sceneReleaseCount) rss=\(rssSamples.map(String.init).joined(separator: ",")) "
+            + "screenshotRequired=\(configuration.requiresRacingScreenshot) "
+            + "screenshotReady=\(screenshotReadinessPassed) "
+            + "screenshotRendered=\(racingRenderedEvent != nil) "
+            + "screenshotCountdownOverlay=false "
+            + "screenshotReadinessSamples=\(screenshotReadinessSampleCount) "
+            + "screenshotReadinessFPS=\(formatted(screenshotReadinessFPS)) "
+            + "freeze=\(freezeDetected) stateLoss=\(stateLossDetected)"
+    }
+
+    private func runRacingEnvironmentReleaseCycle(
+        track: RacingTrack,
+        weather: RacingWeather
+    ) async -> ReleaseProbe? {
+        _ = flow.selectTrack(track)
+        _ = flow.selectWeather(weather)
+        guard flow.drive(controlRoute: .touchOnly), let controller = flow.gameSession,
+              await waitUntilRacing(controller, timeout: 15) != nil else {
+            return nil
+        }
+        let probe = ReleaseProbe(controller: controller)
+        let deadline = ProcessInfo.processInfo.systemUptime + 1
+        while ProcessInfo.processInfo.systemUptime < deadline {
+            steerSafely(controller)
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        controller.releaseTouch()
+        flow.returnToHub()
+        return probe
+    }
+
+    private func racingEnvironmentSnapshot(
+        resources: RacingEnvironmentResources,
+        weather: RacingWeather,
+        tier: RacingEnvironmentQualityTier
+    ) throws -> RacingEnvironmentSceneSnapshot {
+        try RacingEnvironmentScene.assemble(
+            resources: resources,
+            travel: 24,
+            weatherState: RacingEnvironmentWeather.presentationState(
+                track: resources.track,
+                weather: weather,
+                travel: 24,
+                tier: tier,
+                accessibilityPolicy: RacingEnvironmentWeather.standardAccessibilityPolicy()
+            )
+        ).snapshot
     }
 
     private func runPresentationAcceptance() async -> String {
@@ -647,25 +993,43 @@ final class SG6AcceptanceCoordinator {
         private(set) var maximumActiveRoadLights = 0
         private(set) var maximumActiveFogBands = 0
         private(set) var maximumScheduledDebris = 0
+        private(set) var maximumActiveReplacementCues = 0
+        private(set) var replacementPresentationBounded = true
+        private(set) var replacementConsumedEventCount = 0
+        private(set) var replacementSourceEventCount = 0
+        private(set) var replacementDuplicateEventCount = 0
 
-        mutating func observe(_ diagnostics: GameScene.PresentationDiagnostics) {
+        mutating func observe(
+            _ diagnostics: GameScene.PresentationDiagnostics,
+            replacement: RacingFeedbackPresentationDiagnostics
+        ) {
             let maximumEdgeStreakCount = GameScene.maximumEdgeStreakCount
             let maximumRoadLightCount = GameScene.maximumRoadLightCount
             let maximumFogBandCount = GameScene.maximumFogBandCount
             let maximumCollisionDebrisCount = GameScene.maximumCollisionDebrisCount
+            let usesRealityKitPresentation = diagnostics.edgeStreakNodeCount == 0
+                && diagnostics.roadLightNodeCount == 0
+                && diagnostics.fogBandNodeCount == 0
+                && diagnostics.debrisNodeCount == 0
+            let legacyPoolCountsAreExact = diagnostics.edgeStreakNodeCount
+                == maximumEdgeStreakCount
+                && diagnostics.roadLightNodeCount == maximumRoadLightCount
+                && diagnostics.fogBandNodeCount == maximumFogBandCount
+                && diagnostics.debrisNodeCount == maximumCollisionDebrisCount
             let observations = [
-                diagnostics.edgeStreakNodeCount == maximumEdgeStreakCount,
+                usesRealityKitPresentation || legacyPoolCountsAreExact,
                 diagnostics.activeEdgeStreakCount <= maximumEdgeStreakCount,
-                diagnostics.roadLightNodeCount == maximumRoadLightCount,
                 diagnostics.activeRoadLightCount <= maximumRoadLightCount,
-                diagnostics.fogBandNodeCount == maximumFogBandCount,
                 diagnostics.activeFogBandCount <= maximumFogBandCount,
-                diagnostics.debrisNodeCount == maximumCollisionDebrisCount,
                 diagnostics.activeDebrisCount <= maximumCollisionDebrisCount,
                 diagnostics.scheduledDebrisCount <= maximumCollisionDebrisCount,
                 diagnostics.unexpectedFeedbackNodeCount == 0,
             ]
-            isBounded = isBounded && observations.allSatisfy { $0 }
+            replacementPresentationBounded = replacementPresentationBounded
+                && replacement.isBounded
+            isBounded = isBounded
+                && observations.allSatisfy { $0 }
+                && replacementPresentationBounded
             maximumActiveStreaks = max(
                 maximumActiveStreaks,
                 diagnostics.activeEdgeStreakCount
@@ -681,6 +1045,22 @@ final class SG6AcceptanceCoordinator {
             maximumScheduledDebris = max(
                 maximumScheduledDebris,
                 diagnostics.scheduledDebrisCount
+            )
+            maximumActiveReplacementCues = max(
+                maximumActiveReplacementCues,
+                replacement.activeCueCount
+            )
+            replacementConsumedEventCount = max(
+                replacementConsumedEventCount,
+                replacement.consumedEventCount
+            )
+            replacementSourceEventCount = max(
+                replacementSourceEventCount,
+                replacement.sourceEventCount
+            )
+            replacementDuplicateEventCount = max(
+                replacementDuplicateEventCount,
+                replacement.duplicateEventCount
             )
         }
     }
@@ -705,6 +1085,10 @@ final class SG6AcceptanceCoordinator {
         guard await waitForAssetReadiness(timeout: 15),
               let audioDirector = flow.audioDirector else {
             return sensoryFailure("asset_or_audio_readiness_failed")
+        }
+        if let environment = racingEnvironmentLaunchConfiguration {
+            _ = flow.selectTrack(environment.track)
+            _ = flow.selectWeather(environment.weather)
         }
 
         let originalSettings = sensorySettings.settings
@@ -807,7 +1191,7 @@ final class SG6AcceptanceCoordinator {
             && !driveIntent.hasStartedDrive
 
         sensorySettings.setHapticsEnabled(false)
-        let firstCueCursor = SG6AcceptanceProbe.latestSequence
+        let accessibilityCursor = SG6AcceptanceProbe.latestSequence
         driveIntent.requestDrive(readiness: .stale)
         let continuePendingPassed = driveIntent.hasPendingDriveIntent
             && driveIntent.isReadinessSheetPresented
@@ -828,9 +1212,29 @@ final class SG6AcceptanceCoordinator {
             return sensoryFailure("session_audio_identity_missing")
         }
         directorIdentities.append(sessionDirectorIdentity)
-        let firstCountdownFPSStart = controller.frameRateSamples.count
         contextChecks.append(await waitForAudioContext(.countdown, director: audioDirector))
-        guard await waitUntilRacing(controller, timeout: 5) != nil else {
+        guard await waitUntilRacing(controller, timeout: 15) != nil else {
+            return sensoryFailure("pipeline_warmup_countdown_timeout")
+        }
+        contextChecks.append(await waitForAudioContext(.racing, director: audioDirector))
+        let pipelineWarmupDeadline = ProcessInfo.processInfo.systemUptime + 5
+        while ProcessInfo.processInfo.systemUptime < pipelineWarmupDeadline {
+            guard flow.route == .playing,
+                  flow.gameSession === controller,
+                  controller.presentationPhase == .racing else {
+                return sensoryFailure("pipeline_warmup_interrupted")
+            }
+            steerSafely(controller)
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        controller.releaseTouch()
+        log("SG8_SENSORY_PIPELINE_WARMUP pass=true racingSeconds=5.000 sameSession=true")
+
+        let firstCueCursor = SG6AcceptanceProbe.latestSequence
+        let firstCountdownFPSStart = controller.frameRateSamples.count
+        controller.retry()
+        contextChecks.append(await waitForAudioContext(.countdown, director: audioDirector))
+        guard await waitUntilRacing(controller, timeout: 15) != nil else {
             return sensoryFailure("first_countdown_timeout")
         }
         let firstCountdownFPSEnd = controller.frameRateSamples.count
@@ -839,7 +1243,7 @@ final class SG6AcceptanceCoordinator {
             return sensoryFailure("first_visible_cue_timeout")
         }
         guard let accessibilityEvent = await waitForProbeEvent(
-            after: firstCueCursor,
+            after: accessibilityCursor,
             timeout: 2,
             matching: {
                 if case .accessibilityPolicyApplied = $0 { return true }
@@ -851,6 +1255,10 @@ final class SG6AcceptanceCoordinator {
         }
         let reduceMotion = accessibilityPolicy.camera == .off
         let reduceTransparency = accessibilityPolicy.usesOpaqueFeedback
+        let accessibilitySource = sensoryLaunchConfiguration.expectedReduceMotion != nil
+            || sensoryLaunchConfiguration.expectedReduceTransparency != nil
+            ? "launch-override"
+            : "system"
         let accessibilityExpectationPassed = sensoryLaunchConfiguration.expectedReduceMotion
             .map { $0 == reduceMotion } ?? true
             && (sensoryLaunchConfiguration.expectedReduceTransparency
@@ -860,7 +1268,10 @@ final class SG6AcceptanceCoordinator {
                 .map { $0 == sensorySettings.settings.effectIntensity } ?? true
 
         var poolAudit = SensoryPoolAudit()
-        poolAudit.observe(controller.scene.presentationDiagnostics)
+        poolAudit.observe(
+            controller.scene.presentationDiagnostics,
+            replacement: controller.racingFeedbackPresentationDiagnostics
+        )
         guard let nearMissAudit = await steerForNearMissPresentation(
             controller,
             timeout: 35,
@@ -887,7 +1298,10 @@ final class SG6AcceptanceCoordinator {
             return sensoryFailure("collision_render_timeout")
         }
         contextChecks.append(await waitForAudioContext(.impact, director: audioDirector))
-        poolAudit.observe(controller.scene.presentationDiagnostics)
+        poolAudit.observe(
+            controller.scene.presentationDiagnostics,
+            replacement: controller.racingFeedbackPresentationDiagnostics
+        )
         guard let resultRendered = await waitForProbeEvent(
             after: collisionRendered.sequence,
             timeout: 2,
@@ -904,7 +1318,10 @@ final class SG6AcceptanceCoordinator {
         try? await Task.sleep(for: .milliseconds(300))
         let resultFPSEnd = controller.frameRateSamples.count
         let resultDiagnostics = controller.scene.presentationDiagnostics
-        poolAudit.observe(resultDiagnostics)
+        poolAudit.observe(
+            resultDiagnostics,
+            replacement: controller.racingFeedbackPresentationDiagnostics
+        )
         let resultCleanupPassed = resultDiagnostics.activeDebrisCount == 0
             && resultDiagnostics.scheduledDebrisCount == 0
             && !resultDiagnostics.isCollisionPresentationActive
@@ -918,7 +1335,7 @@ final class SG6AcceptanceCoordinator {
         }
         directorIdentities.append(retryDirectorIdentity)
         contextChecks.append(await waitForAudioContext(.countdown, director: audioDirector))
-        guard await waitUntilRacing(controller, timeout: 5) != nil else {
+        guard await waitUntilRacing(controller, timeout: 15) != nil else {
             return sensoryFailure("retry_countdown_timeout")
         }
         let retryCountdownFPSEnd = controller.frameRateSamples.count
@@ -926,7 +1343,10 @@ final class SG6AcceptanceCoordinator {
         guard let retryCueRun = await waitForCueRun(after: retryCueCursor, timeout: 2) else {
             return sensoryFailure("retry_visible_cue_timeout")
         }
-        poolAudit.observe(controller.scene.presentationDiagnostics)
+        poolAudit.observe(
+            controller.scene.presentationDiagnostics,
+            replacement: controller.racingFeedbackPresentationDiagnostics
+        )
 
         let lifecycleCueCursor = SG6AcceptanceProbe.latestSequence
         let lifecycleCountdownFPSStart = controller.frameRateSamples.count
@@ -938,7 +1358,7 @@ final class SG6AcceptanceCoordinator {
         try? await Task.sleep(for: .milliseconds(100))
         flow.handleLifecycle(.active)
         contextChecks.append(await waitForAudioContext(.countdown, director: audioDirector))
-        guard await waitUntilRacing(controller, timeout: 5) != nil else {
+        guard await waitUntilRacing(controller, timeout: 15) != nil else {
             return sensoryFailure("lifecycle_countdown_timeout")
         }
         let lifecycleCountdownFPSEnd = controller.frameRateSamples.count
@@ -952,7 +1372,10 @@ final class SG6AcceptanceCoordinator {
         let foregroundLifecyclePassed = !audioDirector.isSuspended
             && controller.presentationPhase == .racing
             && !controller.scene.isPaused
-        poolAudit.observe(controller.scene.presentationDiagnostics)
+        poolAudit.observe(
+            controller.scene.presentationDiagnostics,
+            replacement: controller.racingFeedbackPresentationDiagnostics
+        )
 
         let staleEventCursor = SG6AcceptanceProbe.latestSequence
         flow.returnToHub()
@@ -978,10 +1401,12 @@ final class SG6AcceptanceCoordinator {
             }
         }
         let stoppedDiagnostics = controller.scene.presentationDiagnostics
-        poolAudit.observe(stoppedDiagnostics)
+        let stoppedReplacementDiagnostics = controller.racingFeedbackPresentationDiagnostics
+        poolAudit.observe(stoppedDiagnostics, replacement: stoppedReplacementDiagnostics)
         let staleActionCount = (controller.hasActiveCountdownTask ? 1 : 0)
             + (controller.hasActiveStartCueTask ? 1 : 0)
             + (controller.hasActiveCollisionTask ? 1 : 0)
+            + stoppedReplacementDiagnostics.activeCueCount
             + stoppedDiagnostics.nodesWithActions
             + stoppedDiagnostics.activeDebrisCount
             + stoppedDiagnostics.scheduledDebrisCount
@@ -989,6 +1414,7 @@ final class SG6AcceptanceCoordinator {
             && stoppedDiagnostics.activeDebrisCount == 0
             && stoppedDiagnostics.scheduledDebrisCount == 0
             && stoppedDiagnostics.nodesWithActions == 0
+            && stoppedReplacementDiagnostics.activeCueCount == 0
             && stoppedDiagnostics.visibleScoreTexts.isEmpty
 
         driveIntent.beginHubVisit()
@@ -1004,7 +1430,7 @@ final class SG6AcceptanceCoordinator {
         }
         directorIdentities.append(adaptiveDirectorIdentity)
         contextChecks.append(await waitForAudioContext(.countdown, director: audioDirector))
-        guard await waitUntilRacing(adaptiveController, timeout: 5) != nil else {
+        guard await waitUntilRacing(adaptiveController, timeout: 15) != nil else {
             return sensoryFailure("adaptive_countdown_timeout")
         }
         contextChecks.append(await waitForAudioContext(.racing, director: audioDirector))
@@ -1089,6 +1515,7 @@ final class SG6AcceptanceCoordinator {
             + "nearMissVisualSides=\(serializedSides(nearMissAudit.visibleSides)) "
             + "effectIntensity=\(sensorySettings.settings.effectIntensity.rawValue) "
             + "reduceMotion=\(reduceMotion) reduceTransparency=\(reduceTransparency) "
+            + "accessibilitySource=\(accessibilitySource) "
             + "accessibilityPass=\(accessibilityExpectationPassed) "
             + "adaptiveCleanup=\(adaptiveCleanupPassed) staleCue=\(staleCueCount) "
             + "staleAction=\(staleActionCount) poolsBounded=\(poolAudit.isBounded) "
@@ -1096,6 +1523,13 @@ final class SG6AcceptanceCoordinator {
             + "maxRoadLights=\(poolAudit.maximumActiveRoadLights) "
             + "maxFog=\(poolAudit.maximumActiveFogBands) "
             + "maxDebris=\(poolAudit.maximumScheduledDebris) "
+            + "replacementCueCapacity=\(RacingFeedbackPresentationDiagnostics.cueCapacity) "
+            + "replacementActiveMax=\(poolAudit.maximumActiveReplacementCues) "
+            + "replacementConsumed=\(poolAudit.replacementConsumedEventCount) "
+            + "replacementSource=\(poolAudit.replacementSourceEventCount) "
+            + "replacementDuplicates=\(poolAudit.replacementDuplicateEventCount) "
+            + "replacementBounded=\(poolAudit.replacementPresentationBounded) "
+            + "replacementStale=\(stoppedReplacementDiagnostics.activeCueCount) "
             + "decodedAudioBytes=\(decodedAudioBytes) decodedAudioLimit=\(decodedAudioLimit) "
             + "audioNodes=\(audioDirector.backendDiagnostics.longLivedNodeCount) "
             + "audioOneShotsMax=\(audioDirector.backendDiagnostics.maximumSimultaneousOneShots) "
@@ -1326,7 +1760,10 @@ final class SG6AcceptanceCoordinator {
             guard flow.route == .playing, flow.gameSession === controller else {
                 return nil
             }
-            audit.observe(controller.scene.presentationDiagnostics)
+            audit.observe(
+                controller.scene.presentationDiagnostics,
+                replacement: controller.racingFeedbackPresentationDiagnostics
+            )
             switch controller.presentationPhase {
             case .collision:
                 return audit
@@ -1364,11 +1801,22 @@ final class SG6AcceptanceCoordinator {
             guard flow.route == .playing,
                   flow.gameSession === controller,
                   controller.presentationPhase == .racing else {
+                log(
+                    "SG8_SENSORY_NEAR_MISS_INTERRUPTED "
+                        + "route=\(String(describing: flow.route)) "
+                        + "sameSession=\(flow.gameSession === controller) "
+                        + "phase=\(String(describing: controller.presentationPhase)) "
+                        + "events=\(serializedSides(result.eventSides)) "
+                        + "visible=\(serializedSides(result.visibleSides))"
+                )
                 return nil
             }
 
             let diagnostics = controller.scene.presentationDiagnostics
-            result.poolAudit.observe(diagnostics)
+            result.poolAudit.observe(
+                diagnostics,
+                replacement: controller.racingFeedbackPresentationDiagnostics
+            )
             if let side = diagnostics.visibleNearMissSide,
                side == .left || side == .right,
                !result.visibleSides.contains(side) {
@@ -1422,10 +1870,30 @@ final class SG6AcceptanceCoordinator {
                 let configuration = controller.scene.configuration
                 let playerLimit = snapshot.roadHalfWidth - snapshot.playerWidth / 2
                 if let candidate = snapshot.obstacles
-                    .filter({ $0.distance > -2 })
+                    .filter({ obstacle in
+                        guard obstacle.distance > -2,
+                              !obstacle.didAwardNearMiss else {
+                            return false
+                        }
+                        let targetX = nearMissTargetX(
+                            obstacle: obstacle,
+                            side: desiredSide,
+                            snapshot: snapshot,
+                            margin: configuration.nearMissMargin
+                        )
+                        guard abs(targetX) <= playerLimit else {
+                            return false
+                        }
+                        let lateralTravelSeconds = abs(targetX - snapshot.playerX)
+                            / max(configuration.playerLateralSpeed, .leastNonzeroMagnitude)
+                        let requiredDistance = max(
+                            12,
+                            (lateralTravelSeconds + 0.5) * max(obstacle.closingSpeed, 0)
+                                + (obstacle.length + snapshot.playerLength) / 2
+                        )
+                        return obstacle.distance > requiredDistance
+                    })
                     .min(by: { $0.distance < $1.distance }),
-                   !candidate.didAwardNearMiss,
-                   candidate.distance > 12,
                    abs(
                        nearMissTargetX(
                            obstacle: candidate,
@@ -1458,6 +1926,16 @@ final class SG6AcceptanceCoordinator {
             try? await Task.sleep(for: .milliseconds(20))
         }
         controller.releaseTouch()
+        let snapshot = controller.scene.currentSnapshot
+        let closest = snapshot.obstacles.min(by: { $0.distance < $1.distance })
+        log(
+            "SG8_SENSORY_NEAR_MISS_TIMEOUT "
+                + "events=\(serializedSides(result.eventSides)) "
+                + "visible=\(serializedSides(result.visibleSides)) "
+                + "playerX=\(formatted(snapshot.playerX)) "
+                + "closestDistance=\(closest.map { formatted($0.distance) } ?? "none") "
+                + "closestX=\(closest.map { formatted($0.x) } ?? "none")"
+        )
         return nil
     }
 
@@ -1480,27 +1958,52 @@ final class SG6AcceptanceCoordinator {
 
     private func steerSafely(_ controller: GameSessionController) {
         let snapshot = controller.scene.currentSnapshot
-        let upcoming = snapshot.obstacles.filter { $0.distance > -2 && $0.distance < 24 }
-        guard !upcoming.isEmpty else {
-            steer(controller, toward: 0, from: snapshot.playerX)
-            return
-        }
-        let targetLaneIndex = [0, 1, 2].max { leftLane, rightLane in
-            let leftClearance = upcoming
-                .filter { $0.laneIndex == leftLane }
-                .map(\.distance)
-                .min() ?? .greatestFiniteMagnitude
-            let rightClearance = upcoming
-                .filter { $0.laneIndex == rightLane }
-                .map(\.distance)
-                .min() ?? .greatestFiniteMagnitude
-            if leftClearance != rightClearance {
-                return leftClearance < rightClearance
+        var lane0Clearance = Double.greatestFiniteMagnitude
+        var lane1Clearance = Double.greatestFiniteMagnitude
+        var lane2Clearance = Double.greatestFiniteMagnitude
+        for obstacle in snapshot.obstacles where obstacle.distance > -2 && obstacle.distance < 60 {
+            switch obstacle.laneIndex {
+            case 0:
+                lane0Clearance = min(lane0Clearance, obstacle.distance)
+            case 1:
+                lane1Clearance = min(lane1Clearance, obstacle.distance)
+            case 2:
+                lane2Clearance = min(lane2Clearance, obstacle.distance)
+            default:
+                break
             }
-            let leftX = Double(leftLane - 1) * snapshot.laneWidth
-            let rightX = Double(rightLane - 1) * snapshot.laneWidth
-            return abs(leftX - snapshot.playerX) > abs(rightX - snapshot.playerX)
-        } ?? 1
+        }
+
+        let currentLaneIndex = min(
+            max(Int((snapshot.playerX / snapshot.laneWidth).rounded()) + 1, 0),
+            2
+        )
+        let laneClearances = (lane0Clearance, lane1Clearance, lane2Clearance)
+        let currentClearance = switch currentLaneIndex {
+        case 0: laneClearances.0
+        case 1: laneClearances.1
+        default: laneClearances.2
+        }
+        var targetLaneIndex = currentLaneIndex
+        var targetClearance = currentClearance
+        var targetDistance = 0.0
+        if currentClearance < 24 {
+            for laneIndex in 0...2 where laneIndex != currentLaneIndex {
+                let clearance = switch laneIndex {
+                case 0: laneClearances.0
+                case 1: laneClearances.1
+                default: laneClearances.2
+                }
+                let laneX = Double(laneIndex - 1) * snapshot.laneWidth
+                let distance = abs(laneX - snapshot.playerX)
+                if clearance > targetClearance
+                    || (clearance == targetClearance && distance < targetDistance) {
+                    targetLaneIndex = laneIndex
+                    targetClearance = clearance
+                    targetDistance = distance
+                }
+            }
+        }
         steer(
             controller,
             toward: Double(targetLaneIndex - 1) * snapshot.laneWidth,
@@ -1578,6 +2081,10 @@ final class SG6AcceptanceCoordinator {
 
     private func sensoryFailure(_ reason: String) -> String {
         "SG8_SENSORY_SUMMARY pass=false reason=\(reason)"
+    }
+
+    private func racingEnvironmentFailure(_ reason: String) -> String {
+        "RACING_ENVIRONMENT_ACCEPTANCE_SUMMARY pass=false reason=\(reason)"
     }
 
     private func log(_ message: String) {

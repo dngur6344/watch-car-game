@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "revision": 1,
+  "license": "project-original",
+  "hashAlgorithm": "SHA-256",
+  "authoring": {
+    "determinismContract": "Repository scripts use fixed numeric recipes and stable output ordering. USD package mode normalizes USDA mtime to 2026-08-30T00:00:00Z and invokes /usr/bin/usdzip from the output directory with relative basenames and TZ=UTC. Raster processing uses CoreGraphics/ImageIO only. There is no network access, runtime generation, or third-party runtime dependency.",
+    "scripts": [
+      {
+        "path": "Scripts/build_racing_environment_usd.swift",
+        "version": "1.1.0"
+      },
+      {
+        "path": "Scripts/build_racing_environment_pbr_maps.swift",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "textureContract": {
+    "width": 1024,
+    "height": 1024,
+    "bitsPerComponent": 8,
+    "channels": "RGBA",
+    "atlasQuadrantSize": 512,
+    "atlasCoordinateOrigin": "top-left",
+    "expectedBaseLevelDecodedBytesPerTexture": 4194304,
+    "expectedBaseLevelDecodedBytesPerTrack": 12582912,
+    "expectedBaseLevelDecodedBytesAllTracks": 37748736,
+    "mipmapPolicy": "allocateAndGenerateAll",
+    "runtimeGenerationAllowed": false
+  },
+  "sources": [
+    {
+      "trackID": "coastal",
+      "assetSlug": "ocean",
+      "filename": "ocean_terrain_source.png",
+      "sourceID": "exec-24ec8976-8a43-4415-8dde-ae56d793ed02",
+      "tool": "Codex built-in image_gen",
+      "generatedOn": "2026-08-30",
+      "license": "project-original",
+      "sha256": "fc62fba112a901ae41adfa497bbce2d889f1a32b432487074bfe650f65d42416",
+      "width": 1254,
+      "height": 1254,
+      "prompt": "Use case: stylized-concept. Asset type: source master for a production iOS racing-game terrain PBR atlas. Create a square, edge-to-edge, orthographic top-down material featuring pale weathered limestone, compacted warm sand, small gravel, sparse salt grass, and dark damp patches. Make it seamless-looking, with even macro variation and no central focal object. Use diffuse neutral studio light with minimal directional shadow and a production-polished stylized-realism treatment in an authored low-poly language. No road markings, cars, buildings, horizon, sky, text, logo, watermark, dramatic baked shadows, perspective, obvious repeating stamps, or isolated props."
+    },
+    {
+      "trackID": "alpine",
+      "assetSlug": "alpine",
+      "filename": "alpine_terrain_source.png",
+      "sourceID": "exec-508cc22c-ff7b-4908-96e1-06b94ea3661a",
+      "tool": "Codex built-in image_gen",
+      "generatedOn": "2026-08-30",
+      "license": "project-original",
+      "sha256": "735c36b4ab5f958fcb7afc691c9303ceb8086bf138bfde9ed34d58b4d628fba7",
+      "width": 1254,
+      "height": 1254,
+      "prompt": "Use case: stylized-concept. Asset type: source master for a production iOS racing-game terrain PBR atlas. Create a square, edge-to-edge, orthographic top-down material featuring cool fractured granite, compact gravel, dark soil, mountain grass, and tiny old snow in crevices. Make it seamless-looking, with even macro variation and no central focal object. Use diffuse neutral studio light with minimal directional shadow and a production-polished stylized-realism treatment in an authored low-poly language. No road markings, cars, buildings, horizon, sky, text, logo, watermark, dramatic baked shadows, perspective, obvious repeating stamps, or isolated props."
+    },
+    {
+      "trackID": "desert",
+      "assetSlug": "desert",
+      "filename": "desert_terrain_source.png",
+      "sourceID": "exec-0aaeffee-34be-4348-8b39-15377b0c2639",
+      "tool": "Codex built-in image_gen",
+      "generatedOn": "2026-08-30",
+      "license": "project-original",
+      "sha256": "062c6cc3a963d7c161947af2ed913fd450e007af469fecf177432694792bab54",
+      "width": 1254,
+      "height": 1254,
+      "prompt": "Use case: stylized-concept. Asset type: source master for a production iOS racing-game terrain PBR atlas. Create a square, edge-to-edge, orthographic top-down material featuring red sandstone, ochre sand, cracked clay, gravel, and dry scrub. Make it seamless-looking, with even macro variation and no central focal object. Use diffuse neutral studio light with minimal directional shadow and a production-polished stylized-realism treatment in an authored low-poly language. No road markings, cars, buildings, horizon, sky, text, logo, watermark, dramatic baked shadows, perspective, obvious repeating stamps, or isolated props."
+    }
+  ],
+  "tracks": [
+    {
+      "id": "coastal",
+      "assetSlug": "ocean",
+      "displayName": "Ocean Drive",
+      "sourceFilename": "ocean_terrain_source.png",
+      "variantEntityNames": ["Coastal_ShorelineRock", "Coastal_PalmGrove", "Coastal_CliffOutcrop", "Coastal_SeaStack"],
+      "heroEntityName": "Coastal_CliffCove_Hero",
+      "roadClearanceHalfWidth": 6.0,
+      "heroRoadApertureWidth": 14.0,
+      "geometry": {
+        "base": {
+          "rootName": "OceanEnvironmentBase",
+          "tier": "base",
+          "role": "racing-environment-pack",
+          "requiredLODRoots": ["ForegroundLOD", "MidgroundLOD", "FarLOD", "Hero"],
+          "materialSlots": ["Terrain", "Rock", "Vegetation", "Accent"],
+          "sourceUSDA": "ocean_environment_base.usda",
+          "runtimeUSDZ": "ocean_environment_base.usdz",
+          "sourceUSDASHA256": "4506f527e3eb203c34e7551c815dc8b83a749453cd37887b8c4ef2d98b8f8efc",
+          "runtimeUSDZSHA256": "14cd89c2273368ae02de5424677c4c1bb6d395e1427bd4ae66b2eb7cd56dfdca",
+          "hashStatus": "verified"
+        },
+        "enhanced": {
+          "rootName": "OceanEnvironmentEnhanced",
+          "tier": "enhanced",
+          "role": "racing-environment-pack",
+          "requiredLODRoots": ["ForegroundLOD", "MidgroundLOD", "FarLOD", "Hero"],
+          "materialSlots": ["Terrain", "Rock", "Vegetation", "Accent"],
+          "sourceUSDA": "ocean_environment_enhanced.usda",
+          "runtimeUSDZ": "ocean_environment_enhanced.usdz",
+          "sourceUSDASHA256": "53c78c7fe4c9251706ab9b73ac3376e7a37bb1b44154461d9cb8b0c4778d0c48",
+          "runtimeUSDZSHA256": "c1ed9c5717474c8a294390e1ac4841ffbf46722ca0b622ff7a72d3458ce6dc29",
+          "hashStatus": "verified"
+        }
+      },
+      "atlasQuadrants": [
+        { "name": "terrainPrimary", "x": 0, "y": 0, "width": 512, "height": 512, "content": "pale limestone, warm compacted sand, and small gravel primary terrain" },
+        { "name": "terrainSecondary", "x": 512, "y": 0, "width": 512, "height": 512, "content": "cooler shifted shoreline terrain variation" },
+        { "name": "transition", "x": 0, "y": 512, "width": 512, "height": 512, "content": "sand-to-dark-damp shoreline transition" },
+        { "name": "decal", "x": 512, "y": 512, "width": 512, "height": 512, "content": "sparse salt-grass and damp-edge decal material" }
+      ],
+      "textures": [
+        { "filename": "ocean_terrain_basecolor.png", "channelRole": "baseColor", "colorEncoding": "sRGB", "realityKitSemantic": ".color", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "49a990570bc5eda11fab5e6bdfd34594b67bfc84d94d3bf68dd9579bb7792030", "hashStatus": "verified" },
+        { "filename": "ocean_terrain_normal.png", "channelRole": "tangentSpaceNormal", "colorEncoding": "linear-sRGB", "realityKitSemantic": ".normal", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "f67bef0e2e9e1c4debd22b126130493ad6665fb93f99fb18bc6f8f41676a8dbd", "hashStatus": "verified" },
+        { "filename": "ocean_terrain_roughness.png", "channelRole": "roughnessScalarReplicatedRGBA", "colorEncoding": "linear-sRGB", "realityKitSemantic": ".scalar", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "ce993155a622fbecb56c83e5411d56e149a17b5b0b30d6811ea7fd761ba0c741", "hashStatus": "verified" }
+      ]
+    },
+    {
+      "id": "alpine",
+      "assetSlug": "alpine",
+      "displayName": "Alpine Pass",
+      "sourceFilename": "alpine_terrain_source.png",
+      "variantEntityNames": ["Alpine_RockOutcrop", "Alpine_PineGrove", "Alpine_ForestBelt", "Alpine_SnowRidge"],
+      "heroEntityName": "Alpine_TunnelPeak_Hero",
+      "roadClearanceHalfWidth": 6.0,
+      "heroRoadApertureWidth": 14.0,
+      "geometry": {
+        "base": {
+          "rootName": "AlpineEnvironmentBase",
+          "tier": "base",
+          "role": "racing-environment-pack",
+          "requiredLODRoots": ["ForegroundLOD", "MidgroundLOD", "FarLOD", "Hero"],
+          "materialSlots": ["Terrain", "Rock", "Vegetation", "Accent"],
+          "sourceUSDA": "alpine_environment_base.usda",
+          "runtimeUSDZ": "alpine_environment_base.usdz",
+          "sourceUSDASHA256": "1c02e4e9ca0faa0c07165cfaaa8c8904f8dfa4e16620a04d14a469f3734a8854",
+          "runtimeUSDZSHA256": "a61db45184b9f17d26e41411d524057bf3182f869f74e1b074d3ad646d5abb77",
+          "hashStatus": "verified"
+        },
+        "enhanced": {
+          "rootName": "AlpineEnvironmentEnhanced",
+          "tier": "enhanced",
+          "role": "racing-environment-pack",
+          "requiredLODRoots": ["ForegroundLOD", "MidgroundLOD", "FarLOD", "Hero"],
+          "materialSlots": ["Terrain", "Rock", "Vegetation", "Accent"],
+          "sourceUSDA": "alpine_environment_enhanced.usda",
+          "runtimeUSDZ": "alpine_environment_enhanced.usdz",
+          "sourceUSDASHA256": "df7691a8bca027f905b4c42360066ce3343455a8cf9c0f952a7ddf400b4cec8d",
+          "runtimeUSDZSHA256": "9af7abd7bf9798150347698203a20df7ca9742fcce3f75bb626df84854bced18",
+          "hashStatus": "verified"
+        }
+      },
+      "atlasQuadrants": [
+        { "name": "terrainPrimary", "x": 0, "y": 0, "width": 512, "height": 512, "content": "cool fractured granite and compact gravel primary terrain" },
+        { "name": "terrainSecondary", "x": 512, "y": 0, "width": 512, "height": 512, "content": "dark-soil granite terrain variation" },
+        { "name": "transition", "x": 0, "y": 512, "width": 512, "height": 512, "content": "gravel-to-mountain-grass transition" },
+        { "name": "decal", "x": 512, "y": 512, "width": 512, "height": 512, "content": "tiny old-snow crevice and grass-edge decal material" }
+      ],
+      "textures": [
+        { "filename": "alpine_terrain_basecolor.png", "channelRole": "baseColor", "colorEncoding": "sRGB", "realityKitSemantic": ".color", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "c90396ecaf1f44f8677ac5083652ff1d7e5e00877d0c22accb053fc0dc2ec6d3", "hashStatus": "verified" },
+        { "filename": "alpine_terrain_normal.png", "channelRole": "tangentSpaceNormal", "colorEncoding": "linear-sRGB", "realityKitSemantic": ".normal", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "b459ec978e09a948351ef102b5210de6c1c83ab26aceba1984518bf8c32bc7ea", "hashStatus": "verified" },
+        { "filename": "alpine_terrain_roughness.png", "channelRole": "roughnessScalarReplicatedRGBA", "colorEncoding": "linear-sRGB", "realityKitSemantic": ".scalar", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "97300a0540bf5133cdd2476e5db2efe3020a1dc8fbe9db7a7ccf09ce6bce2624", "hashStatus": "verified" }
+      ]
+    },
+    {
+      "id": "desert",
+      "assetSlug": "desert",
+      "displayName": "Desert Circuit",
+      "sourceFilename": "desert_terrain_source.png",
+      "variantEntityNames": ["Desert_CactusCluster", "Desert_BoulderCluster", "Desert_CanyonWall", "Desert_Mesa"],
+      "heroEntityName": "Desert_StoneArch_Hero",
+      "roadClearanceHalfWidth": 6.0,
+      "heroRoadApertureWidth": 14.0,
+      "geometry": {
+        "base": {
+          "rootName": "DesertEnvironmentBase",
+          "tier": "base",
+          "role": "racing-environment-pack",
+          "requiredLODRoots": ["ForegroundLOD", "MidgroundLOD", "FarLOD", "Hero"],
+          "materialSlots": ["Terrain", "Rock", "Vegetation", "Accent"],
+          "sourceUSDA": "desert_environment_base.usda",
+          "runtimeUSDZ": "desert_environment_base.usdz",
+          "sourceUSDASHA256": "c69ce0566f3acee1927fac7d186d4b3136ff55df5856e1c484994060db3cb5a7",
+          "runtimeUSDZSHA256": "36aa9c0ce528b644f3785f94aca39f32e9fe66a3d55d32e78e3661f154889b38",
+          "hashStatus": "verified"
+        },
+        "enhanced": {
+          "rootName": "DesertEnvironmentEnhanced",
+          "tier": "enhanced",
+          "role": "racing-environment-pack",
+          "requiredLODRoots": ["ForegroundLOD", "MidgroundLOD", "FarLOD", "Hero"],
+          "materialSlots": ["Terrain", "Rock", "Vegetation", "Accent"],
+          "sourceUSDA": "desert_environment_enhanced.usda",
+          "runtimeUSDZ": "desert_environment_enhanced.usdz",
+          "sourceUSDASHA256": "d8f263fa9f45035d0b1c08e42c3a1ce1b134ee0612693c0eaa6f87ca3fc1d9e3",
+          "runtimeUSDZSHA256": "fdeb37e951b31d18511ce06ebb262bbde2ae73be9cb963416244d9d39751b95d",
+          "hashStatus": "verified"
+        }
+      },
+      "atlasQuadrants": [
+        { "name": "terrainPrimary", "x": 0, "y": 0, "width": 512, "height": 512, "content": "red sandstone, ochre sand, and gravel primary terrain" },
+        { "name": "terrainSecondary", "x": 512, "y": 0, "width": 512, "height": 512, "content": "deeper weathered sandstone terrain variation" },
+        { "name": "transition", "x": 0, "y": 512, "width": 512, "height": 512, "content": "ochre-sand-to-cracked-clay transition" },
+        { "name": "decal", "x": 512, "y": 512, "width": 512, "height": 512, "content": "cracked-clay and dry-scrub decal material" }
+      ],
+      "textures": [
+        { "filename": "desert_terrain_basecolor.png", "channelRole": "baseColor", "colorEncoding": "sRGB", "realityKitSemantic": ".color", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "61f613e4bd46c9699227f22253ccf6c66962ed804eb8a1e18e7fad15e1560c13", "hashStatus": "verified" },
+        { "filename": "desert_terrain_normal.png", "channelRole": "tangentSpaceNormal", "colorEncoding": "linear-sRGB", "realityKitSemantic": ".normal", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "6796373072eef7f38d6ef0f02aee61ddde956f279269fde92fa622a1c181a2fc", "hashStatus": "verified" },
+        { "filename": "desert_terrain_roughness.png", "channelRole": "roughnessScalarReplicatedRGBA", "colorEncoding": "linear-sRGB", "realityKitSemantic": ".scalar", "pixelFormat": "RGBA8", "width": 1024, "height": 1024, "expectedBaseLevelDecodedBytes": 4194304, "derivedSHA256": "4ec2408fed06f90ff54f7101bd05e2cb00bdb404281c1143e5e64d1bc1baa2d4", "hashStatus": "verified" }
+      ]
+    }
+  ]
+}

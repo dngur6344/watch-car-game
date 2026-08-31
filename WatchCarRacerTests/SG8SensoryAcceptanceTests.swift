@@ -3,6 +3,32 @@ import XCTest
 
 @MainActor
 final class SG8SensoryAcceptanceTests: XCTestCase {
+    func testRealityFeedbackPresentationIsSingleCapacityConsumesOnceAndClearsOnStop() {
+        let eventID = UUID(uuidString: "77777777-7777-7777-7777-777777777777")!
+        let controller = GameSessionController(
+            seed: 77,
+            makeFeedbackEventID: { eventID }
+        )
+        let event = GameEvent.nearMiss(obstacleID: 7, kind: .barrier, bonus: 100)
+
+        controller.receive(
+            snapshot: controller.scene.currentSnapshot,
+            events: [event, event]
+        )
+
+        XCTAssertEqual(RacingFeedbackPresentationDiagnostics.cueCapacity, 1)
+        XCTAssertEqual(controller.racingFeedbackPresentationDiagnostics.activeCueCount, 1)
+        XCTAssertEqual(controller.racingFeedbackPresentationDiagnostics.consumedEventCount, 1)
+        XCTAssertEqual(controller.racingFeedbackPresentationDiagnostics.sourceEventCount, 1)
+        XCTAssertEqual(controller.racingFeedbackPresentationDiagnostics.duplicateEventCount, 0)
+        XCTAssertTrue(controller.racingFeedbackPresentationDiagnostics.isBounded)
+
+        controller.stop()
+
+        XCTAssertEqual(controller.racingFeedbackPresentationDiagnostics.activeCueCount, 0)
+        XCTAssertTrue(controller.racingFeedbackPresentationDiagnostics.isBounded)
+    }
+
     func testLaunchConfigurationParsesOnlySupportedExplicitValues() {
         let supported = SG8SensoryLaunchConfiguration(
             arguments: [

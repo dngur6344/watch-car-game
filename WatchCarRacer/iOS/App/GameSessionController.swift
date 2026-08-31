@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 
 enum RunPresentationPhase: Equatable, Sendable {
     case countdown(Int)
@@ -12,6 +13,21 @@ enum GameSessionLifecyclePhase: Equatable, Sendable {
     case active
     case inactive
     case background
+}
+
+struct RacingFeedbackPresentationDiagnostics: Equatable, Sendable {
+    static let cueCapacity = 1
+
+    let activeCueCount: Int
+    let consumedEventCount: Int
+    let sourceEventCount: Int
+    let duplicateEventCount: Int
+
+    var isBounded: Bool {
+        activeCueCount <= Self.cueCapacity
+            && consumedEventCount == sourceEventCount
+            && duplicateEventCount == 0
+    }
 }
 
 @MainActor
@@ -36,6 +52,10 @@ final class GameSessionController {
     private(set) var fallbackBannerText: String?
     private(set) var feedbackDeliveryFailures = 0
     private(set) var startCuePresentation: StartCuePresentation?
+    private(set) var nearMissFeedbackPresentation: GameFeedback?
+    private(set) var environmentQualityTier: RacingEnvironmentQualityTier
+    private(set) var environmentQualityRunID: UInt64 = 0
+    private(set) var adaptiveEnvironmentQualityState: RacingEnvironmentAdaptiveQualityState
 #if DEBUG
     private(set) var framesPerSecond: Double?
     private(set) var averageFramesPerSecond: Double?
@@ -69,6 +89,10 @@ final class GameSessionController {
     @ObservationIgnored private let resultRecorder: ResultRecorder
     @ObservationIgnored private let makeStartCueEventID: @MainActor () -> UUID
     @ObservationIgnored private let gameLoopDriver: GameLoopDriver
+    @ObservationIgnored private let initialEnvironmentQualityTier: @MainActor () -> RacingEnvironmentQualityTier
+    @ObservationIgnored private let adaptiveQualityNotificationCenter: NotificationCenter
+    @ObservationIgnored private let adaptiveQualityProcessInfo: ProcessInfo
+    @ObservationIgnored private var adaptiveQualityObservers: [NSObjectProtocol] = []
     @ObservationIgnored private var inputRouter = SteeringInputRouter()
     @ObservationIgnored private var feedbackCoordinator: GameFeedbackCoordinator
     @ObservationIgnored private var fallbackBannerExpiration: TimeInterval?
@@ -78,6 +102,10 @@ final class GameSessionController {
     @ObservationIgnored private var countdownTask: Task<Void, Never>?
     @ObservationIgnored private var startCueGeneration: UInt64 = 0
     @ObservationIgnored private var startCueTask: Task<Void, Never>?
+    @ObservationIgnored private var nearMissFeedbackGeneration: UInt64 = 0
+    @ObservationIgnored private var nearMissFeedbackTask: Task<Void, Never>?
+    @ObservationIgnored private var presentedNearMissFeedbackIDs: Set<UUID> = []
+    @ObservationIgnored private var duplicateNearMissFeedbackCount = 0
     @ObservationIgnored private var collisionGeneration: UInt64 = 0
     @ObservationIgnored private var collisionTask: Task<Void, Never>?
     @ObservationIgnored private var didRecordResult = false
@@ -117,6 +145,11 @@ final class GameSessionController {
         collisionSleeper: @escaping DurationSleeper = { duration in
             try await Task.sleep(for: .seconds(duration))
         },
+        initialEnvironmentQualityTier: @escaping @MainActor () -> RacingEnvironmentQualityTier = {
+            RacingEnvironmentQualityProductionAdapter.initialTier()
+        },
+        adaptiveQualityNotificationCenter: NotificationCenter = .default,
+        adaptiveQualityProcessInfo: ProcessInfo = .processInfo,
         resultRecorder: @escaping ResultRecorder = { score in
             RunResult(
                 score: score,
@@ -156,7 +189,15 @@ final class GameSessionController {
         self.countdownSleeper = countdownSleeper
         self.presentationSleeper = presentationSleeper
         self.collisionSleeper = collisionSleeper
+        self.initialEnvironmentQualityTier = initialEnvironmentQualityTier
+        self.adaptiveQualityNotificationCenter = adaptiveQualityNotificationCenter
+        self.adaptiveQualityProcessInfo = adaptiveQualityProcessInfo
         self.resultRecorder = resultRecorder
+        let initialTier = initialEnvironmentQualityTier()
+        environmentQualityTier = initialTier
+        adaptiveEnvironmentQualityState = RacingEnvironmentAdaptiveQualityState(
+            initialTier: initialTier
+        )
 
         if controlRoute == .touchOnly {
             steeringSnapshot = SteeringSnapshot(
@@ -175,11 +216,10 @@ final class GameSessionController {
         scene.frameHandler = { [weak self] snapshot, presentationEvents in
             self?.receive(snapshot: snapshot, presentationEvents: presentationEvents)
         }
-#if DEBUG
         scene.frameRateHandler = { [weak self] framesPerSecond in
             self?.receiveFrameRate(framesPerSecond)
         }
-#endif
+        installAdaptiveQualityObservers()
         receive(snapshot: scene.currentSnapshot, events: [])
         scene.isPaused = true
         audioDirector?.beginAttempt()
@@ -209,6 +249,11 @@ final class GameSessionController {
         collisionSleeper: @escaping DurationSleeper = { duration in
             try await Task.sleep(for: .seconds(duration))
         },
+        initialEnvironmentQualityTier: @escaping @MainActor () -> RacingEnvironmentQualityTier = {
+            RacingEnvironmentQualityProductionAdapter.initialTier()
+        },
+        adaptiveQualityNotificationCenter: NotificationCenter = .default,
+        adaptiveQualityProcessInfo: ProcessInfo = .processInfo,
         resultRecorder: @escaping ResultRecorder = { score in
             RunResult(
                 score: score,
@@ -241,6 +286,9 @@ final class GameSessionController {
                 countdownSleeper: countdownSleeper,
                 presentationSleeper: presentationSleeper,
                 collisionSleeper: collisionSleeper,
+                initialEnvironmentQualityTier: initialEnvironmentQualityTier,
+                adaptiveQualityNotificationCenter: adaptiveQualityNotificationCenter,
+                adaptiveQualityProcessInfo: adaptiveQualityProcessInfo,
                 resultRecorder: resultRecorder
             )
         } catch {
@@ -290,7 +338,9 @@ final class GameSessionController {
         lastEvent = nil
         feedbackDeliveryFailures = 0
         feedbackCoordinator.reset()
+        resetNearMissFeedbackPresentation()
         didRecordResult = false
+        resetAdaptiveEnvironmentQualityForNewRun()
         audioDirector?.beginAttempt()
         // Retrying the same session intentionally reuses its seed for a reproducible run.
         scene.isPaused = true
@@ -313,6 +363,18 @@ final class GameSessionController {
         startCueTask != nil
     }
 
+    var racingFeedbackPresentationDiagnostics: RacingFeedbackPresentationDiagnostics {
+        RacingFeedbackPresentationDiagnostics(
+            activeCueCount: nearMissFeedbackPresentation == nil ? 0 : 1,
+            consumedEventCount: presentedNearMissFeedbackIDs.count,
+            sourceEventCount: scene.presentedFeedback.count {
+                if case .nearMiss = $0.kind { return true }
+                return false
+            },
+            duplicateEventCount: duplicateNearMissFeedbackCount
+        )
+    }
+
     var hasActiveCollisionTask: Bool {
         collisionTask != nil
     }
@@ -326,6 +388,7 @@ final class GameSessionController {
             gameLoopDriver.stop()
             invalidateCountdown()
             invalidateStartCue()
+            invalidateNearMissFeedbackPresentation()
             touchSteering.reset()
             if case let .collision(result) = presentationPhase {
                 promoteCollisionToResult(result)
@@ -357,10 +420,12 @@ final class GameSessionController {
         gameLoopDriver.stop()
         invalidateCountdown()
         invalidateStartCue()
+        invalidateNearMissFeedbackPresentation()
         invalidateCollision()
         touchSteering.reset()
         scene.isPaused = true
         scene.stopPresentation()
+        removeAdaptiveQualityObservers()
     }
 
     func startGameLoop() {
@@ -444,6 +509,7 @@ final class GameSessionController {
         for feedback in feedbackEvents {
             switch feedback.kind {
             case .nearMiss:
+                presentNearMissFeedback(feedback)
                 audioDirector?.play(
                     .nearMiss,
                     eventID: feedback.eventID,
@@ -452,6 +518,7 @@ final class GameSessionController {
                     gain: nearMissAudioGain(for: feedback)
                 )
             case .collision:
+                invalidateNearMissFeedbackPresentation()
                 audioDirector?.transition(to: .impact)
                 let closeness = feedback.spatialContext?.closeness ?? 0
                 audioDirector?.play(
@@ -584,6 +651,7 @@ final class GameSessionController {
         }
         countdownTask = nil
         presentationPhase = .racing
+        adaptiveEnvironmentQualityState.beginRacing(at: currentTime())
         audioDirector?.transition(to: .racing)
         scene.isPaused = false
         emitStartCue(.go)
@@ -661,6 +729,46 @@ final class GameSessionController {
         startCueTask?.cancel()
         startCueTask = nil
         startCuePresentation = nil
+    }
+
+    private func presentNearMissFeedback(_ feedback: GameFeedback) {
+        guard presentedNearMissFeedbackIDs.insert(feedback.eventID).inserted else {
+            duplicateNearMissFeedbackCount += 1
+            return
+        }
+        invalidateNearMissFeedbackPresentation()
+        nearMissFeedbackPresentation = feedback
+        let generation = nearMissFeedbackGeneration
+        nearMissFeedbackTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(680))
+            guard !Task.isCancelled else { return }
+            self?.removeNearMissFeedbackPresentation(
+                id: feedback.eventID,
+                generation: generation
+            )
+        }
+    }
+
+    private func removeNearMissFeedbackPresentation(id: UUID, generation: UInt64) {
+        guard nearMissFeedbackGeneration == generation,
+              nearMissFeedbackPresentation?.eventID == id else {
+            return
+        }
+        nearMissFeedbackTask = nil
+        nearMissFeedbackPresentation = nil
+    }
+
+    private func invalidateNearMissFeedbackPresentation() {
+        nearMissFeedbackGeneration &+= 1
+        nearMissFeedbackTask?.cancel()
+        nearMissFeedbackTask = nil
+        nearMissFeedbackPresentation = nil
+    }
+
+    private func resetNearMissFeedbackPresentation() {
+        invalidateNearMissFeedbackPresentation()
+        presentedNearMissFeedbackIDs.removeAll(keepingCapacity: true)
+        duplicateNearMissFeedbackCount = 0
     }
 
     private func beginCollisionTransition(result: RunResult) {
@@ -751,11 +859,100 @@ final class GameSessionController {
         }
     }
 
-#if DEBUG
     private func receiveFrameRate(_ value: Double) {
         guard presentationPhase == .racing, value.isFinite, value > 0 else {
             return
         }
+        applyAdaptiveQualityTransition(
+            adaptiveEnvironmentQualityState.receiveFrameRateSample(
+                value,
+                at: currentTime()
+            )
+        )
+#if DEBUG
+        recordFrameRateDiagnostic(value)
+#endif
+    }
+
+    func receiveEnvironmentFrameRateSample(_ value: Double, at timestamp: TimeInterval) {
+        guard presentationPhase == .racing else { return }
+        applyAdaptiveQualityTransition(
+            adaptiveEnvironmentQualityState.receiveFrameRateSample(value, at: timestamp)
+        )
+    }
+
+    func receiveEnvironmentThermalState(
+        _ state: RacingEnvironmentThermalState,
+        at timestamp: TimeInterval? = nil
+    ) {
+        applyAdaptiveQualityTransition(
+            adaptiveEnvironmentQualityState.receiveThermalState(state, at: timestamp)
+        )
+    }
+
+    func receiveEnvironmentMemoryWarning(at timestamp: TimeInterval? = nil) {
+        applyAdaptiveQualityTransition(
+            adaptiveEnvironmentQualityState.receiveMemoryWarning(at: timestamp)
+        )
+    }
+
+    private func resetAdaptiveEnvironmentQualityForNewRun() {
+        let tier = initialEnvironmentQualityTier()
+        adaptiveEnvironmentQualityState.reset(initialTier: tier)
+        environmentQualityTier = tier
+        environmentQualityRunID &+= 1
+    }
+
+    var adaptiveQualityObserverCount: Int {
+        adaptiveQualityObservers.count
+    }
+
+    private func applyAdaptiveQualityTransition(
+        _ transition: RacingEnvironmentQualityTransition?
+    ) {
+        guard let transition else { return }
+        environmentQualityTier = transition.toTier
+        RacingEnvironmentQualityTransitionLogger.log(transition)
+    }
+
+    private func installAdaptiveQualityObservers() {
+        let thermalObserver = adaptiveQualityNotificationCenter.addObserver(
+            forName: ProcessInfo.thermalStateDidChangeNotification,
+            object: adaptiveQualityProcessInfo,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.receiveEnvironmentThermalState(
+                    RacingEnvironmentQualityProductionAdapter.thermalState(
+                        self.adaptiveQualityProcessInfo.thermalState
+                    ),
+                    at: self.currentTime()
+                )
+            }
+        }
+        let memoryObserver = adaptiveQualityNotificationCenter.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.receiveEnvironmentMemoryWarning(at: self.currentTime())
+            }
+        }
+        adaptiveQualityObservers = [thermalObserver, memoryObserver]
+    }
+
+    private func removeAdaptiveQualityObservers() {
+        for observer in adaptiveQualityObservers {
+            adaptiveQualityNotificationCenter.removeObserver(observer)
+        }
+        adaptiveQualityObservers.removeAll()
+    }
+
+#if DEBUG
+    private func recordFrameRateDiagnostic(_ value: Double) {
         framesPerSecond = value
         frameRateSampleCount += 1
         frameRateSum += value

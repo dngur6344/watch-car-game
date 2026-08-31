@@ -91,6 +91,7 @@ final class GameAssetLibraryTests: XCTestCase {
                     $0.hasSuffix(".png")
                         && !$0.hasPrefix("Presentation/")
                         && !$0.hasPrefix("Racing3D/")
+                        && !$0.hasPrefix("RacingEnvironment3D/")
                 }
         )
         XCTAssertEqual(declaredFiles, productionFiles)

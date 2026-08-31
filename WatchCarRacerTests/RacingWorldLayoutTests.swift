@@ -275,7 +275,7 @@ final class RacingWorldLayoutTests: XCTestCase {
 
         XCTAssertEqual(
             pose.target.x,
-            Float(1.4) * 0.42 + curve.position.x * 0.56,
+            Float(1.4) * 0.38 + curve.position.x * 0.62,
             accuracy: 0.000_1
         )
         XCTAssertLessThan(pose.roll, 0)
@@ -299,6 +299,36 @@ final class RacingWorldLayoutTests: XCTestCase {
         XCTAssertTrue(pose.target.z.isFinite)
     }
 
+    func testCinematicSpeedIntensityRespectsAccessibilityAndClampsInput() {
+        let calm = RacingWorldLayout.cinematicSpeedIntensity(
+            speedProgress: 0,
+            effectLevel: .balanced
+        )
+        let fast = RacingWorldLayout.cinematicSpeedIntensity(
+            speedProgress: 1,
+            effectLevel: .balanced
+        )
+        let reduced = RacingWorldLayout.cinematicSpeedIntensity(
+            speedProgress: 1,
+            effectLevel: .reduced
+        )
+        let disabled = RacingWorldLayout.cinematicSpeedIntensity(
+            speedProgress: 1,
+            effectLevel: .off
+        )
+        let invalid = RacingWorldLayout.cinematicSpeedIntensity(
+            speedProgress: .nan,
+            effectLevel: .balanced
+        )
+
+        XCTAssertEqual(calm, 0)
+        XCTAssertEqual(fast, 1, accuracy: 0.000_1)
+        XCTAssertGreaterThan(fast, reduced)
+        XCTAssertGreaterThan(reduced, 0)
+        XCTAssertEqual(disabled, 0)
+        XCTAssertEqual(invalid, 0)
+    }
+
     func testSunlightDirectionMovesSmoothlyAndSanitizesInvalidInput() {
         let start = RacingSunlightModel.state(travel: 0, steering: 0)
         let nextFrame = RacingSunlightModel.state(travel: 0.5, steering: 0)
@@ -309,8 +339,10 @@ final class RacingWorldLayoutTests: XCTestCase {
         XCTAssertLessThan(simd_distance(start.direction, nextFrame.direction), 0.001)
         XCTAssertGreaterThan(simd_distance(start.direction, later.direction), 0.01)
         XCTAssertGreaterThan(start.sourcePosition.y, start.target.y)
-        XCTAssertGreaterThan(start.intensity, 16_000)
-        XCTAssertLessThan(start.intensity, 21_000)
+        XCTAssertGreaterThan(start.intensity, 13_000)
+        XCTAssertLessThan(start.intensity, 17_000)
+        XCTAssertGreaterThan(start.rimIntensity, 3_000)
+        XCTAssertLessThan(start.rimIntensity, 4_500)
 
         for value in [
             invalid.sourcePosition.x,
@@ -320,6 +352,13 @@ final class RacingWorldLayoutTests: XCTestCase {
             invalid.direction.y,
             invalid.direction.z,
             invalid.intensity,
+            invalid.rimSourcePosition.x,
+            invalid.rimSourcePosition.y,
+            invalid.rimSourcePosition.z,
+            invalid.rimColor.x,
+            invalid.rimColor.y,
+            invalid.rimColor.z,
+            invalid.rimIntensity,
             invalid.glarePosition.x,
             invalid.glarePosition.y,
             invalid.glareOpacity,
@@ -360,14 +399,14 @@ final class RacingWorldLayoutTests: XCTestCase {
 
     func testRacing3DAssetsMatchAuthoredHashesAndUSDZContract() throws {
         let expectedHashes = [
-            "rally_racer.usda": "94e23ae4da95829c7f086c228a933008f437be2f94cbaf5bbaf058c6b9a51f13",
-            "rally_racer.usdz": "753b0ca8836d3d3e0851189620b06afca8eaa1a306c638af458a019b1dba90e3",
-            "gt_racer.usda": "2cb6bbdc27dbecd520964342229c4dad8c05f3260162eae3c6d55f965771c970",
-            "gt_racer.usdz": "248920909bd2bbbcecf699893ea69faf54186fd7864ef327ddb41541095b73e0",
-            "angular_racer.usda": "8de9be3e5949d626c75fde413f1c7fa43c7d49df8a0e0dc38f119fdece950bd6",
-            "angular_racer.usdz": "6398420dc8311c92fefc57b8c517f490b0fcc72a6e458c54efe01aa9f7b67248",
-            "traffic_sedan_3d.usda": "fa46f51149f3f39ba92859bdc9154a60dad6bb5afe8dbb5ff8c4822ea4c76f03",
-            "traffic_sedan_3d.usdz": "1fdb141d516f08efb9dc8f80f32047b4f30467a637397cf876e75546245a008d",
+            "rally_racer.usda": "78d050e14ced0f760bb9c9890ac07bb2a9e73078bc91a92e6304394a93396a7f",
+            "rally_racer.usdz": "be6c9cbe491dfb49d2ffb1f9df693801fbabbb2a6bd35bef36af293f85a802c7",
+            "gt_racer.usda": "d565b0533610899661397a2cd638ac9cce22988945d2f22adb7bd294a7896ccc",
+            "gt_racer.usdz": "a063100e6a9f3c98e14c7d1589a9b8fbbedffe3e9645ca7bd9ec8e8e2c820832",
+            "angular_racer.usda": "16387b335acda03874ae4000ede6b87944bfe561a5222ed1a73556fa176d30a3",
+            "angular_racer.usdz": "3534290018452fb5ff0c166e35f1b2e6581024bbf64eaa95c5b59240ec8e5ca6",
+            "traffic_sedan_3d.usda": "dd6e027c81a15be7c685f37bf908894ddb918cefadbe11ce26198a113a3e4327",
+            "traffic_sedan_3d.usdz": "e16125cf69a140ef44593d25028b57983e5d89bb94f5ce9711dcc88cb6f7fb26",
             "track_barrier.usda": "2d5009eea05facd538fbf364a4e1a9c7a7618b70593df60f0b43bc68c3feb68f",
             "track_barrier.usdz": "911fc70d5e295cbd442a721af73d2b3e9a6369772aea24d075120833e36c57ea",
             "asphalt_normal.png": "c978c6d71292bb1bf012bd6e527cf74fe4ba758177fab50ad53f3634b8d9f571",
@@ -409,7 +448,11 @@ final class RacingWorldLayoutTests: XCTestCase {
                 package.range(of: Data("defaultPrim = \"\(contract.root)\"".utf8)),
                 filename
             )
-            XCTAssertNotNil(package.range(of: Data("productionRevision = 2".utf8)), filename)
+            let revision = filename == "track_barrier.usdz" ? 2 : 3
+            XCTAssertNotNil(
+                package.range(of: Data("productionRevision = \(revision)".utf8)),
+                filename
+            )
         }
         XCTAssertLessThan(packagedBytes, 512 * 1_024)
     }
@@ -474,10 +517,10 @@ final class RacingWorldLayoutTests: XCTestCase {
     @MainActor
     func testEveryProductionUSDZLoadsAndExposesRequiredRuntimeParts() async throws {
         let contracts = [
-            "rally_racer": ["paint_body_shell", "glass_canopy", "wheel_front_left", "paint_spoiler"],
-            "gt_racer": ["paint_body_shell", "glass_canopy", "wheel_rear_right", "paint_ducktail"],
-            "angular_racer": ["paint_body_shell", "glass_canopy", "wheel_front_right", "paint_spoiler"],
-            "traffic_sedan_3d": ["paint_body_shell", "glass_canopy", "wheel_rear_left", "paint_rear_lip"],
+            "rally_racer": ["paint_body_shell", "glass_canopy", "wheel_front_left", "paint_spoiler", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
+            "gt_racer": ["paint_body_shell", "glass_canopy", "wheel_rear_right", "paint_ducktail", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
+            "angular_racer": ["paint_body_shell", "glass_canopy", "wheel_front_right", "paint_spoiler", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
+            "traffic_sedan_3d": ["paint_body_shell", "glass_canopy", "wheel_rear_left", "paint_rear_lip", "rear_light_recess", "tire_sidewall", "rim_outer"],
             "track_barrier": ["dark_base", "panel_0", "reflector_4", "foot_right"],
         ]
 

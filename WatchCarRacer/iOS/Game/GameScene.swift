@@ -4,9 +4,7 @@ import SpriteKit
 final class GameScene: SKScene {
     typealias SteeringProvider = @MainActor (TimeInterval) -> Double
     typealias FrameHandler = @MainActor (GameSnapshot, [GameEventPresentation]) -> Void
-#if DEBUG
     typealias FrameRateHandler = @MainActor (Double) -> Void
-#endif
 
     static let fixedStep: TimeInterval = 1.0 / 60.0
     static let maximumStepsPerFrame = 5
@@ -22,15 +20,11 @@ final class GameScene: SKScene {
     static let collisionRecoilEndTime: TimeInterval = 0.405
     static let collisionSettleEndTime: TimeInterval = 0.500
     static let collisionTotalDuration: TimeInterval = 0.520
-#if DEBUG
     static let frameRateReportingInterval: TimeInterval = 1
-#endif
 
     var steeringProvider: SteeringProvider = { _ in 0 }
     var frameHandler: FrameHandler?
-#if DEBUG
     var frameRateHandler: FrameRateHandler?
-#endif
 
     private(set) var currentSnapshot: GameSnapshot
     private(set) var reduceMotionEnabled = false
@@ -52,10 +46,8 @@ final class GameScene: SKScene {
     private var accumulatedTime: TimeInterval = 0
     private var routedSteering: Double = 0
     private var didBuildScene = false
-#if DEBUG
     private var frameRateFrameCount = 0
     private var frameRateElapsedTime: TimeInterval = 0
-#endif
 
     private let continuousCameraNode = SKNode()
     private let impactCameraNode = SKNode()
@@ -245,9 +237,7 @@ final class GameScene: SKScene {
 
         self.previousUpdateTime = currentTime
         let elapsedFrameTime = max(currentTime - previousUpdateTime, 0)
-#if DEBUG
         updateFrameRateDiagnostic(elapsedFrameTime: elapsedFrameTime)
-#endif
         let frameTime = min(elapsedFrameTime, 0.25)
         let maximumAccumulatedTime = Self.fixedStep * Double(Self.maximumStepsPerFrame)
         accumulatedTime = min(accumulatedTime + frameTime, maximumAccumulatedTime)
@@ -282,10 +272,8 @@ final class GameScene: SKScene {
         currentSnapshot = simulation.snapshot
         previousUpdateTime = nil
         accumulatedTime = 0
-#if DEBUG
         frameRateFrameCount = 0
         frameRateElapsedTime = 0
-#endif
         presentedFeedbackIDs.removeAll(keepingCapacity: true)
         presentedFeedback.removeAll(keepingCapacity: true)
         routedSteering = 0
@@ -336,7 +324,6 @@ final class GameScene: SKScene {
         resetCollisionPresentation()
     }
 
-#if DEBUG
     private func updateFrameRateDiagnostic(elapsedFrameTime: TimeInterval) {
         guard elapsedFrameTime > 0 else {
             return
@@ -351,13 +338,16 @@ final class GameScene: SKScene {
         frameRateFrameCount = 0
         frameRateElapsedTime = 0
     }
-#endif
 
     func present(_ feedback: GameFeedback) {
         guard presentedFeedbackIDs.insert(feedback.eventID).inserted else {
             return
         }
         presentedFeedback.append(feedback)
+        if case .nearMiss = feedback.kind {
+            visibleNearMissSide = feedback.spatialContext?.side ?? .center
+            visibleNearMissGrade = feedback.nearMissGrade ?? .standard
+        }
         guard didBuildScene else {
             return
         }

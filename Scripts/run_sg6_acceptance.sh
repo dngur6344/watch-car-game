@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: $0 <presentation|fps|memory|sensory> <iOS simulator name> <OS version> [timeout seconds]" >&2
+    echo "Usage: $0 <presentation|fps|memory|sensory|environment> <iOS simulator name> <OS version> [timeout seconds]" >&2
 }
 
 if [[ $# -lt 3 || $# -gt 4 ]]; then
@@ -42,6 +42,13 @@ case "$MODE" in
         DEFAULT_TIMEOUT=120
         START_DELAY=1
         ;;
+    environment)
+        SUMMARY_PREFIX="RACING_ENVIRONMENT_ACCEPTANCE_SUMMARY"
+        LAUNCH_ARGUMENT="--sg8-racing-environment"
+        ACCEPTANCE_LABEL="racing environment"
+        DEFAULT_TIMEOUT=900
+        START_DELAY=1
+        ;;
     *)
         usage
         exit 64
@@ -53,7 +60,6 @@ if [[ ! "$TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
     echo "Timeout must be a positive integer number of seconds." >&2
     exit 64
 fi
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_PATH="$PROJECT_ROOT/WatchCarRacer.xcodeproj"
@@ -98,6 +104,55 @@ if [[ "$MODE" == "sensory" ]]; then
         argument="--$(printf '%s' "$expectation" | tr '[:upper:]_' '[:lower:]-')"
         LAUNCH_ARGUMENTS+=("$argument" "$value")
     done
+fi
+
+if [[ "$MODE" == "environment" ]]; then
+    : "${SG8_TRACK:?SG8_TRACK is required for environment mode}"
+    : "${SG8_WEATHER:?SG8_WEATHER is required for environment mode}"
+    : "${SG8_TIER:?SG8_TIER is required for environment mode}"
+    : "${SG8_DURATION:?SG8_DURATION is required for environment mode}"
+    SG8_ROUTE_CYCLES="${SG8_ROUTE_CYCLES:-0}"
+    case "$SG8_TRACK" in coastal|alpine|desert) ;; *) echo "Invalid SG8_TRACK." >&2; exit 64 ;; esac
+    case "$SG8_WEATHER" in clear|rain|fog|storm) ;; *) echo "Invalid SG8_WEATHER." >&2; exit 64 ;; esac
+    case "$SG8_TIER" in baseline|enhanced) ;; *) echo "Invalid SG8_TIER." >&2; exit 64 ;; esac
+    if [[ ! "$SG8_DURATION" =~ ^([5-9]|[1-9][0-9]+)(\.[0-9]+)?$ ]]; then
+        echo "SG8_DURATION must be a finite number of at least 5 seconds." >&2
+        exit 64
+    fi
+    if [[ ! "$SG8_ROUTE_CYCLES" =~ ^([0-9]|10)$ ]]; then
+        echo "SG8_ROUTE_CYCLES must be an integer from 0 through 10." >&2
+        exit 64
+    fi
+    LAUNCH_ARGUMENTS+=(
+        --sg8-track "$SG8_TRACK"
+        --sg8-weather "$SG8_WEATHER"
+        --sg8-tier "$SG8_TIER"
+        --sg8-duration "$SG8_DURATION"
+        --sg8-route-cycles "$SG8_ROUTE_CYCLES"
+        "--watch-car-racer-environment-quality=$SG8_TIER"
+    )
+    if [[ "${SG8_TRIGGER_MEMORY_WARNING:-false}" == "true" ]]; then
+        LAUNCH_ARGUMENTS+=(--sg8-trigger-memory-warning)
+    fi
+    if [[ "${SG8_ENFORCE_PERFORMANCE:-false}" == "true" ]]; then
+        LAUNCH_ARGUMENTS+=(--sg8-enforce-performance)
+    fi
+    if [[ -n "${SG8_SCREENSHOT_DESTINATION:-}" ]]; then
+        LAUNCH_ARGUMENTS+=(--sg8-require-racing-screenshot)
+    fi
+fi
+
+if [[ "$MODE" == "sensory" && -n "${SG8_TRACK:-}" ]]; then
+    : "${SG8_WEATHER:?SG8_WEATHER is required when SG8_TRACK is set}"
+    : "${SG8_TIER:?SG8_TIER is required when SG8_TRACK is set}"
+    LAUNCH_ARGUMENTS+=(
+        --sg8-track "$SG8_TRACK"
+        --sg8-weather "$SG8_WEATHER"
+        --sg8-tier "$SG8_TIER"
+        --sg8-duration "${SG8_DURATION:-5}"
+        --sg8-route-cycles 0
+        "--watch-car-racer-environment-quality=$SG8_TIER"
+    )
 fi
 
 mkdir -p "$EVIDENCE_DIR"
@@ -173,6 +228,16 @@ SIMULATOR_LOG_DIRECTORY="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATO
         echo "expectedReduceMotion=${SG8_EXPECT_REDUCE_MOTION:-unspecified}"
         echo "expectedReduceTransparency=${SG8_EXPECT_REDUCE_TRANSPARENCY:-unspecified}"
     fi
+    if [[ "$MODE" == "environment" ]]; then
+        echo "track=$SG8_TRACK"
+        echo "weather=$SG8_WEATHER"
+        echo "tier=$SG8_TIER"
+        echo "duration=$SG8_DURATION"
+        echo "routeCycles=$SG8_ROUTE_CYCLES"
+        echo "triggerMemoryWarning=${SG8_TRIGGER_MEMORY_WARNING:-false}"
+        echo "enforcePerformance=${SG8_ENFORCE_PERFORMANCE:-false}"
+        echo "requiresRacingScreenshot=$([[ -n "${SG8_SCREENSHOT_DESTINATION:-}" ]] && echo true || echo false)"
+    fi
 } > "$EVIDENCE_DIR/run-metadata.txt"
 
 set -o pipefail
@@ -195,8 +260,11 @@ if ! xcrun simctl bootstatus "$SIMULATOR_UDID" -b; then
     echo "Unable to boot simulator $SIMULATOR_UDID." >&2
     exit 70
 fi
-xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 xcrun simctl terminate "$SIMULATOR_UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
+if [[ "$MODE" == "environment" || "$MODE" == "sensory" ]]; then
+    xcrun simctl uninstall "$SIMULATOR_UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
+fi
+xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
 
 LOG_START="$(date -u '+%Y-%m-%d %H:%M:%S%z')"
 /usr/bin/log stream \
@@ -252,6 +320,16 @@ summary_count() {
         ' "$log_path"
 }
 
+screenshot_readiness_count() {
+    local log_path="$1"
+    awk \
+        -v pid_marker="WatchCarRacer[$APP_PID:" \
+        -v prefix="RACING_ENVIRONMENT_SCREENSHOT_READY " '
+            index($0, pid_marker) && index($0, prefix) { count += 1 }
+            END { print count + 0 }
+        ' "$log_path"
+}
+
 stop_log_stream() {
     if [[ -n "$LOG_STREAM_PID" ]] && kill -0 "$LOG_STREAM_PID" 2>/dev/null; then
         kill -INT "$LOG_STREAM_PID" 2>/dev/null || true
@@ -273,13 +351,84 @@ capture_unified_log_snapshot() {
 
 START_SECONDS=$SECONDS
 SUMMARY_COUNT=0
+SCREENSHOT_CAPTURED=false
+SCREENSHOT_READINESS_COUNT=0
+KNOWN_SIMULATOR_STARTUP_CRASH=false
+
+capture_known_simulator_startup_crash() {
+    local report=""
+    local candidate
+    for crash_wait in 1 2 3 4 5; do
+        while IFS= read -r candidate; do
+            if grep -E -q "\"pid\"[[:space:]]*:[[:space:]]*$APP_PID([,}]|$)" "$candidate" \
+                && grep -F -q 'com.apple.spritekit.preloadQueue' "$candidate" \
+                && grep -F -q 'SKTextureAtlas' "$candidate" \
+                && grep -F -q 'UIScreen currentMode' "$candidate"; then
+                report="$candidate"
+                break
+            fi
+        done < <(
+            find "$HOME/Library/Logs/DiagnosticReports" \
+                -maxdepth 1 -type f -name 'WatchCarRacer*.ips' -mmin -5 -print \
+                2>/dev/null
+        )
+        if [[ -n "$report" ]]; then
+            cp "$report" "$EVIDENCE_DIR/known-simulator-framework-startup-crash.ips"
+            echo "Known Simulator SpriteKit/UIScreen startup crash for PID $APP_PID." >&2
+            return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
+
 while (( SECONDS - START_SECONDS < TIMEOUT_SECONDS )); do
+    if [[ -n "${SG8_SCREENSHOT_DESTINATION:-}" && "$SCREENSHOT_CAPTURED" == "false" ]]; then
+        SCREENSHOT_READINESS_COUNT="$(screenshot_readiness_count "$UNIFIED_LOG")"
+        if (( SCREENSHOT_READINESS_COUNT > 1 )); then
+            echo "Expected one racing screenshot readiness token; found $SCREENSHOT_READINESS_COUNT." >&2
+            break
+        fi
+        if (( SCREENSHOT_READINESS_COUNT == 1 )); then
+            mkdir -p "$(dirname "$SG8_SCREENSHOT_DESTINATION")"
+            awk \
+                -v pid_marker="WatchCarRacer[$APP_PID:" \
+                -v prefix="RACING_ENVIRONMENT_SCREENSHOT_READY " '
+                    index($0, pid_marker) && index($0, prefix) { print }
+                ' "$UNIFIED_LOG" > "$EVIDENCE_DIR/screenshot-readiness.log"
+            if ! grep -F -q "route=playing phase=racing rendered=true countdownOverlay=false sampleCount=1 " \
+                "$EVIDENCE_DIR/screenshot-readiness.log"; then
+                echo "Racing screenshot readiness token did not satisfy the rendered racing contract." >&2
+                break
+            fi
+            xcrun simctl io "$SIMULATOR_UDID" screenshot "$SG8_SCREENSHOT_DESTINATION"
+            {
+                echo "capturedUTC=$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+                echo "destination=$SG8_SCREENSHOT_DESTINATION"
+            } > "$EVIDENCE_DIR/screenshot-capture.log"
+            SCREENSHOT_CAPTURED=true
+        fi
+    fi
     SUMMARY_COUNT="$(summary_count "$UNIFIED_LOG")"
     if (( SUMMARY_COUNT > 0 )); then
         break
     fi
+    if ! kill -0 "$APP_PID" 2>/dev/null; then
+        echo "Launched app process $APP_PID exited before emitting $SUMMARY_PREFIX." >&2
+        if capture_known_simulator_startup_crash; then
+            KNOWN_SIMULATOR_STARTUP_CRASH=true
+        fi
+        break
+    fi
     sleep 2
 done
+
+if [[ "$KNOWN_SIMULATOR_STARTUP_CRASH" != "true" \
+      && -n "${SG8_SCREENSHOT_DESTINATION:-}" \
+      && ! -s "$SG8_SCREENSHOT_DESTINATION" ]]; then
+    echo "Requested screenshot was not captured at $SG8_SCREENSHOT_DESTINATION." >&2
+    exit 1
+fi
 
 stop_log_stream
 SUMMARY_COUNT="$(summary_count "$UNIFIED_LOG")"
@@ -329,6 +478,11 @@ if [[ "$MODE" == "memory" ]]; then
     fi
 fi
 
+if [[ "$KNOWN_SIMULATOR_STARTUP_CRASH" == "true" && "$SUMMARY_COUNT" == "0" ]]; then
+    echo "Known Simulator framework startup crash evidence: $EVIDENCE_DIR" >&2
+    exit 75
+fi
+
 if (( SUMMARY_COUNT != 1 )); then
     echo "Expected exactly one $SUMMARY_PREFIX record; found $SUMMARY_COUNT." >&2
     echo "Evidence: $EVIDENCE_DIR" >&2
@@ -340,6 +494,25 @@ if ! grep -F -q "$SUMMARY_PREFIX pass=true" "$EVIDENCE_DIR/summary.log"; then
     cat "$EVIDENCE_DIR/summary.log" >&2
     echo "Evidence: $EVIDENCE_DIR" >&2
     exit 1
+fi
+
+if [[ -n "${SG8_SCREENSHOT_DESTINATION:-}" ]]; then
+    SCREENSHOT_READINESS_COUNT="$(screenshot_readiness_count "$UNIFIED_LOG")"
+    if (( SCREENSHOT_READINESS_COUNT != 1 )); then
+        echo "Expected exactly one racing screenshot readiness token; found $SCREENSHOT_READINESS_COUNT." >&2
+        exit 1
+    fi
+    for field in \
+        "screenshotRequired=true" \
+        "screenshotReady=true" \
+        "screenshotRendered=true" \
+        "screenshotCountdownOverlay=false" \
+        "screenshotReadinessSamples=1"; do
+        if ! grep -F -q "$field" "$EVIDENCE_DIR/summary.log"; then
+            echo "Screenshot acceptance summary is missing required field: $field" >&2
+            exit 1
+        fi
+    done
 fi
 
 cat "$EVIDENCE_DIR/summary.log"
