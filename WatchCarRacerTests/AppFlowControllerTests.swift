@@ -46,6 +46,41 @@ final class AppFlowControllerTests: XCTestCase {
         )
     }
 
+    func testCPUSprintSelectionPassesOneToThreeRivalsIntoSessionConfiguration() async throws {
+        let store = RecordingSelectionStore(selection: VehicleCatalog.defaultSelection)
+        let flow = try makeFlow(store: store)
+
+        XCTAssertEqual(flow.gameModeSelection, .default)
+        XCTAssertFalse(flow.selectCPUCount(2))
+        XCTAssertTrue(flow.selectGameMode(.cpuSprint))
+        XCTAssertTrue(flow.selectCPUCount(2))
+        XCTAssertFalse(flow.selectCPUCount(0))
+        XCTAssertFalse(flow.selectCPUCount(4))
+        XCTAssertEqual(
+            flow.gameModeSelection,
+            GameModeSelection(mode: .cpuSprint, cpuCount: 2)
+        )
+
+        flow.enterMaintenance()
+        XCTAssertFalse(flow.selectGameMode(.survival))
+        XCTAssertFalse(flow.selectCPUCount(1))
+        flow.exitMaintenance()
+        await flow.prepareAssets()
+        XCTAssertTrue(flow.drive(controlRoute: .touchOnly))
+
+        let controller = try XCTUnwrap(flow.gameSession)
+        XCTAssertEqual(controller.scene.configuration.mode, .cpuSprint)
+        XCTAssertEqual(controller.scene.configuration.cpuCount, 2)
+        XCTAssertEqual(controller.renderSnapshot.cpuRacers.count, 2)
+        XCTAssertEqual(controller.renderSnapshot.fieldSize, 3)
+        XCTAssertFalse(flow.selectGameMode(.survival))
+        XCTAssertFalse(flow.selectCPUCount(3))
+
+        flow.retry()
+        XCTAssertEqual(controller.scene.configuration.mode, .cpuSprint)
+        XCTAssertEqual(controller.renderSnapshot.cpuRacers.count, 2)
+    }
+
     func testSelectionCanOnlyBeEditedInMaintenance() async throws {
         let saved = VehicleCatalog.defaultSelection
         let store = RecordingSelectionStore(selection: saved)
@@ -220,10 +255,12 @@ final class AppFlowControllerTests: XCTestCase {
             assetLibrary: assetLibrary,
             prepareAssets: {},
             seedProvider: { 441 },
-            gameSessionFactory: { seed, appearance, receivedLibrary, controlRoute in
+            gameSessionFactory: {
+                seed, appearance, receivedLibrary, controlRoute, configuration in
                 factoryCalls += 1
                 return try GameSessionController(
                     seed: seed,
+                    configuration: configuration,
                     appearance: appearance,
                     assetLibrary: receivedLibrary,
                     controlRoute: controlRoute
@@ -356,7 +393,7 @@ final class AppFlowControllerTests: XCTestCase {
             routeCuePlayer: { cues.append($0) },
             prepareAssets: {},
             seedProvider: { 99 },
-            gameSessionFactory: { _, _, _, _ in
+            gameSessionFactory: { _, _, _, _, _ in
                 throw TestFailure.controllerCreation
             }
         )
@@ -407,10 +444,11 @@ final class AppFlowControllerTests: XCTestCase {
             localBestScoreStore: StubLocalBestScoreStore(),
             assetLibrary: assetLibrary,
             prepareAssets: {},
-            gameSessionFactory: { seed, appearance, library, controlRoute in
+            gameSessionFactory: { seed, appearance, library, controlRoute, configuration in
                 factoryRoutes.append(controlRoute)
                 return try GameSessionController(
                     seed: seed,
+                    configuration: configuration,
                     appearance: appearance,
                     assetLibrary: library,
                     controlRoute: controlRoute
@@ -441,10 +479,11 @@ final class AppFlowControllerTests: XCTestCase {
             localBestScoreStore: StubLocalBestScoreStore(),
             assetLibrary: assetLibrary,
             prepareAssets: {},
-            gameSessionFactory: { seed, appearance, library, controlRoute in
+            gameSessionFactory: { seed, appearance, library, controlRoute, configuration in
                 factoryRoutes.append(controlRoute)
                 return try GameSessionController(
                     seed: seed,
+                    configuration: configuration,
                     appearance: appearance,
                     assetLibrary: library,
                     controlRoute: controlRoute

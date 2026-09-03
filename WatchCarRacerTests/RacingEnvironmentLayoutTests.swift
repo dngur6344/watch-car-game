@@ -108,7 +108,7 @@ final class RacingEnvironmentLayoutTests: XCTestCase {
         for (index, state) in states.enumerated() {
             XCTAssertTrue(state.distance.isFinite, "index=\(index)")
             XCTAssertGreaterThanOrEqual(state.distance, -12, "index=\(index)")
-            XCTAssertLessThan(state.distance, 204, "index=\(index)")
+            XCTAssertLessThan(state.distance, 276, "index=\(index)")
             XCTAssertEqual(
                 RacingWorldLayout.trackTileDistance(
                     index: index,
@@ -135,7 +135,7 @@ final class RacingEnvironmentLayoutTests: XCTestCase {
         )
         XCTAssertEqual(
             RacingWorldLayout.trackTileState(index: 0, travel: 0.01).logicalSegmentIndex,
-            17
+            23
         )
         XCTAssertEqual(
             RacingWorldLayout.trackTileState(index: 1, travel: 11.99).logicalSegmentIndex,
@@ -143,7 +143,7 @@ final class RacingEnvironmentLayoutTests: XCTestCase {
         )
         XCTAssertEqual(
             RacingWorldLayout.trackTileState(index: 1, travel: 12.01).logicalSegmentIndex,
-            18
+            24
         )
 
         for index in 0..<RacingWorldLayout.trackTileCount {
@@ -252,9 +252,15 @@ final class RacingEnvironmentLayoutTests: XCTestCase {
                 let variantTuples = first.map {
                     $0.placements.map(\.variantAssetName).joined(separator: "|")
                 }
-                XCTAssertEqual(
+                let availableTupleCount = RacingEnvironmentDistanceLayer.allCases.reduce(1) {
+                    partialResult, layer in
+                    let slotCount = expectedDensity.clusterCount(for: layer)
+                    let variantCount = profile.eligibleVariantIndices(for: layer).count
+                    return partialResult * Int(pow(Double(variantCount), Double(slotCount)))
+                }
+                XCTAssertGreaterThanOrEqual(
                     Set(variantTuples).count,
-                    256,
+                    min(64, availableTupleCount),
                     "short variant tuple cycle: \(profile.track) \(tier)"
                 )
                 for layer in RacingEnvironmentDistanceLayer.allCases {
@@ -263,9 +269,14 @@ final class RacingEnvironmentLayoutTests: XCTestCase {
                             .filter { $0.layer == layer }
                             .map(\.variantAssetName)
                     })
+                    let expectedCoverage = Set(
+                        profile.eligibleVariantIndices(for: layer).map {
+                            profile.variants[$0].assetName
+                        }
+                    )
                     XCTAssertEqual(
                         coverage,
-                        Set(profile.variants.map(\.assetName)),
+                        expectedCoverage,
                         "\(profile.track) \(tier) \(layer)"
                     )
                     for segment in 1..<first.count {
@@ -294,6 +305,28 @@ final class RacingEnvironmentLayoutTests: XCTestCase {
                                 && abs(left.longitudinalOffset + right.longitudinalOffset) < 0.001
                             XCTAssertFalse(isObviousMirror, "\(profile.track) \(tier)")
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    func testForegroundPoolExcludesLargeHorizonSilhouettes() {
+        for profile in RacingEnvironmentCatalog.allProfiles {
+            for tier in RacingEnvironmentQualityTier.allCases {
+                for segment in 0..<128 {
+                    let plan = RacingEnvironmentLayout.clusterPlan(
+                        track: profile.track,
+                        seed: RacingEnvironmentLayout.sceneSeed,
+                        logicalSegmentIndex: segment,
+                        qualityTier: tier
+                    )
+                    for placement in plan.placements where placement.layer == .foreground {
+                        XCTAssertLessThanOrEqual(
+                            placement.footprintRadius / placement.scale,
+                            2.5,
+                            "\(profile.track) \(tier) \(placement.variantAssetName)"
+                        )
                     }
                 }
             }
@@ -469,18 +502,18 @@ final class RacingEnvironmentLayoutTests: XCTestCase {
         }
     }
 
-    func testTileStateKeepsExactLegacyDistancesAndSpacing() {
+    func testTileStateKeepsFullTrackPoolSpacing() {
         XCTAssertEqual(RacingWorldLayout.trackTileLength, 12)
-        XCTAssertEqual(RacingWorldLayout.trackTileCount, 18)
+        XCTAssertEqual(RacingWorldLayout.trackTileCount, 24)
 
-        let expectedAtStart = stride(from: Float(-12), through: 192, by: 12).map { $0 }
+        let expectedAtStart = stride(from: Float(-12), through: 264, by: 12).map { $0 }
         let actualAtStart = (0..<RacingWorldLayout.trackTileCount).map {
             RacingWorldLayout.trackTileState(index: $0, travel: 0).distance
         }
         XCTAssertEqual(actualAtStart, expectedAtStart)
         XCTAssertEqual(
             RacingWorldLayout.trackTileState(index: 0, travel: 0.01).distance,
-            203.99,
+            275.99,
             accuracy: 0.000_1
         )
         XCTAssertEqual(
@@ -490,16 +523,20 @@ final class RacingEnvironmentLayoutTests: XCTestCase {
         )
         XCTAssertEqual(
             RacingWorldLayout.trackTileState(index: 1, travel: 12.01).distance,
-            203.99,
+            275.99,
             accuracy: 0.000_1
         )
 
-        for travel in [0.0, 0.01, 11.99, 12.01, 147.25, 216.01] {
+        for travel in [0.0, 0.01, 11.99, 12.01, 147.25, 288.01] {
             let distances = (0..<RacingWorldLayout.trackTileCount).map {
                 RacingWorldLayout.trackTileState(index: $0, travel: travel).distance
             }.sorted()
             for index in 1..<distances.count {
-                XCTAssertEqual(distances[index] - distances[index - 1], 12, accuracy: 0.000_1)
+                XCTAssertEqual(
+                    distances[index] - distances[index - 1],
+                    RacingWorldLayout.trackTileLength,
+                    accuracy: 0.000_1
+                )
             }
             for index in 0..<RacingWorldLayout.trackTileCount {
                 XCTAssertEqual(

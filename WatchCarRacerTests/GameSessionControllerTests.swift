@@ -43,6 +43,60 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertTrue(controller.scene.isPaused)
     }
 
+    func testCPUSprintFinishTransitionsDirectlyToResultWithoutCollisionDelay() {
+        var configuration = GameSimulation.Configuration()
+        configuration.mode = .cpuSprint
+        configuration.cpuCount = 2
+        let result = RunResult(
+            score: 1_000,
+            previousBest: 500,
+            localBest: 500,
+            isNewBest: false
+        )
+        var recordedScores: [Int] = []
+        let collisionSleeper = ManualDurationSleeper()
+        let controller = GameSessionController(
+            seed: 8,
+            configuration: configuration,
+            collisionSleeper: { try await collisionSleeper.sleep(for: $0) },
+            resultRecorder: { score in
+                recordedScores.append(score)
+                return result
+            }
+        )
+        let running = controller.renderSnapshot
+        let finished = GameSnapshot(
+            phase: .finished,
+            playerX: running.playerX,
+            playerWidth: running.playerWidth,
+            playerLength: running.playerLength,
+            roadHalfWidth: running.roadHalfWidth,
+            laneWidth: running.laneWidth,
+            obstacles: running.obstacles,
+            score: 1_000,
+            speed: running.speed,
+            elapsedTime: 42,
+            distance: 1_000,
+            spawnInterval: running.spawnInterval,
+            gameMode: .cpuSprint,
+            booster: running.booster,
+            cpuRacers: running.cpuRacers,
+            playerPlace: 2,
+            fieldSize: 3,
+            raceDistance: 1_000
+        )
+
+        controller.receive(snapshot: finished, events: [])
+
+        XCTAssertEqual(controller.phase, .finished)
+        XCTAssertEqual(controller.presentationPhase, .result(result))
+        XCTAssertEqual(controller.renderSnapshot.playerPlace, 2)
+        XCTAssertEqual(recordedScores, [1_000])
+        XCTAssertTrue(controller.scene.isPaused)
+        XCTAssertFalse(controller.acceptsTouchInput)
+        XCTAssertEqual(collisionSleeper.pendingCount, 0)
+    }
+
     func testRetryReusesSessionSeedAndClearsSceneHUDAndTouch() {
         let controller = GameSessionController(seed: 42)
         let initialSnapshot = GameSimulation(seed: 42).snapshot
@@ -1021,7 +1075,13 @@ final class GameSessionControllerTests: XCTestCase {
             speed: speed,
             elapsedTime: snapshot.elapsedTime,
             distance: snapshot.distance,
-            spawnInterval: snapshot.spawnInterval
+            spawnInterval: snapshot.spawnInterval,
+            gameMode: snapshot.gameMode,
+            booster: snapshot.booster,
+            cpuRacers: snapshot.cpuRacers,
+            playerPlace: snapshot.playerPlace,
+            fieldSize: snapshot.fieldSize,
+            raceDistance: snapshot.raceDistance
         )
     }
 

@@ -117,7 +117,7 @@ final class HubDriveIntentControllerTests: XCTestCase {
     }
 
     func testMaintenanceDataAndPendingAccessibilitySeamsAreExact() {
-        XCTAssertEqual(VehicleMaintenanceView.vehicleOptions.count, 3)
+        XCTAssertEqual(VehicleMaintenanceView.vehicleOptions.count, 4)
         XCTAssertEqual(VehicleMaintenanceView.colorOptions.count, 8)
         XCTAssertEqual(
             VehicleMaintenanceView.vehicleOptions.map(\.id),
@@ -127,7 +127,7 @@ final class HubDriveIntentControllerTests: XCTestCase {
             VehicleMaintenanceView.colorOptions.map(\.id),
             VehicleColorID.allCases
         )
-        XCTAssertEqual(VehicleCatalog.allSelections.count, 24)
+        XCTAssertEqual(VehicleCatalog.allSelections.count, 32)
         XCTAssertEqual(VehicleMaintenanceView.pendingText, "Pending until Drive")
         XCTAssertTrue(
             VehicleMaintenanceView.pendingAccessibilityValue.contains("not been saved")

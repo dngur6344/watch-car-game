@@ -104,8 +104,10 @@ struct FixedSplitMix64: RandomNumberGenerator, Sendable {
 }
 
 enum RacingEnvironmentLayout {
+    // Keep detail anchors beyond the continuous road mesh's visible horizon so
+    // lane marks, guardrails, and scenery recycle outside the player's focus.
     static let trackTileLength: Float = 12
-    static let trackTileCount = 18
+    static let trackTileCount = 24
     static let minimumTrackTileDistance: Float = -12
     static let sceneSeed: UInt64 = 0x5052_4F50_5F50_4F4F
     static let nearLODContract = RacingEnvironmentNearLODContract(
@@ -167,11 +169,13 @@ enum RacingEnvironmentLayout {
         let normalizedTravel = safeTravel >= cycleLength
             ? safeTravel.truncatingRemainder(dividingBy: cycleLength)
             : safeTravel
-        let unwrappedDistance = Double(index - 1) * Double(trackTileLength)
+        let unwrappedDistance = minimumDistance
+            + Double(index) * Double(trackTileLength)
             - normalizedTravel
         let cycle = floor((unwrappedDistance - minimumDistance) / cycleLength)
         let distance = Float(unwrappedDistance - cycle * cycleLength)
-        let logicalIndex = Double(index - 1)
+        let firstLogicalIndex = floor(minimumDistance / Double(trackTileLength))
+        let logicalIndex = firstLogicalIndex + Double(index)
             - cycle * Double(trackTileCount)
             + completedCycles * Double(trackTileCount)
 
@@ -269,14 +273,18 @@ enum RacingEnvironmentLayout {
         let layerSalt = 0xA24B_AED4_963E_E407 &* UInt64(layerIndex + 1)
         let slotSalt = 0x9FB2_1C65_1E98_DF25 &* UInt64(slotIndex + 1)
         let fixedRoleSalt = layerSalt ^ slotSalt ^ roleSalt
-        let variantIndex = stableVariantIndex(
+        let eligibleVariantIndices = profile.eligibleVariantIndices(for: layer)
+        guard !eligibleVariantIndices.isEmpty else { return nil }
+        let eligibleVariantIndex = stableVariantIndex(
             profile: profile,
             seed: seed,
             segmentBits: segmentBits,
             layerIndex: layerIndex,
             slotIndex: slotIndex,
-            roleSalt: fixedRoleSalt
+            roleSalt: fixedRoleSalt,
+            variantCount: eligibleVariantIndices.count
         )
+        let variantIndex = eligibleVariantIndices[eligibleVariantIndex]
         let variant = profile.variants[variantIndex]
         var generator = FixedSplitMix64(
             seed: mixed(
@@ -394,9 +402,10 @@ enum RacingEnvironmentLayout {
         segmentBits: UInt64,
         layerIndex: Int,
         slotIndex: Int,
-        roleSalt: UInt64
+        roleSalt: UInt64,
+        variantCount: Int
     ) -> Int {
-        let radix = UInt64(profile.variants.count)
+        let radix = UInt64(variantCount)
         let seedOffset = mixed(profile.stableSeed ^ seed)
         let ordinal = segmentBits &+ seedOffset
         let digitPosition: Int

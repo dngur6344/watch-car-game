@@ -24,13 +24,15 @@ final class AppFlowController {
         _ seed: UInt64,
         _ appearance: VehicleAppearance,
         _ assetLibrary: GameAssetLibrary,
-        _ controlRoute: SessionControlRoute
+        _ controlRoute: SessionControlRoute,
+        _ configuration: GameSimulation.Configuration
     ) throws -> GameSessionController
 
     private(set) var route: Route = .hub
     private(set) var committedSelection: VehicleSelection
     private(set) var draftSelection: VehicleSelection
     private(set) var environmentSelection: RacingEnvironmentSelection = .default
+    private(set) var gameModeSelection: GameModeSelection = .default
     private(set) var assetReadiness: AssetReadiness = .idle
     private(set) var gameSession: GameSessionController?
     private(set) var errorMessage: String?
@@ -77,9 +79,11 @@ final class AppFlowController {
         }
         self.seedProvider = seedProvider
         let resultStore = localBestScoreStore
-        self.gameSessionFactory = gameSessionFactory ?? { seed, appearance, library, controlRoute in
+        self.gameSessionFactory = gameSessionFactory ?? {
+            seed, appearance, library, controlRoute, configuration in
             try GameSessionController(
                 seed: seed,
+                configuration: configuration,
                 appearance: appearance,
                 assetLibrary: library,
                 controlRoute: controlRoute,
@@ -89,6 +93,14 @@ final class AppFlowController {
                 isHapticsEnabled: isHapticsEnabled,
                 resultRecorder: { score in
                     let previousBest = resultStore.load()
+                    guard configuration.mode == .survival else {
+                        return RunResult(
+                            score: score,
+                            previousBest: previousBest,
+                            localBest: previousBest,
+                            isNewBest: false
+                        )
+                    }
                     let localBest = resultStore.record(score)
                     return RunResult(
                         score: score,
@@ -138,6 +150,30 @@ final class AppFlowController {
             return false
         }
         environmentSelection.weather = weather
+        return true
+    }
+
+    @discardableResult
+    func selectGameMode(_ mode: GameMode) -> Bool {
+        guard route == .hub,
+              gameSession == nil,
+              gameModeSelection.mode != mode else {
+            return false
+        }
+        gameModeSelection.mode = mode
+        return true
+    }
+
+    @discardableResult
+    func selectCPUCount(_ count: Int) -> Bool {
+        guard route == .hub,
+              gameSession == nil,
+              gameModeSelection.mode == .cpuSprint,
+              (1...3).contains(count),
+              gameModeSelection.cpuCount != count else {
+            return false
+        }
+        gameModeSelection.cpuCount = count
         return true
     }
 
@@ -208,12 +244,16 @@ final class AppFlowController {
         }
 
         let seed = seedProvider()
+        var configuration = GameSimulation.Configuration()
+        configuration.mode = gameModeSelection.mode
+        configuration.cpuCount = gameModeSelection.cpuCount
         do {
             let controller = try gameSessionFactory(
                 seed,
                 appearance,
                 assetLibrary,
-                controlRoute
+                controlRoute,
+                configuration
             )
             selectionStore.save(draftSelection)
             committedSelection = draftSelection

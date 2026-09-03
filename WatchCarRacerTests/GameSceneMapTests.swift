@@ -23,7 +23,7 @@ final class GameSceneMapTests: XCTestCase {
 
         let laneContainer = try XCTUnwrap(scene.childNode(withName: "//map.lanes"))
         let lanes = laneContainer.children.compactMap { $0 as? SKSpriteNode }
-        XCTAssertEqual(lanes.count, 24)
+        XCTAssertEqual(lanes.count, 36)
         XCTAssertEqual(laneContainer.children.count, lanes.count)
         for lane in lanes {
             XCTAssertTrue(lane.texture === (try library.texture(named: "lane_worn")))
@@ -151,19 +151,40 @@ final class GameSceneMapTests: XCTestCase {
         let scene = try makeScene(configuration: configuration)
         scene.update(0)
 
-        assertProjectedLane(index: 3, separatorX: -0.5, in: scene, configuration: configuration)
+        for separatorX in [-1.0, 0.0, 1.0] {
+            assertProjectedLane(
+                index: 3,
+                separatorX: separatorX,
+                in: scene,
+                configuration: configuration
+            )
+        }
         assertProjectedRoadside(index: 7, in: scene, configuration: configuration)
 
         for frame in 1...30 {
             scene.update(Double(frame) * GameScene.fixedStep)
         }
-        assertProjectedLane(index: 3, separatorX: -0.5, in: scene, configuration: configuration)
+        for separatorX in [-1.0, 0.0, 1.0] {
+            assertProjectedLane(
+                index: 3,
+                separatorX: separatorX,
+                in: scene,
+                configuration: configuration
+            )
+        }
         assertProjectedRoadside(index: 7, in: scene, configuration: configuration)
 
         for frame in 31...120 {
             scene.update(Double(frame) * GameScene.fixedStep)
         }
-        assertProjectedLane(index: 3, separatorX: -0.5, in: scene, configuration: configuration)
+        for separatorX in [-1.0, 0.0, 1.0] {
+            assertProjectedLane(
+                index: 3,
+                separatorX: separatorX,
+                in: scene,
+                configuration: configuration
+            )
+        }
         assertProjectedRoadside(index: 7, in: scene, configuration: configuration)
     }
 
@@ -208,7 +229,10 @@ final class GameSceneMapTests: XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        let separatorIndex = separatorX < 0 ? 0 : 1
+        let separators = [-1.0, 0.0, 1.0]
+        guard let separatorIndex = separators.firstIndex(of: separatorX) else {
+            return XCTFail("Unknown lane separator", file: file, line: line)
+        }
         guard let node = scene.childNode(
             withName: "//map.lane.lane_worn.\(separatorIndex).\(index)"
         ) as? SKSpriteNode else {

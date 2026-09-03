@@ -91,11 +91,18 @@ final class RacingEnvironmentAssetTests: XCTestCase {
                 XCTAssertTrue(source.contains("string tier = \"\(pack.tier)\""), pack.sourceUSDA)
                 XCTAssertTrue(source.contains("string role = \"\(pack.role)\""), pack.sourceUSDA)
                 XCTAssertTrue(source.contains("string license = \"project-original\""), pack.sourceUSDA)
+                let isBlenderAlpinePack = pack.sourceUSDA == "alpine_environment_enhanced.usda"
+                let authoringTool = isBlenderAlpinePack
+                    ? "Blender 4.5 LTS + Scripts/build_alpine_environment_blender.py@1.0.0"
+                    : "Scripts/build_racing_environment_usd.swift@1.1.0"
                 XCTAssertTrue(
-                    source.contains("string authoringTool = \"Scripts/build_racing_environment_usd.swift@1.1.0\""),
+                    source.contains("string authoringTool = \"\(authoringTool)\""),
                     pack.sourceUSDA
                 )
-                XCTAssertTrue(source.contains("int revision = 2"), pack.sourceUSDA)
+                XCTAssertTrue(
+                    source.contains("int revision = \(isBlenderAlpinePack ? 3 : 2)"),
+                    pack.sourceUSDA
+                )
                 XCTAssertTrue(source.contains("string topology = \"closed-volume\""), pack.sourceUSDA)
                 XCTAssertTrue(source.contains("double roadClearanceHalfWidth = 6.00000"), pack.sourceUSDA)
                 XCTAssertTrue(source.contains("double roadApertureWidth = 14.00000"), pack.sourceUSDA)

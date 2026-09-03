@@ -21,6 +21,8 @@ private let presentationNames = Set([
     "gt_hero_details_shadow.png",
     "angular_hero_paint.png",
     "angular_hero_details_shadow.png",
+    "rally-rs_hero_paint.png",
+    "rally-rs_hero_details_shadow.png",
 ])
 private let racing3DNames = Set(["asphalt_normal.png", "asphalt_roughness.png"])
 private let expectedEnvironmentNames = Set([

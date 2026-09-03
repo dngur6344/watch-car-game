@@ -13,6 +13,7 @@ struct MainHubView: View {
     @State private var presentationReloadRequest = 0
     @State private var isSensorySettingsPresented = false
     @State private var isEnvironmentPickerPresented = false
+    @State private var isGameModePickerPresented = false
 
     var body: some View {
         GeometryReader { proxy in
@@ -80,6 +81,9 @@ struct MainHubView: View {
         }
         .sheet(isPresented: $isEnvironmentPickerPresented) {
             RacingEnvironmentPickerView(flow: flow)
+        }
+        .sheet(isPresented: $isGameModePickerPresented) {
+            GameModePickerView(flow: flow)
         }
     }
 
@@ -199,6 +203,7 @@ struct MainHubView: View {
         VStack(alignment: .leading, spacing: compact ? 8 : 12) {
             localBestCard(compact: compact)
             watchStatusCard(compact: compact)
+            gameModeButton(compact: compact)
             environmentButton(compact: compact)
 
             Button {
@@ -345,6 +350,48 @@ struct MainHubView: View {
         .accessibilityIdentifier("hub.environment")
     }
 
+    private func gameModeButton(compact: Bool) -> some View {
+        let selection = flow.gameModeSelection
+        return Button {
+            isGameModePickerPresented = true
+        } label: {
+            HStack(spacing: compact ? 8 : 12) {
+                Image(systemName: selection.mode == .survival ? "shield.checkered" : "person.3.fill")
+                    .font(compact ? .headline : .title2)
+                    .foregroundStyle(.orange)
+                    .frame(width: compact ? 36 : 44, height: compact ? 36 : 44)
+                    .background(.orange.opacity(0.12), in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("GAME MODE")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white.opacity(0.64))
+                    Text(gameModeSummary(selection))
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.white)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white.opacity(0.46))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Game mode")
+        .accessibilityValue(gameModeSummary(selection))
+        .accessibilityHint("Choose survival or a CPU sprint and set the rival count")
+        .accessibilityIdentifier("hub.gameMode")
+    }
+
+    private func gameModeSummary(_ selection: GameModeSelection) -> String {
+        switch selection.mode {
+        case .survival:
+            selection.mode.displayName
+        case .cpuSprint:
+            "\(selection.mode.displayName) · \(selection.cpuCount) CPU"
+        }
+    }
+
     @ViewBuilder
     private var assetStatus: some View {
         if let errorMessage = flow.errorMessage {
@@ -409,6 +456,146 @@ struct MainHubView: View {
         return "Sound effects \(settings.sfxEnabled ? "on" : "off"), "
             + "haptics \(settings.hapticsEnabled ? "on" : "off"), "
             + "effects \(settings.effectIntensity.displayName)"
+    }
+}
+
+private struct GameModePickerView: View {
+    let flow: AppFlowController
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("Choose an endless score run or a 1,000 m race against CPU rivals.")
+                        .font(.callout)
+                        .foregroundStyle(.white.opacity(0.70))
+
+                    ForEach(GameMode.allCases) { mode in
+                        modeButton(mode)
+                    }
+
+                    if flow.gameModeSelection.mode == .cpuSprint {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("CPU RIVALS")
+                                .font(.caption.bold())
+                                .tracking(1.2)
+                                .foregroundStyle(.orange)
+                            Picker(
+                                "CPU rivals",
+                                selection: Binding(
+                                    get: { flow.gameModeSelection.cpuCount },
+                                    set: { flow.selectCPUCount($0) }
+                                )
+                            ) {
+                                ForEach(1...3, id: \.self) { count in
+                                    Text("\(count) CPU").tag(count)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .accessibilityIdentifier("gameMode.cpuCount")
+
+                            Text("PLAYER + \(flow.gameModeSelection.cpuCount) CPU · "
+                                + "\(flow.gameModeSelection.cpuCount + 1) CARS TOTAL")
+                                .font(.caption.monospaced().bold())
+                                .foregroundStyle(.white.opacity(0.68))
+                        }
+                        .padding(14)
+                        .background(
+                            Color.orange.opacity(0.10),
+                            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        )
+                    }
+
+                    Label(
+                        "Stay off the side guards for 5 seconds to trigger a 3-second auto boost.",
+                        systemImage: "bolt.fill"
+                    )
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.mint)
+                    .padding(12)
+                    .background(.mint.opacity(0.09), in: RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(20)
+                .frame(maxWidth: 680)
+                .frame(maxWidth: .infinity)
+            }
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.02, green: 0.04, blue: 0.08),
+                        Color(red: 0.16, green: 0.07, blue: 0.03),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+            )
+            .navigationTitle("GAME MODE")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("DONE") {
+                        dismiss()
+                    }
+                    .fontWeight(.bold)
+                    .accessibilityIdentifier("gameMode.done")
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .presentationDetents([.medium, .large])
+    }
+
+    private func modeButton(_ mode: GameMode) -> some View {
+        let isSelected = flow.gameModeSelection.mode == mode
+        return Button {
+            flow.selectGameMode(mode)
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: mode == .survival ? "shield.checkered" : "person.3.fill")
+                    .font(.title3.bold())
+                    .foregroundStyle(isSelected ? .black : .orange)
+                    .frame(width: 40, height: 40)
+                    .background(
+                        isSelected ? Color.orange : Color.orange.opacity(0.12),
+                        in: Circle()
+                    )
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(mode.displayName)
+                        .font(.headline.bold())
+                        .foregroundStyle(.white)
+                    Text(mode.detail)
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.66))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.orange)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 84, alignment: .leading)
+            .background(
+                isSelected ? Color.orange.opacity(0.12) : Color.white.opacity(0.055),
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(
+                        isSelected ? Color.orange.opacity(0.76) : Color.white.opacity(0.10)
+                    )
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(mode.displayName)
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint(mode.detail)
+        .accessibilityIdentifier("gameMode.\(mode.rawValue)")
     }
 }
 

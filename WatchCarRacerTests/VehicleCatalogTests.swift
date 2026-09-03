@@ -3,8 +3,8 @@ import XCTest
 @testable import WatchCarRacer
 
 final class VehicleCatalogTests: XCTestCase {
-    func testCatalogHasExactlyThreeStableVehiclesAndEightStableColors() {
-        XCTAssertEqual(VehicleID.allCases, [.rally, .gt, .angular])
+    func testCatalogHasExactlyFourStableVehiclesAndEightStableColors() {
+        XCTAssertEqual(VehicleID.allCases, [.rally, .gt, .angular, .rallyRS])
         XCTAssertEqual(
             VehicleColorID.allCases,
             [
@@ -12,12 +12,12 @@ final class VehicleCatalogTests: XCTestCase {
                 .solarCoral, .emberGold, .lunarSilver, .midnightInk,
             ]
         )
-        XCTAssertEqual(VehicleCatalog.all.count, 3)
+        XCTAssertEqual(VehicleCatalog.all.count, 4)
         XCTAssertEqual(VehicleCatalog.colors.count, 8)
-        XCTAssertEqual(Set(VehicleID.allCases.map(\.rawValue)).count, 3)
+        XCTAssertEqual(Set(VehicleID.allCases.map(\.rawValue)).count, 4)
         XCTAssertEqual(Set(VehicleColorID.allCases.map(\.rawValue)).count, 8)
-        XCTAssertEqual(Set(VehicleCatalog.all.map(\.displayName)).count, 3)
-        XCTAssertEqual(Set(VehicleCatalog.all.map(\.accessibilityName)).count, 3)
+        XCTAssertEqual(Set(VehicleCatalog.all.map(\.displayName)).count, 4)
+        XCTAssertEqual(Set(VehicleCatalog.all.map(\.accessibilityName)).count, 4)
         XCTAssertEqual(Set(VehicleCatalog.colors.map(\.displayName)).count, 8)
         XCTAssertEqual(Set(VehicleCatalog.colors.map(\.accessibilityName)).count, 8)
     }
@@ -56,11 +56,11 @@ final class VehicleCatalogTests: XCTestCase {
         XCTAssertEqual(normalized, RGBAComponents(red: 0, green: 1, blue: 0, alpha: 0))
     }
 
-    func testCatalogResolvesExactlyTwentyFourUniqueVisualOnlyAppearances() throws {
-        XCTAssertEqual(VehicleCatalog.allSelections.count, 24)
+    func testCatalogResolvesExactlyThirtyTwoUniqueVisualOnlyAppearances() throws {
+        XCTAssertEqual(VehicleCatalog.allSelections.count, 32)
         XCTAssertEqual(
             Set(VehicleCatalog.allSelections.map { "\($0.vehicleID.rawValue)|\($0.colorID.rawValue)" }).count,
-            24
+            32
         )
 
         var appearanceKeys = Set<String>()
@@ -73,10 +73,10 @@ final class VehicleCatalogTests: XCTestCase {
                 ["vehicle", "color"]
             )
             appearanceKeys.insert(
-                "\(appearance.vehicle.textures.paint)|\(appearance.color.id.rawValue)"
+                "\(appearance.vehicle.id.rawValue)|\(appearance.color.id.rawValue)"
             )
         }
-        XCTAssertEqual(appearanceKeys.count, 24)
+        XCTAssertEqual(appearanceKeys.count, 32)
         XCTAssertNil(VehicleCatalog.resolve(vehicleID: "unknown", colorID: "aurora-mint"))
         XCTAssertNil(VehicleCatalog.resolve(vehicleID: "rally", colorID: "unknown"))
     }

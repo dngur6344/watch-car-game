@@ -119,6 +119,8 @@ struct SG8RacingEnvironmentLaunchConfiguration: Equatable {
     let weather: RacingWeather
     let tier: RacingEnvironmentQualityTier
     let vehicle: VehicleID?
+    let gameMode: GameMode
+    let cpuCount: Int
     let duration: TimeInterval
     let routeCycles: Int
     let triggersMemoryWarning: Bool
@@ -151,11 +153,34 @@ struct SG8RacingEnvironmentLaunchConfiguration: Equatable {
         } else {
             vehicle = nil
         }
+        let gameMode: GameMode
+        if arguments.contains("--sg8-game-mode") {
+            guard let modeValue = Self.value(after: "--sg8-game-mode", in: arguments),
+                  let selectedMode = GameMode(rawValue: modeValue) else {
+                return nil
+            }
+            gameMode = selectedMode
+        } else {
+            gameMode = .survival
+        }
+        let cpuCount: Int
+        if arguments.contains("--sg8-cpu-count") {
+            guard let countValue = Self.value(after: "--sg8-cpu-count", in: arguments),
+                  let selectedCount = Int(countValue),
+                  (1...3).contains(selectedCount) else {
+                return nil
+            }
+            cpuCount = selectedCount
+        } else {
+            cpuCount = 3
+        }
 
         self.track = track
         self.weather = weather
         self.tier = tier
         self.vehicle = vehicle
+        self.gameMode = gameMode
+        self.cpuCount = cpuCount
         self.duration = duration
         self.routeCycles = routeCycles
         triggersMemoryWarning = arguments.contains("--sg8-trigger-memory-warning")
@@ -429,9 +454,16 @@ final class SG6AcceptanceCoordinator {
         }
         _ = flow.selectTrack(configuration.track)
         _ = flow.selectWeather(configuration.weather)
+        _ = flow.selectGameMode(configuration.gameMode)
+        if configuration.gameMode == .cpuSprint {
+            _ = flow.selectCPUCount(configuration.cpuCount)
+        }
         guard flow.environmentSelection == RacingEnvironmentSelection(
             track: configuration.track,
             weather: configuration.weather
+        ), flow.gameModeSelection == GameModeSelection(
+            mode: configuration.gameMode,
+            cpuCount: configuration.cpuCount
         ) else {
             return racingEnvironmentFailure("environment_selection_failed")
         }
@@ -650,6 +682,7 @@ final class SG6AcceptanceCoordinator {
 
         return "RACING_ENVIRONMENT_ACCEPTANCE_SUMMARY pass=\(passed) "
             + "track=\(configuration.track.rawValue) weather=\(configuration.weather.rawValue) "
+            + "gameMode=\(configuration.gameMode.rawValue) cpuCount=\(configuration.cpuCount) "
             + "tier=\(configuration.tier.rawValue) duration=\(formatted(configuration.duration)) "
             + "samples=\(samples.count) averageFPS=\(formatted(average)) "
             + "minimumFPS=\(formatted(minimum)) consecutiveBelow50=\(consecutiveBelow50) "
@@ -1981,43 +2014,36 @@ final class SG6AcceptanceCoordinator {
 
     private func steerSafely(_ controller: GameSessionController) {
         let snapshot = controller.scene.currentSnapshot
-        var lane0Clearance = Double.greatestFiniteMagnitude
-        var lane1Clearance = Double.greatestFiniteMagnitude
-        var lane2Clearance = Double.greatestFiniteMagnitude
+        let laneCount = GameSimulation.laneCount
+        let laneCenterOffset = (Double(laneCount) - 1) / 2
+        var laneClearances = Array(
+            repeating: Double.greatestFiniteMagnitude,
+            count: laneCount
+        )
         for obstacle in snapshot.obstacles where obstacle.distance > -2 && obstacle.distance < 60 {
-            switch obstacle.laneIndex {
-            case 0:
-                lane0Clearance = min(lane0Clearance, obstacle.distance)
-            case 1:
-                lane1Clearance = min(lane1Clearance, obstacle.distance)
-            case 2:
-                lane2Clearance = min(lane2Clearance, obstacle.distance)
-            default:
-                break
+            if laneClearances.indices.contains(obstacle.laneIndex) {
+                laneClearances[obstacle.laneIndex] = min(
+                    laneClearances[obstacle.laneIndex],
+                    obstacle.distance
+                )
             }
         }
 
         let currentLaneIndex = min(
-            max(Int((snapshot.playerX / snapshot.laneWidth).rounded()) + 1, 0),
-            2
+            max(
+                Int((snapshot.playerX / snapshot.laneWidth + laneCenterOffset).rounded()),
+                0
+            ),
+            laneCount - 1
         )
-        let laneClearances = (lane0Clearance, lane1Clearance, lane2Clearance)
-        let currentClearance = switch currentLaneIndex {
-        case 0: laneClearances.0
-        case 1: laneClearances.1
-        default: laneClearances.2
-        }
+        let currentClearance = laneClearances[currentLaneIndex]
         var targetLaneIndex = currentLaneIndex
         var targetClearance = currentClearance
         var targetDistance = 0.0
         if currentClearance < 24 {
-            for laneIndex in 0...2 where laneIndex != currentLaneIndex {
-                let clearance = switch laneIndex {
-                case 0: laneClearances.0
-                case 1: laneClearances.1
-                default: laneClearances.2
-                }
-                let laneX = Double(laneIndex - 1) * snapshot.laneWidth
+            for laneIndex in laneClearances.indices where laneIndex != currentLaneIndex {
+                let clearance = laneClearances[laneIndex]
+                let laneX = (Double(laneIndex) - laneCenterOffset) * snapshot.laneWidth
                 let distance = abs(laneX - snapshot.playerX)
                 if clearance > targetClearance
                     || (clearance == targetClearance && distance < targetDistance) {
@@ -2029,7 +2055,7 @@ final class SG6AcceptanceCoordinator {
         }
         steer(
             controller,
-            toward: Double(targetLaneIndex - 1) * snapshot.laneWidth,
+            toward: (Double(targetLaneIndex) - laneCenterOffset) * snapshot.laneWidth,
             from: snapshot.playerX
         )
     }

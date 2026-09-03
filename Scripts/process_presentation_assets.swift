@@ -354,7 +354,7 @@ private func makeContactSheet(
     presentationDirectory: URL,
     outputURL: URL
 ) throws {
-    let vehicleNames = ["rally", "gt", "angular"]
+    let vehicleNames = ["rally", "gt", "angular", "rally-rs"]
     let cellSize = 200
     let width = cellSize * presentationColors.count
     let height = cellSize * vehicleNames.count

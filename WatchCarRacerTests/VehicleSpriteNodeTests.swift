@@ -4,7 +4,7 @@ import XCTest
 
 @MainActor
 final class VehicleSpriteNodeTests: XCTestCase {
-    func testAllTwentyFourAppearancesUseExpectedLayersAndTintOnlyPaintMask() throws {
+    func testAllThirtyTwoAppearancesUseExpectedLayersAndTintOnlyPaintMask() throws {
         let assetLibrary = try GameAssetLibrary()
 
         for selection in VehicleCatalog.allSelections {

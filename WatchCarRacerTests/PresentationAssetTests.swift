@@ -12,7 +12,7 @@ final class PresentationAssetTests: XCTestCase {
         let gameplay = try sourceGameplayManifest()
 
         XCTAssertEqual(presentation.schemaVersion, 1)
-        XCTAssertEqual(presentation.assets.count, 8)
+        XCTAssertEqual(presentation.assets.count, 10)
         XCTAssertEqual(Set(presentation.assets.map(\.name)), expectedNames)
         XCTAssertEqual(gameplay.assets.count, 19)
         XCTAssertFalse(
@@ -158,6 +158,9 @@ final class PresentationAssetTests: XCTestCase {
 
         _ = try library.load(route: .hub, vehicleID: .angular)
         XCTAssertEqual(decoder.decodedFilenames.count, 8)
+
+        _ = try library.load(route: .hub, vehicleID: .rallyRS)
+        XCTAssertEqual(decoder.decodedFilenames.count, 10)
         XCTAssertEqual(Set(decoder.decodedFilenames), expectedFilenames)
 
         let independentDecoder = PresentationDecoderSpy()
@@ -174,7 +177,7 @@ final class PresentationAssetTests: XCTestCase {
         XCTAssertEqual(independentCache.cachedAssetNames.count, 3)
     }
 
-    func testAllTwentyFourCompositionsTintOnlyPaintPixels() throws {
+    func testAllThirtyTwoCompositionsTintOnlyPaintPixels() throws {
         for vehicle in VehicleID.allCases {
             let paint = try sourceUIImage(named: "\(vehicle.rawValue)_hero_paint")
             let details = try sourceUIImage(named: "\(vehicle.rawValue)_hero_details_shadow")
@@ -213,7 +216,7 @@ final class PresentationAssetTests: XCTestCase {
 
             XCTAssertEqual(paintedColors.count, 8, vehicle.rawValue)
         }
-        XCTAssertEqual(VehicleCatalog.allSelections.count, 24)
+        XCTAssertEqual(VehicleCatalog.allSelections.count, 32)
     }
 
     func testPresentationResourcesAreRegisteredOnlyInIOSResourcePhase() throws {
@@ -259,6 +262,7 @@ final class PresentationAssetTests: XCTestCase {
             "rally_hero_paint", "rally_hero_details_shadow",
             "gt_hero_paint", "gt_hero_details_shadow",
             "angular_hero_paint", "angular_hero_details_shadow",
+            "rally-rs_hero_paint", "rally-rs_hero_details_shadow",
         ]
     }
 

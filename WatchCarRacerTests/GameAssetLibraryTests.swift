@@ -6,9 +6,9 @@ import XCTest
 
 @MainActor
 final class GameAssetLibraryTests: XCTestCase {
-    func testVehicleCatalogLocksExactlyThreeAssetDescriptors() {
-        XCTAssertEqual(VehicleID.allCases, [.rally, .gt, .angular])
-        XCTAssertEqual(VehicleCatalog.all.map(\.id), [.rally, .gt, .angular])
+    func testVehicleCatalogLocksExactlyFourAssetDescriptors() {
+        XCTAssertEqual(VehicleID.allCases, [.rally, .gt, .angular, .rallyRS])
+        XCTAssertEqual(VehicleCatalog.all.map(\.id), [.rally, .gt, .angular, .rallyRS])
         XCTAssertEqual(Set(VehicleCatalog.all.flatMap(\.textures.allNames)).count, 9)
 
         for descriptor in VehicleCatalog.all {

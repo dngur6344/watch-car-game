@@ -104,6 +104,32 @@
       "bitsPerComponent": 8,
       "channels": "RGBA",
       "alphaMode": "straight"
+    },
+    {
+      "name": "rally-rs_hero_paint",
+      "file": "Presentation/rally-rs_hero_paint.png",
+      "family": "presentation.vehicle.rally-rs.paint-mask",
+      "kind": "paint-mask",
+      "vehicleID": "rally-rs",
+      "pixelSize": { "width": 1024, "height": 1024 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "straight-white-mask"
+    },
+    {
+      "name": "rally-rs_hero_details_shadow",
+      "file": "Presentation/rally-rs_hero_details_shadow.png",
+      "family": "presentation.vehicle.rally-rs.details-shadow",
+      "kind": "details-shadow",
+      "vehicleID": "rally-rs",
+      "pixelSize": { "width": 1024, "height": 1024 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "colorSpace": "sRGB",
+      "bitsPerComponent": 8,
+      "channels": "RGBA",
+      "alphaMode": "straight"
     }
   ]
 }

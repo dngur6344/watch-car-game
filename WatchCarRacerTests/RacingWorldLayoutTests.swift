@@ -77,8 +77,203 @@ final class RacingWorldLayoutTests: XCTestCase {
         )
         XCTAssertGreaterThan(
             farthestCenter + RacingWorldLayout.trackUnderlayLength / 2,
-            190
+            250
         )
+    }
+
+    func testTrackDetailsFadeSmoothlyBeforeTheirRecycleBoundary() {
+        XCTAssertEqual(RacingWorldLayout.trackDetailOpacity(distance: 0), 1)
+        XCTAssertEqual(
+            RacingWorldLayout.trackDetailOpacity(
+                distance: RacingWorldLayout.trackDetailFadeStart
+            ),
+            1
+        )
+        XCTAssertEqual(
+            RacingWorldLayout.trackDetailOpacity(
+                distance: RacingWorldLayout.trackDetailFadeEnd
+            ),
+            0
+        )
+        XCTAssertEqual(RacingWorldLayout.trackDetailOpacity(distance: .nan), 0)
+        XCTAssertEqual(RacingWorldLayout.trackDetailOpacity(distance: .infinity), 0)
+
+        let samples = stride(
+            from: RacingWorldLayout.trackDetailFadeStart,
+            through: RacingWorldLayout.trackDetailFadeEnd,
+            by: 1
+        ).map(RacingWorldLayout.trackDetailOpacity(distance:))
+        for index in 1..<samples.count {
+            XCTAssertLessThanOrEqual(samples[index], samples[index - 1])
+        }
+
+        let recycledDistance = RacingWorldLayout.trackTileDistance(
+            index: 0,
+            travel: 0.01
+        )
+        XCTAssertGreaterThan(recycledDistance, RacingWorldLayout.trackDetailFadeEnd)
+        XCTAssertEqual(
+            RacingWorldLayout.trackDetailOpacity(distance: recycledDistance),
+            0
+        )
+    }
+
+    func testDenseTrackSegmentsKeepAdjacentHeadingChangesSubtle() {
+        for track in RacingTrack.allCases {
+            for travel in stride(from: 0.0, through: 240.0, by: 17.5) {
+                var previous = RacingWorldLayout.trackSegmentPlacement(
+                    distance: 0,
+                    travel: travel,
+                    track: track
+                ).orientation
+                for distance in stride(
+                    from: RacingWorldLayout.trackTileLength,
+                    through: Float(180),
+                    by: RacingWorldLayout.trackTileLength
+                ) {
+                    let current = RacingWorldLayout.trackSegmentPlacement(
+                        distance: distance,
+                        travel: travel,
+                        track: track
+                    )
+                    let delta = previous.inverse * current.orientation
+                    XCTAssertLessThan(
+                        abs(delta.angle),
+                        0.15,
+                        "track=\(track), travel=\(travel), distance=\(distance)"
+                    )
+                    previous = current.orientation
+                }
+            }
+        }
+    }
+
+    func testRoadCurbAndGuardrailShareOneTrackCrossSection() {
+        let expectedSeparation = RacingWorldLayout.guardrailCenterOffset
+            - RacingWorldLayout.curbCenterOffset
+
+        for track in RacingTrack.allCases {
+            for travel in stride(from: 0.0, through: 240.0, by: 23.5) {
+                for distance in stride(from: Float(0), through: Float(204), by: 12) {
+                    let frame = RacingWorldLayout.trackPlacement(
+                        distance: distance,
+                        travel: travel,
+                        track: track
+                    )
+                    let lateralAxis = frame.orientation.act(SIMD3<Float>(1, 0, 0))
+                    let forwardAxis = frame.orientation.act(SIMD3<Float>(0, 0, -1))
+                    let verticalAxis = frame.orientation.act(SIMD3<Float>(0, 1, 0))
+
+                    for side: Float in [-1, 1] {
+                        let curb = frame.position
+                            + lateralAxis * (side * RacingWorldLayout.curbCenterOffset)
+                        let guardrail = frame.position
+                            + lateralAxis * (side * RacingWorldLayout.guardrailCenterOffset)
+                        let separation = guardrail - curb
+
+                        XCTAssertEqual(
+                            simd_length(separation),
+                            expectedSeparation,
+                            accuracy: 0.000_1
+                        )
+                        XCTAssertEqual(simd_dot(separation, forwardAxis), 0, accuracy: 0.000_1)
+                        XCTAssertEqual(simd_dot(separation, verticalAxis), 0, accuracy: 0.000_1)
+                    }
+                }
+            }
+        }
+    }
+
+    func testTrackAnchorsMeetAcrossAdjacentTileBoundaries() {
+        let halfTileLength = RacingWorldLayout.trackTileLength / 2
+
+        for track in RacingTrack.allCases {
+            for travel in stride(from: 0.0, through: 240.0, by: 23.5) {
+                for distance in stride(from: Float(0), through: Float(204), by: 12) {
+                    for followsSurface in [false, true] {
+                        let nearTileAnchor = RacingWorldLayout.trackAnchorPlacement(
+                            tileDistance: distance,
+                            localPosition: SIMD3(5.05, 0.27, -halfTileLength),
+                            travel: travel,
+                            track: track,
+                            followsSurface: followsSurface
+                        )
+                        let farTileAnchor = RacingWorldLayout.trackAnchorPlacement(
+                            tileDistance: distance + RacingWorldLayout.trackTileLength,
+                            localPosition: SIMD3(5.05, 0.27, halfTileLength),
+                            travel: travel,
+                            track: track,
+                            followsSurface: followsSurface
+                        )
+
+                        XCTAssertEqual(
+                            simd_distance(nearTileAnchor.position, farTileAnchor.position),
+                            0,
+                            accuracy: 0.000_1,
+                            "track=\(track), travel=\(travel), distance=\(distance)"
+                        )
+                        XCTAssertEqual(
+                            abs(simd_dot(
+                                nearTileAnchor.orientation.vector,
+                                farTileAnchor.orientation.vector
+                            )),
+                            1,
+                            accuracy: 0.000_1
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    func testUprightTrackAnchorsRemainGroundedWithoutBankingProps() {
+        let worldUp = SIMD3<Float>(0, 1, 0)
+
+        for track in RacingTrack.allCases {
+            for travel in stride(from: 0.0, through: 240.0, by: 23.5) {
+                for distance in stride(from: Float(0), through: Float(204), by: 12) {
+                    let placement = RacingWorldLayout.trackAnchorPlacement(
+                        tileDistance: distance,
+                        localPosition: SIMD3(8.1, 0, -4.8),
+                        travel: travel,
+                        track: track,
+                        followsSurface: false
+                    )
+
+                    XCTAssertEqual(
+                        simd_dot(placement.orientation.act(worldUp), worldUp),
+                        1,
+                        accuracy: 0.000_1
+                    )
+                    XCTAssertTrue(placement.position.x.isFinite)
+                    XCTAssertTrue(placement.position.y.isFinite)
+                    XCTAssertTrue(placement.position.z.isFinite)
+                }
+            }
+        }
+    }
+
+    func testTrackSurfaceLengthCoversEveryCurvedSegmentChord() {
+        for track in RacingTrack.allCases {
+            for travel in stride(from: 0.0, through: 240.0, by: 19.0) {
+                for distance in stride(
+                    from: Float(0),
+                    through: Float(180),
+                    by: RacingWorldLayout.trackTileLength
+                ) {
+                    let segment = RacingWorldLayout.trackSegmentPlacement(
+                        distance: distance,
+                        travel: travel,
+                        track: track
+                    )
+                    XCTAssertLessThanOrEqual(
+                        RacingWorldLayout.trackTileLength * segment.longitudinalScale,
+                        RacingWorldLayout.trackSurfaceLength,
+                        "track=\(track), travel=\(travel), distance=\(distance)"
+                    )
+                }
+            }
+        }
     }
 
     func testMountainMassifsLeaveTheTrackCorridorOpen() {
@@ -97,6 +292,7 @@ final class RacingWorldLayoutTests: XCTestCase {
             2.90 * RacingWorldLayout.vehicleVisualScale(vehicleID: .rally),
             3.39 * RacingWorldLayout.vehicleVisualScale(vehicleID: .gt),
             3.06 * RacingWorldLayout.vehicleVisualScale(vehicleID: .angular),
+            3.22 * RacingWorldLayout.vehicleVisualScale(vehicleID: .rallyRS),
             2.86 * RacingWorldLayout.vehicleVisualScale(vehicleID: nil),
         ]
         let spread = try XCTUnwrap(scaledLengths.max())
@@ -173,7 +369,30 @@ final class RacingWorldLayoutTests: XCTestCase {
         XCTAssertEqual(localOffset.z, 0, accuracy: 0.000_1)
     }
 
-    func testBarrierReceivesGroundClearance() {
+    func testCPURacerUsesProgressRelativeToPlayerOnCurvedTrack() {
+        let racer = CPURacerSnapshot(
+            id: 1,
+            vehicleID: .gt,
+            x: -2,
+            distance: 128,
+            speed: 24,
+            finishPosition: nil
+        )
+
+        let track = RacingWorldLayout.trackPlacement(distance: 28, travel: 100)
+        let rival = RacingWorldLayout.cpuRacerPlacement(
+            racer,
+            playerDistance: 100
+        )
+        let localOffset = track.orientation.inverse.act(rival.position - track.position)
+
+        XCTAssertEqual(localOffset.x, -2, accuracy: 0.000_1)
+        XCTAssertEqual(localOffset.y, 0, accuracy: 0.000_1)
+        XCTAssertEqual(localOffset.z, 0, accuracy: 0.000_1)
+        XCTAssertEqual(rival.orientation, track.orientation)
+    }
+
+    func testBarrierOriginStaysOnTheTrackSurface() {
         let obstacle = ObstacleSnapshot(
             id: 8,
             rowID: 3,
@@ -192,7 +411,7 @@ final class RacingWorldLayoutTests: XCTestCase {
         let localOffset = track.orientation.inverse.act(barrier.position - track.position)
 
         XCTAssertEqual(localOffset.x, -2, accuracy: 0.000_1)
-        XCTAssertEqual(localOffset.y, 0.34, accuracy: 0.000_1)
+        XCTAssertEqual(localOffset.y, 0, accuracy: 0.000_1)
         XCTAssertEqual(localOffset.z, 0, accuracy: 0.000_1)
     }
 
@@ -405,6 +624,8 @@ final class RacingWorldLayoutTests: XCTestCase {
             "gt_racer.usdz": "7f17d5a462c9db20447b39c385f0a7f9cfa8d9500b3c755b4dcc3e40a779f340",
             "gt_racer_v5.usda": "51b69641cafd7e451941f202aef77b0f4efbbb49215eb8bd80dee1a4920bdf43",
             "gt_racer_v5.usdz": "c367cdb805bdea64c2e003e06eba92f1c8f90cff7819f241b44e590d06eabbd4",
+            "rally_rs_v5.usda": "3c2c52c7a3555dceb7897316b45f79c09508d6e4493dba2870f7819fdebbd3a7",
+            "rally_rs_v5.usdz": "4aac0217d07157c08cdd58d0d4a92377dee9c36deb84cd25242632a8473d6129",
             "angular_racer.usda": "04a3356cb53108c10254f2273799f7449b486117e536be129f9244f01686dc7b",
             "angular_racer.usdz": "080bfba6f10438090b184b91570f469b438f03b58749e136edfcdedceffc256f",
             "traffic_sedan_3d.usda": "3bc539e925336af826569dc64bf1a2ca28d6be963e64213ff3f3c7fdad70bf76",
@@ -457,25 +678,42 @@ final class RacingWorldLayoutTests: XCTestCase {
             )
         }
 
-        let gtV5Package = try Data(
-            contentsOf: racing3DDirectory.appendingPathComponent("gt_racer_v5.usdz")
-        )
-        let gtV5Source = try String(
-            contentsOf: racing3DDirectory.appendingPathComponent("gt_racer_v5.usda"),
-            encoding: .utf8
-        )
-        packagedBytes += gtV5Package.count
-        XCTAssertEqual(Array(gtV5Package.prefix(2)), [0x50, 0x4B])
-        XCTAssertLessThan(gtV5Package.count, 2 * 1_024 * 1_024)
-        XCTAssertNotNil(gtV5Package.range(of: Data("gt_racer_v5.usdc".utf8)))
-        XCTAssertTrue(gtV5Source.contains("defaultPrim = \"root\""))
-        XCTAssertTrue(gtV5Source.contains("def Xform \"GTRacerV5\""))
-        XCTAssertTrue(gtV5Source.contains("productionRevision = 5"))
-        XCTAssertTrue(gtV5Source.contains("gameForwardAxis = \"-Z\""))
-        XCTAssertTrue(gtV5Source.contains("def Xform \"paint_body_shell\""))
-        XCTAssertTrue(gtV5Source.contains("def Xform \"wheel_front_left\""))
-        XCTAssertTrue(gtV5Source.contains("def Xform \"wheel_rear_right\""))
-        XCTAssertLessThan(packagedBytes, 2_560 * 1_024)
+        let v5Contracts = [
+            (
+                basename: "gt_racer_v5",
+                rootName: "GTRacerV5",
+                requiredNames: ["paint_body_shell", "wheel_front_left", "wheel_rear_right"]
+            ),
+            (
+                basename: "rally_rs_v5",
+                rootName: "RallyRSV5",
+                requiredNames: ["paint_body_shell", "wheel_front_left", "wheel_rear_right", "paint_rally_wing", "paint_roof_scoop"]
+            ),
+        ]
+        for contract in v5Contracts {
+            let package = try Data(
+                contentsOf: racing3DDirectory.appendingPathComponent("\(contract.basename).usdz")
+            )
+            let source = try String(
+                contentsOf: racing3DDirectory.appendingPathComponent("\(contract.basename).usda"),
+                encoding: .utf8
+            )
+            packagedBytes += package.count
+            XCTAssertEqual(Array(package.prefix(2)), [0x50, 0x4B], contract.basename)
+            XCTAssertLessThan(package.count, 2 * 1_024 * 1_024, contract.basename)
+            XCTAssertNotNil(
+                package.range(of: Data("\(contract.basename).usdc".utf8)),
+                contract.basename
+            )
+            XCTAssertTrue(source.contains("defaultPrim = \"root\""), contract.basename)
+            XCTAssertTrue(source.contains("def Xform \"\(contract.rootName)\""), contract.basename)
+            XCTAssertTrue(source.contains("productionRevision = 5"), contract.basename)
+            XCTAssertTrue(source.contains("gameForwardAxis = \"-Z\""), contract.basename)
+            for name in contract.requiredNames {
+                XCTAssertTrue(source.contains("def Xform \"\(name)\""), "\(contract.basename): \(name)")
+            }
+        }
+        XCTAssertLessThan(packagedBytes, 4_512 * 1_024)
     }
 
     func testAsphaltPBRMapsAreSRGBEightBitRGBA() throws {
@@ -516,7 +754,7 @@ final class RacingWorldLayoutTests: XCTestCase {
         )
 
         for filename in [
-            "rally_racer.usdz", "gt_racer.usdz", "gt_racer_v5.usdz", "angular_racer.usdz",
+            "rally_racer.usdz", "gt_racer.usdz", "gt_racer_v5.usdz", "rally_rs_v5.usdz", "angular_racer.usdz",
             "traffic_sedan_3d.usdz", "track_barrier.usdz",
             "asphalt_normal.png", "asphalt_roughness.png",
         ] {
@@ -553,6 +791,7 @@ final class RacingWorldLayoutTests: XCTestCase {
             "rally_racer": ["paint_body_shell", "glass_canopy", "wheel_front_left", "paint_spoiler", "paint_roof_panel", "paint_rear_fascia", "paint_c_pillar_left", "rear_plate", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
             "gt_racer": ["paint_body_shell", "glass_canopy", "wheel_rear_right", "paint_ducktail", "paint_roof_panel", "paint_rear_fascia", "paint_c_pillar_right", "rear_plate", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
             "gt_racer_v5": ["paint_body_shell", "glass_canopy", "wheel_front_left", "wheel_rear_right", "paint_ducktail", "paint_roof_panel", "paint_rear_fascia", "rear_plate", "rear_light_recess", "tire", "rim_outer", "brake_disc", "caliper", "interior_cockpit"],
+            "rally_rs_v5": ["paint_body_shell", "glass_canopy", "wheel_front_left", "wheel_rear_right", "paint_rally_wing", "paint_roof_panel", "paint_rear_fascia", "rear_plate", "rear_light_recess", "tire", "rim_outer", "brake_disc", "caliper", "interior_cockpit", "paint_roof_scoop"],
             "angular_racer": ["paint_body_shell", "glass_canopy", "wheel_front_right", "paint_spoiler", "paint_roof_panel", "paint_rear_fascia", "paint_c_pillar_left", "rear_plate", "rear_light_recess", "tire_sidewall", "rim_outer", "interior_cockpit"],
             "traffic_sedan_3d": ["paint_body_shell", "glass_canopy", "wheel_rear_left", "paint_rear_lip", "paint_roof_panel", "paint_rear_fascia", "paint_c_pillar_right", "rear_plate", "rear_light_recess", "tire_sidewall", "rim_outer"],
             "track_barrier": ["dark_base", "panel_0", "reflector_4", "foot_right"],

@@ -28,9 +28,6 @@ def output_directory() -> pathlib.Path:
     return destination
 
 
-OUTPUT = output_directory()
-
-
 def reset_scene() -> None:
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
@@ -358,7 +355,7 @@ def add_bucket_seat(name: str, x: float, materials, root) -> None:
     add_box(f"{name}_headrest", (0.20, 0.10, 0.11), (x, 0.40, 0.94), materials["Interior"], root, bevel=0.040)
 
 
-def build_vehicle() -> tuple[bpy.types.Object, dict[str, bpy.types.Material]]:
+def build_gt_vehicle() -> tuple[bpy.types.Object, dict[str, bpy.types.Material]]:
     reset_scene()
     materials = {
         "Paint": make_material("Paint", (0.055, 0.30, 0.66, 1.0), metallic=0.70, roughness=0.16, coat=1.0, coat_roughness=0.045),
@@ -470,7 +467,11 @@ def look_at(obj: bpy.types.Object, target: tuple[float, float, float]) -> None:
     obj.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
 
 
-def render_preview(root: bpy.types.Object) -> None:
+def render_preview(
+    root: bpy.types.Object,
+    output: pathlib.Path,
+    filename: str = "gt_racer_v5_preview.png",
+) -> None:
     bpy.ops.mesh.primitive_plane_add(size=18, location=(0.0, 0.0, 0.015))
     floor = bpy.context.object
     floor.name = "preview_floor"
@@ -512,7 +513,7 @@ def render_preview(root: bpy.types.Object) -> None:
     scene.render.resolution_y = 900
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
-    scene.render.filepath = str(OUTPUT / "gt_racer_v5_preview.png")
+    scene.render.filepath = str(output / filename)
     scene.render.film_transparent = False
     bpy.ops.render.render(write_still=True)
 
@@ -523,19 +524,23 @@ def render_preview(root: bpy.types.Object) -> None:
             bpy.data.objects.remove(obj, do_unlink=True)
 
 
-def export_vehicle(root: bpy.types.Object) -> None:
+def export_vehicle(
+    root: bpy.types.Object,
+    output: pathlib.Path,
+    basename: str = "gt_racer_v5",
+) -> None:
     # RealityKit's racing scene advances toward -Z; Blender's authored nose is -Y.
     # The orientation conversion maps -Y to +Z, so turn the complete vehicle around.
     root.rotation_euler.z = math.pi
     root["gameForwardAxis"] = "-Z"
-    bpy.ops.wm.save_as_mainfile(filepath=str(OUTPUT / "gt_racer_v5.blend"))
+    bpy.ops.wm.save_as_mainfile(filepath=str(output / f"{basename}.blend"))
     bpy.ops.object.select_all(action="DESELECT")
     root.select_set(True)
     for child in root.children_recursive:
         child.select_set(True)
     bpy.context.view_layer.objects.active = root
     bpy.ops.wm.usd_export(
-        filepath=str(OUTPUT / "gt_racer_v5.usda"),
+        filepath=str(output / f"{basename}.usda"),
         selected_objects_only=True,
         visible_objects_only=False,
         export_animation=False,
@@ -555,13 +560,19 @@ def export_vehicle(root: bpy.types.Object) -> None:
         export_global_up_selection="Y",
         meters_per_unit=1.0,
     )
-    source_path = OUTPUT / "gt_racer_v5.usda"
+    source_path = output / f"{basename}.usda"
     source_path.write_bytes(source_path.read_bytes().rstrip() + b"\n")
 
 
-vehicle_root, _ = build_vehicle()
-render_preview(vehicle_root)
-export_vehicle(vehicle_root)
-print(f"wrote {OUTPUT / 'gt_racer_v5.blend'}")
-print(f"wrote {OUTPUT / 'gt_racer_v5.usda'}")
-print(f"wrote {OUTPUT / 'gt_racer_v5_preview.png'}")
+def main() -> None:
+    output = output_directory()
+    vehicle_root, _ = build_gt_vehicle()
+    render_preview(vehicle_root, output)
+    export_vehicle(vehicle_root, output)
+    print(f"wrote {output / 'gt_racer_v5.blend'}")
+    print(f"wrote {output / 'gt_racer_v5.usda'}")
+    print(f"wrote {output / 'gt_racer_v5_preview.png'}")
+
+
+if __name__ == "__main__":
+    main()

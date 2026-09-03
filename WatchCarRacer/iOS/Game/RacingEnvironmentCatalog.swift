@@ -86,6 +86,17 @@ struct RacingEnvironmentProfile: Equatable, Sendable {
     ) -> RacingEnvironmentLayerContract? {
         layers.first { $0.layer == layer }
     }
+
+    func eligibleVariantIndices(
+        for layer: RacingEnvironmentDistanceLayer
+    ) -> [Int] {
+        switch layer {
+        case .foreground:
+            variants.indices.filter { variants[$0].footprintRadius <= 2.5 }
+        case .midground, .far:
+            Array(variants.indices)
+        }
+    }
 }
 
 enum RacingEnvironmentCatalog {
@@ -108,7 +119,7 @@ enum RacingEnvironmentCatalog {
     ]
 
     private static let roadClearance = RacingEnvironmentRoadClearance(
-        corridorHalfWidth: 3.35,
+        corridorHalfWidth: 4.35,
         shoulderSafetyMargin: 2.65
     )
 

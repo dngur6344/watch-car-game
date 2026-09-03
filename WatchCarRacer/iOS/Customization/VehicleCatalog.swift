@@ -5,6 +5,7 @@ enum VehicleID: String, CaseIterable, Codable, Hashable, Sendable {
     case rally
     case gt
     case angular
+    case rallyRS = "rally-rs"
 }
 
 enum VehicleColorID: String, CaseIterable, Codable, Hashable, Sendable {
@@ -131,6 +132,19 @@ enum VehicleCatalog {
                     shadow: "angular_shadow",
                     paint: "angular_paint",
                     details: "angular_details"
+                ),
+                logicalRenderSize: CGSize(width: 50, height: 75),
+                pivot: .collisionCenter
+            )
+        case .rallyRS:
+            return VehicleDescriptor(
+                id: .rallyRS,
+                displayName: "Rally RS",
+                accessibilityName: "Rally RS performance vehicle",
+                textures: VehicleTextureLayers(
+                    shadow: "rally_shadow",
+                    paint: "rally_paint",
+                    details: "rally_details"
                 ),
                 logicalRenderSize: CGSize(width: 50, height: 75),
                 pivot: .collisionCenter

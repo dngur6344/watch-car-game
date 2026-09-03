@@ -148,8 +148,8 @@
           "materialSlots": ["Terrain", "Rock", "Vegetation", "Accent"],
           "sourceUSDA": "alpine_environment_enhanced.usda",
           "runtimeUSDZ": "alpine_environment_enhanced.usdz",
-          "sourceUSDASHA256": "df7691a8bca027f905b4c42360066ce3343455a8cf9c0f952a7ddf400b4cec8d",
-          "runtimeUSDZSHA256": "9af7abd7bf9798150347698203a20df7ca9742fcce3f75bb626df84854bced18",
+          "sourceUSDASHA256": "90a27f9229b8a5981d226ea01efd9957951817a56d9022d911d7a02772de6c38",
+          "runtimeUSDZSHA256": "5c8209dda980ef138d51d045bf5bb6c6b81a00e8fdbd461976fec988f031ef53",
           "hashStatus": "verified"
         }
       },

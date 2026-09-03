@@ -112,11 +112,15 @@ if [[ "$MODE" == "environment" ]]; then
     : "${SG8_TIER:?SG8_TIER is required for environment mode}"
     : "${SG8_DURATION:?SG8_DURATION is required for environment mode}"
     SG8_ROUTE_CYCLES="${SG8_ROUTE_CYCLES:-0}"
+    SG8_GAME_MODE="${SG8_GAME_MODE:-survival}"
+    SG8_CPU_COUNT="${SG8_CPU_COUNT:-3}"
     case "$SG8_TRACK" in coastal|alpine|desert) ;; *) echo "Invalid SG8_TRACK." >&2; exit 64 ;; esac
     case "$SG8_WEATHER" in clear|rain|fog|storm) ;; *) echo "Invalid SG8_WEATHER." >&2; exit 64 ;; esac
     case "$SG8_TIER" in baseline|enhanced) ;; *) echo "Invalid SG8_TIER." >&2; exit 64 ;; esac
+    case "$SG8_GAME_MODE" in survival|cpu-sprint) ;; *) echo "Invalid SG8_GAME_MODE." >&2; exit 64 ;; esac
+    case "$SG8_CPU_COUNT" in 1|2|3) ;; *) echo "SG8_CPU_COUNT must be 1, 2, or 3." >&2; exit 64 ;; esac
     if [[ -n "${SG8_VEHICLE:-}" ]]; then
-        case "$SG8_VEHICLE" in rally|gt|angular) ;; *) echo "Invalid SG8_VEHICLE." >&2; exit 64 ;; esac
+        case "$SG8_VEHICLE" in rally|gt|angular|rally-rs) ;; *) echo "Invalid SG8_VEHICLE." >&2; exit 64 ;; esac
     fi
     if [[ ! "$SG8_DURATION" =~ ^([5-9]|[1-9][0-9]+)(\.[0-9]+)?$ ]]; then
         echo "SG8_DURATION must be a finite number of at least 5 seconds." >&2
@@ -130,6 +134,8 @@ if [[ "$MODE" == "environment" ]]; then
         --sg8-track "$SG8_TRACK"
         --sg8-weather "$SG8_WEATHER"
         --sg8-tier "$SG8_TIER"
+        --sg8-game-mode "$SG8_GAME_MODE"
+        --sg8-cpu-count "$SG8_CPU_COUNT"
         --sg8-duration "$SG8_DURATION"
         --sg8-route-cycles "$SG8_ROUTE_CYCLES"
         "--watch-car-racer-environment-quality=$SG8_TIER"
@@ -238,6 +244,8 @@ SIMULATOR_LOG_DIRECTORY="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATO
         echo "track=$SG8_TRACK"
         echo "weather=$SG8_WEATHER"
         echo "tier=$SG8_TIER"
+        echo "gameMode=$SG8_GAME_MODE"
+        echo "cpuCount=$SG8_CPU_COUNT"
         echo "duration=$SG8_DURATION"
         echo "routeCycles=$SG8_ROUTE_CYCLES"
         echo "triggerMemoryWarning=${SG8_TRIGGER_MEMORY_WARNING:-false}"

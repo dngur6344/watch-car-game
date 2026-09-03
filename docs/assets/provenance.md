@@ -98,7 +98,7 @@ Rejected built-in paint/details edits that baked checkerboard pixels were not co
 
 For vehicle separation, pixels seed the paint classification only when source alpha is at least 0.55, luminance is at least 0.38, absolute RGB chroma is at most 0.30, and relative chroma is at most 0.44. Eight-connected components are retained when they contain at least 6,000 pixels, or contain at least 2,000 pixels with a width-to-height ratio of at least 4.0 so authored wide spoilers remain paint while isolated wheel highlights and ground-shadow strips remain fixed details. A two-pixel color-constrained fringe preserves antialiased paint edges. Selected paint pixels become white premultiplied RGB with their source alpha; the details/shadow layer receives the exact complementary source pixels. An eight-pixel safety border is cleared after separation. The paired layers therefore share the same canvas and pivot and never overlap in alpha.
 
-The same script composes the three aligned pairs with all eight catalog colors into `docs/assets/presentation-contact-sheet.png`. This 3×8 evidence confirms paint changes while glass, lights, tires, wheels, trim, interior details, and authored ground shadows remain unmodified.
+The same script composes the four aligned pairs with all eight catalog colors into `docs/assets/presentation-contact-sheet.png`. This 4×8 evidence confirms paint changes while glass, lights, tires, wheels, trim, interior details, and authored ground shadows remain unmodified.
 
 ### Production files
 
@@ -112,8 +112,10 @@ The same script composes the three aligned pairs with all eight catalog colors i
 | `Presentation/gt_hero_details_shadow.png` | presentation.vehicle.gt.details-shadow | P-PRESENTATION-GT | 1024×1024 complementary fixed details/shadow split | `dc0ba9852d81b003f2afe847c0f688853e4a848133a3fe829b1ecfc4593c0f9f` |
 | `Presentation/angular_hero_paint.png` | presentation.vehicle.angular.paint-mask | P-PRESENTATION-ANGULAR | 1024×1024 aligned pure-white alpha paint split | `630fcc807fa702df9e763c0c707ff3493a793bafe67967077024672d50e9f473` |
 | `Presentation/angular_hero_details_shadow.png` | presentation.vehicle.angular.details-shadow | P-PRESENTATION-ANGULAR | 1024×1024 complementary fixed details/shadow split | `aa710880cde0ebafeedb8caa6e1c4649ef1baaa674e735b08cca774a0925714c` |
+| `Presentation/rally-rs_hero_paint.png` | presentation.vehicle.rally-rs.paint-mask | Blender Rally RS presentation source | 1024×1024 aligned pure-white alpha paint split | `2b6e2d23f7e9781ef50447eb354fc9d7d19f0853114eac19f8902f8226516bae` |
+| `Presentation/rally-rs_hero_details_shadow.png` | presentation.vehicle.rally-rs.details-shadow | Blender Rally RS presentation source | 1024×1024 complementary fixed details/shadow split | `cffffd39576b67eda87221c19437bab6b97766607e9509978b4988c2526b906c` |
 
-Contact-sheet evidence SHA-256: `749ad4d843e3d0e0ace9eee101db51436f21aeebf30bc364bc3b84c6bda8a1f4`.
+Contact-sheet evidence SHA-256: `a86b1e5c6e66f9fbbd21c4413cdd5d57409c1114d9aa6126fa014b08376a107d`.
 
 ## Project-original audio kit (2026-08-29)
 
@@ -166,9 +168,11 @@ The racing view's production 3D kit is entirely project-authored and brand-neutr
 
 Generator SHA-256: `f78474bef8bbe0edcfd50ca81258bb4759297ca325cfd217fe67138ac664f23b`.
 
-## Project-original Blender GT hero vehicle (2026-08-31, vehicle revision 5)
+## Project-original Blender hero vehicles (2026-08-31, vehicle revision 5)
 
 `gt_racer_v5` is the first DCC-authored vehicle quality bar for the game. It is an original, brand-neutral grand-touring supercar inspired only by the visual density and presentation standard of premium arcade racers; it does not reproduce a recognizable production vehicle, trademark, badge, logo, or downloaded model. Repository script `Scripts/build_gt_racer_v5_blender.py` authors the source in Blender 4.5.6 LTS with a continuous Catmull-Clark body loft, boolean wheel openings, a low glass canopy, roof panel and window belt, separated body/glass/carbon/metal/lamp materials, four named wheel assemblies, tires, rims, spokes, brake discs, calipers, cockpit, aero, fascia, diffuser, exhausts, and emissive front/rear lighting. The resulting source contains 85 scene objects, 13 materials, 21,698 mesh vertices, and 43,108 rendered triangles.
+
+`rally_rs_v5` is an independent short-wheelbase Rally RS design rather than a scaled GT derivative. Repository script `Scripts/build_rally_rs_v5_blender.py` authors its taller roofline, separate body loft, roof scoop, connected high rally wing, hood extraction vents, skid plate, mud flaps, center exhaust, bespoke lamp signature, wheels, brakes, and cockpit. It uses the same stable RealityKit paint/wheel naming contract while adding a distinct `rally-rs` catalog ID and presentation pair. The lightweight SpriteKit simulation proxy intentionally reuses the original Rally collision silhouette; the visible maintenance and RealityKit assets are unique.
 
 The editable `.blend` master and preview render are retained under `docs/assets/sources/vehicle-v5/`. Blender exports an editable Y-up USDA with project-original license, production revision 5 metadata, and an explicit game-forward `-Z` contract. `/usr/bin/usdcat` converts that source to binary USDC before `/usr/bin/usdzip --checkCompliance` creates the runtime package, reducing the production package from the 8.5 MiB text representation to less than 2 MiB without changing geometry. `/usr/bin/usdchecker` validates both the editable source and final package. The app loads revision 5 for the GT selection first and retains revision 4 `gt_racer.usdz` as a runtime fallback. Paint and mirror nodes keep the established name prefixes, and wheel roots retain the animation contract used by the driving scene.
 
@@ -180,8 +184,13 @@ All geometry, materials, lighting setup, and processing code are repository-auth
 | `Racing3D/gt_racer_v5.usdz` | RealityKit GT revision 5 binary package | `c367cdb805bdea64c2e003e06eba92f1c8f90cff7819f241b44e590d06eabbd4` |
 | `docs/assets/sources/vehicle-v5/gt_racer_v5.blend` | editable Blender source master | `55911efdbe9e5eff1278c81522c7f6a2b8b83866180b77179967f52847215f7f` |
 | `docs/assets/sources/vehicle-v5/gt_racer_v5_preview.png` | Blender Eevee rear three-quarter preview | `6fa41c8195023fac3d24dee564cfc5062a98a9decde652f01addfd456de088e3` |
+| `Racing3D/rally_rs_v5.usda` | editable Y-up Rally RS revision 5 source | `3c2c52c7a3555dceb7897316b45f79c09508d6e4493dba2870f7819fdebbd3a7` |
+| `Racing3D/rally_rs_v5.usdz` | RealityKit Rally RS revision 5 binary package | `4aac0217d07157c08cdd58d0d4a92377dee9c36deb84cd25242632a8473d6129` |
+| `docs/assets/sources/vehicle-v5/rally_rs_v5.blend` | editable Rally RS Blender source master | `7b7e9d363f614b016b7cb67139f32023260d92be22f1299c02840a3f40f6efc8` |
+| `docs/assets/sources/vehicle-v5/rally_rs_v5_preview.png` | Blender Eevee Rally RS preview | `2dab862d5941d6e9e5d776fe8456cfc8becc27364bb2ec03f91916c9dd1b828b` |
+| `docs/assets/sources/vehicle-v5/rally_rs_presentation_source.png` | neutral-paint presentation split source | `71d843105e71980546bd7537aac6775c472444641f980ebb109df15f19019bec` |
 
-Blender authoring script SHA-256: `784a101eda4207a7d8059a5788ce221adedf94337baee8c9f3cef1fe0f4be7f4`.
+Blender authoring script SHA-256: GT `a9437975c2a1f41247fc5c6e31e7aa3768cd88edc99ef356ba20ce44fe9e54dd`; Rally RS `03b24b0c843e9257adc8e6e38febc4a306eeeadf72ef6f4e51a14b7fafee2280`.
 
 ## Project-original racing environment source and authoring contract (2026-08-30)
 
@@ -195,13 +204,15 @@ All three prompts identify the use case as `stylized-concept` and the asset as a
 | `alpine_terrain_source.png` | Alpine Pass / `alpine` | `exec-508cc22c-ff7b-4908-96e1-06b94ea3661a` | `735c36b4ab5f958fcb7afc691c9303ceb8086bf138bfde9ed34d58b4d628fba7` |
 | `desert_terrain_source.png` | Desert Circuit / `desert` | `exec-0aaeffee-34be-4348-8b39-15377b0c2639` | `062c6cc3a963d7c161947af2ed913fd450e007af469fecf177432694792bab54` |
 
-`Scripts/build_racing_environment_usd.swift` version 1.1.0 deterministically authors track-specific base and enhanced USDA sources. Each root carries track, tier, role, authoring-tool, project-original license, revision, 6m road half-clearance, and 14m hero road-aperture metadata. The packs use named foreground/midground/far LOD roots, named SG1 variant entities, persistent hero entities, four flattened `UsdPreviewSurface` material slots, and authored mesh profiles with asymmetric ridges, erosion notches, faceted vegetation/rocks, and irregular arch crowns rather than raw primitive silhouettes. Ridge, cliff, and mesa geometry is closed with deterministic ground skirts so no sky can leak through the mountain body; Alpine snow accents use solid runtime mountain caps instead of an open sheet. Its `package` mode requires exact generated USDA, normalizes input mtime to `2026-08-30T00:00:00Z`, and invokes `/usr/bin/usdzip --checkCompliance` from the output directory under `TZ=UTC` with relative basenames. The resulting one-layer stored USDZ packages therefore avoid temporary absolute member names and varying timestamps and are byte-for-byte reproducible.
+`Scripts/build_racing_environment_usd.swift` version 1.1.0 deterministically authors all baseline packs plus the Ocean and Desert enhanced packs. Alpine enhanced revision 3 is authored by `Scripts/build_alpine_environment_blender.py` in Blender 4.5.6 LTS and retains the same runtime hierarchy/material contract. Each root carries track, tier, role, authoring-tool, project-original license, revision, 6m road half-clearance, and 14m hero road-aperture metadata. The packs use named foreground/midground/far LOD roots, named SG1 variant entities, persistent hero entities, and four flattened `UsdPreviewSurface` material slots. The Blender Alpine pack adds layered granite volumes, combined multi-tier pines, a forest shelf, solid snow ridges, paired mountain massifs, and an explicit stone tunnel portal whose open center replaces the former ambiguous open mountain silhouette. `/usr/bin/usdzip --checkCompliance` stores the compact editable USDA without external dependencies.
 
 `Scripts/build_racing_environment_pbr_maps.swift` version 1.0.0 first rejects any source whose complete-file SHA-256 or 1254×1254 dimensions differ from the contract. It uses Apple CoreGraphics and ImageIO to take the centered 1200×1200 crop at `(27, 27)`, build a 1024×1024 atlas with four 512×512 top-left-origin quadrants, and apply fixed wrap offsets plus a 36-pixel symmetric opposite-edge blend. Quadrants are reserved for primary terrain, secondary terrain, transition, and track-specific decal material. It exports opaque 8-bit RGBA base color with embedded sRGB for RealityKit `.color`, and tangent-space normal plus RGB-replicated roughness with embedded linear sRGB for `.normal` and `.scalar`.
 
 The machine-readable contract is `WatchCarRacer/iOS/Resources/RacingEnvironment3D/RacingEnvironmentAssetManifest.json`. Each texture declares 1024×1024 RGBA8 and 4,194,304 base-level decoded bytes; three textures declare 12,582,912 bytes per track and all three tracks declare 37,748,736 bytes. All source, geometry, package, and derived texture hashes are final lowercase SHA-256 values with `hashStatus: verified`.
 
-The geometry chain is repository-authored deterministic recipe → editable USDA → one-layer stored USDZ containing that exact USDA. The raster chain is selected source master and fixed source SHA → centered crop and four-quadrant edge-blended atlas → sRGB base color or linear-sRGB normal/roughness map. USDA files remain editable repository sources and are not bundled; only the six USDZ, nine runtime PNGs, and manifest are iOS app resources. No racing-environment resource is included in the Watch app.
+Alpine Blender authoring script SHA-256: `5b575a3ac0ebe5aca3d2d0edb1308c2a3d404e949c80ad969947defd54fb02b2`.
+
+The geometry chain is repository-authored deterministic recipe or editable Blender master → editable USDA → one-layer stored USDZ containing that exact USDA. The raster chain is selected source master and fixed source SHA → centered crop and four-quadrant edge-blended atlas → sRGB base color or linear-sRGB normal/roughness map. USDA files and Blender masters remain editable repository sources and are not bundled; only the six USDZ, nine runtime PNGs, and manifest are iOS app resources. No racing-environment resource is included in the Watch app.
 
 | Final asset | Role | Processing and source chain | SHA-256 |
 | --- | --- | --- | --- |
@@ -214,8 +225,10 @@ The geometry chain is repository-authored deterministic recipe → editable USDA
 | `RacingEnvironment3D/ocean_terrain_roughness.png` | Ocean terrain/decal scalar roughness, RealityKit `.scalar` | Ocean base-color atlas → deterministic roughness curve and RGB replication, opaque 8-bit linear-sRGB RGBA | `ce993155a622fbecb56c83e5411d56e149a17b5b0b30d6811ea7fd761ba0c741` |
 | `RacingEnvironment3D/alpine_environment_base.usda` | Alpine baseline authored pack | deterministic Alpine rock, pine, forest, snow-ridge, and tunnel-peak hero recipe | `1c02e4e9ca0faa0c07165cfaaa8c8904f8dfa4e16620a04d14a469f3734a8854` |
 | `RacingEnvironment3D/alpine_environment_base.usdz` | Alpine baseline RealityKit pack | stored compliant package containing exact `alpine_environment_base.usda` | `a61db45184b9f17d26e41411d524057bf3182f869f74e1b074d3ad646d5abb77` |
-| `RacingEnvironment3D/alpine_environment_enhanced.usda` | Alpine enhanced supplemental authored pack | deterministic higher-density Alpine authored recipe with the same named LOD/variant/hero contract | `df7691a8bca027f905b4c42360066ce3343455a8cf9c0f952a7ddf400b4cec8d` |
-| `RacingEnvironment3D/alpine_environment_enhanced.usdz` | Alpine enhanced RealityKit pack | stored compliant package containing exact `alpine_environment_enhanced.usda` | `9af7abd7bf9798150347698203a20df7ca9742fcce3f75bb626df84854bced18` |
+| `RacingEnvironment3D/alpine_environment_enhanced.usda` | Alpine enhanced Blender-authored pack | layered granite, multi-tier pines, closed snow ridges, paired massifs, and a 14m tunnel portal under the existing named contract | `90a27f9229b8a5981d226ea01efd9957951817a56d9022d911d7a02772de6c38` |
+| `RacingEnvironment3D/alpine_environment_enhanced.usdz` | Alpine enhanced RealityKit pack | stored compliant package containing exact Blender-derived `alpine_environment_enhanced.usda` | `5c8209dda980ef138d51d045bf5bb6c6b81a00e8fdbd461976fec988f031ef53` |
+| `docs/assets/sources/racing-environment-blender/alpine_environment_enhanced.blend` | editable Alpine Blender source master | Blender scene containing the four variant families and staged hero composition | `2285d09d9beaf002747322b283ff1119d716ade12b909680b69d1c4cbd17cd5a` |
+| `docs/assets/sources/racing-environment-blender/alpine_environment_blender_preview.png` | Alpine authoring preview | Eevee overview of the granite, pines, snow ridges, and tunnel portal | `14ffee14bb551de867b83c341bd1578d85913d598a76f5e16d0f702cd06de5f7` |
 | `RacingEnvironment3D/alpine_terrain_basecolor.png` | Alpine terrain/decal base color, RealityKit `.color` | `alpine_terrain_source.png` (`735c…ba7`) → fixed crop, four atlas quadrants, edge blend, opaque 8-bit sRGB RGBA | `c90396ecaf1f44f8677ac5083652ff1d7e5e00877d0c22accb053fc0dc2ec6d3` |
 | `RacingEnvironment3D/alpine_terrain_normal.png` | Alpine terrain/decal tangent normal, RealityKit `.normal` | Alpine base-color atlas → deterministic wrapped height gradient, opaque 8-bit linear-sRGB RGBA | `b459ec978e09a948351ef102b5210de6c1c83ab26aceba1984518bf8c32bc7ea` |
 | `RacingEnvironment3D/alpine_terrain_roughness.png` | Alpine terrain/decal scalar roughness, RealityKit `.scalar` | Alpine base-color atlas → deterministic roughness curve and RGB replication, opaque 8-bit linear-sRGB RGBA | `97300a0540bf5133cdd2476e5db2efe3020a1dc8fbe9db7a7ccf09ce6bce2624` |

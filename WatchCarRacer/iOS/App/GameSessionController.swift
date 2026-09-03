@@ -173,8 +173,15 @@ final class GameSessionController {
         gameLoopDriver = GameLoopDriver(scene: scene)
         self.watchInput = watchInput
         self.audioDirector = audioDirector
-        audioInitialSpeed = configuration.initialSpeed
-        audioMaximumSpeed = configuration.maximumSpeed
+        switch configuration.mode {
+        case .survival:
+            audioInitialSpeed = configuration.initialSpeed
+            audioMaximumSpeed = configuration.maximumSpeed * configuration.boosterSpeedMultiplier
+        case .cpuSprint:
+            audioInitialSpeed = configuration.sprintInitialSpeed
+            audioMaximumSpeed = configuration.sprintMaximumSpeed
+                * configuration.boosterSpeedMultiplier
+        }
         let inferredWatchFeedbackSender = watchInput as? any WatchFeedbackSending
         self.feedbackPlayer = feedbackPlayer
             ?? (inferredWatchFeedbackSender == nil ? nil : PhoneFeedbackPlayer())
@@ -504,6 +511,15 @@ final class GameSessionController {
             presentationPhase = .collision(result)
             scene.isPaused = false
             audioDirector?.transition(to: .impact)
+        } else if wasRunning, snapshot.phase == .finished, !didRecordResult {
+            didRecordResult = true
+            let result = resultRecorder(snapshot.score)
+            invalidateCountdown()
+            invalidateStartCue()
+            invalidateNearMissFeedbackPresentation()
+            scene.isPaused = true
+            presentationPhase = .result(result)
+            audioDirector?.transition(to: .result)
         }
 
         for feedback in feedbackEvents {

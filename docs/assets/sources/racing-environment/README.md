@@ -49,7 +49,9 @@ No stock image, external asset pack, third-party source image, trademark, logo, 
 
 The source-to-atlas relationship, quadrant content, output names, semantics, dimensions, decoded-byte budget, and pending/actual derived hashes are machine-readable in `WatchCarRacer/iOS/Resources/RacingEnvironment3D/RacingEnvironmentAssetManifest.json`. Null derived hashes mean “pending SG3 generation”; they are not placeholder hashes.
 
-`Scripts/build_racing_environment_usd.swift` version 1.1.0 has separate `build`, `validate`, and `package` modes. Ridge, cliff, and mesa bodies are authored as closed volumes with deterministic ground skirts; Alpine snow accents use the runtime's solid mountain caps instead of an open USD sheet. Package mode first requires byte-exact generated USDA, sets every USDA modification time to `2026-08-30T00:00:00Z`, and invokes `/usr/bin/usdzip --checkCompliance` from the output directory with `TZ=UTC` and relative input/output basenames. This avoids embedding temporary absolute paths or varying timestamps and makes the stored, compliant one-layer USDZ packages byte-for-byte reproducible.
+`Scripts/build_racing_environment_usd.swift` version 1.1.0 has separate `build`, `validate`, and `package` modes for all baseline packs plus Ocean and Desert enhanced packs. Ridge, cliff, and mesa bodies are authored as closed volumes with deterministic ground skirts. Package mode first requires byte-exact generated USDA, sets every USDA modification time to `2026-08-30T00:00:00Z`, and invokes `/usr/bin/usdzip --checkCompliance` from the output directory with `TZ=UTC` and relative input/output basenames.
+
+The production Alpine enhanced revision 3 is instead authored in Blender 4.5 LTS by `Scripts/build_alpine_environment_blender.py`. Its editable master and preview live in `docs/assets/sources/racing-environment-blender/`. The script builds layered granite, combined multi-tier pine geometry, forest shelves, solid snow ridges, paired mountain massifs, and a stone tunnel portal with an explicit 14m opening, then writes the same named RealityKit variant/hero/material contract and packages the exact USDA with `/usr/bin/usdzip --checkCompliance`.
 
 Build and validate with:
 
@@ -57,6 +59,9 @@ Build and validate with:
 swift Scripts/build_racing_environment_usd.swift build <output-directory>
 swift Scripts/build_racing_environment_usd.swift validate <output-directory>
 swift Scripts/build_racing_environment_usd.swift package <output-directory>
+
+blender --background --factory-startup \
+  --python Scripts/build_alpine_environment_blender.py -- <output-directory>
 
 swift Scripts/build_racing_environment_pbr_maps.swift build \
   docs/assets/sources/racing-environment \

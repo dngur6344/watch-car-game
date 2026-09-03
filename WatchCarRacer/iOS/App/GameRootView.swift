@@ -166,22 +166,26 @@ struct GameRootView: View {
         ZStack(alignment: .top) {
             HStack(alignment: .top, spacing: 12) {
                 hudMetric(
-                    title: "SCORE",
-                    value: String(gameSession.score),
+                    title: primaryMetricTitle,
+                    value: primaryMetricValue,
                     unit: nil,
                     systemImage: "flag.checkered"
                 )
                 .accessibilityIdentifier("game.score")
 
-                Spacer(minLength: 156)
+                Spacer(minLength: 120)
 
-                hudMetric(
-                    title: "SPEED",
-                    value: String(gameSession.speed),
-                    unit: "KM/H",
-                    systemImage: "speedometer"
-                )
-                .accessibilityIdentifier("game.speed")
+                HStack(alignment: .top, spacing: 7) {
+                    hudMetric(
+                        title: "SPEED",
+                        value: String(gameSession.speed),
+                        unit: "KM/H",
+                        systemImage: "speedometer"
+                    )
+                    .accessibilityIdentifier("game.speed")
+
+                    boosterStatus
+                }
             }
 
             VStack(spacing: 3) {
@@ -193,6 +197,75 @@ struct GameRootView: View {
             }
         }
         .frame(height: 50)
+    }
+
+    private var primaryMetricTitle: String {
+        gameSession.renderSnapshot.gameMode == .cpuSprint ? "POSITION" : "SCORE"
+    }
+
+    private var primaryMetricValue: String {
+        let snapshot = gameSession.renderSnapshot
+        guard snapshot.gameMode == .cpuSprint else {
+            return String(gameSession.score)
+        }
+        return "\(snapshot.playerPlace ?? 1)/\(snapshot.fieldSize)"
+    }
+
+    private var boosterStatus: some View {
+        let booster = gameSession.renderSnapshot.booster
+        let configuration = gameSession.scene.configuration
+        let progress: Double
+        let color: Color
+        let status: String
+        if booster.isActive {
+            let duration = max(configuration.boosterActiveDuration, 0.001)
+            progress = min(max(booster.remainingDuration / duration, 0), 1)
+            color = .orange
+            status = booster.remainingDuration.formatted(
+                .number.precision(.fractionLength(1))
+            )
+        } else {
+            progress = min(max(booster.chargeProgress, 0), 1)
+            color = .mint
+            status = "\(Int((progress * 100).rounded()))%"
+        }
+
+        return VStack(spacing: 1) {
+            ZStack {
+                Circle()
+                    .stroke(.white.opacity(0.14), lineWidth: 3)
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundStyle(booster.isActive ? .orange : .white.opacity(0.86))
+            }
+            .frame(width: 27, height: 27)
+
+            Text(booster.isActive ? "BOOST \(status)" : status)
+                .font(.system(size: 6.5, weight: .bold, design: .monospaced))
+                .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .frame(width: 58, height: 50)
+        .background(.black.opacity(0.46), in: RoundedRectangle(cornerRadius: 9))
+        .overlay {
+            RoundedRectangle(cornerRadius: 9)
+                .stroke(color.opacity(booster.isActive ? 0.62 : 0.18), lineWidth: 0.8)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Automatic booster")
+        .accessibilityValue(
+            booster.isActive
+                ? "Active, \(status) seconds remaining"
+                : "Charging, \(status)"
+        )
+        .accessibilityIdentifier("game.booster")
     }
 
     private func hudMetric(
@@ -357,14 +430,15 @@ struct GameRootView: View {
     }
 
     private func resultOverlay(_ result: RunResult) -> some View {
-        VStack(spacing: 12) {
-            Text("CRASHED")
+        let isSprint = gameSession.renderSnapshot.gameMode == .cpuSprint
+        return VStack(spacing: 12) {
+            Text(isSprint ? sprintResultTitle : "CRASHED")
                 .font(.system(size: 34, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityFocused($presentationFocus, equals: .result)
 
-            if result.isNewBest {
+            if !isSprint, result.isNewBest {
                 Label("NEW LOCAL BEST", systemImage: "trophy.fill")
                     .font(.caption.bold())
                     .foregroundStyle(.yellow)
@@ -372,8 +446,22 @@ struct GameRootView: View {
             }
 
             HStack(spacing: 24) {
-                resultMetric(title: "FINAL SCORE", value: result.score)
-                resultMetric(title: "LOCAL BEST", value: result.localBest)
+                if isSprint {
+                    resultMetric(
+                        title: "POSITION",
+                        value: "\(gameSession.renderSnapshot.playerPlace ?? 1) / "
+                            + "\(gameSession.renderSnapshot.fieldSize)"
+                    )
+                    resultMetric(
+                        title: "TIME",
+                        value: gameSession.renderSnapshot.elapsedTime.formatted(
+                            .number.precision(.fractionLength(2))
+                        ) + "s"
+                    )
+                } else {
+                    resultMetric(title: "FINAL SCORE", value: String(result.score))
+                    resultMetric(title: "LOCAL BEST", value: String(result.localBest))
+                }
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Run result")
@@ -418,18 +506,29 @@ struct GameRootView: View {
 #endif
     }
 
-    private func resultMetric(title: String, value: Int) -> some View {
+    private var sprintResultTitle: String {
+        gameSession.renderSnapshot.playerPlace == 1 ? "VICTORY" : "RACE COMPLETE"
+    }
+
+    private func resultMetric(title: String, value: String) -> some View {
         VStack(spacing: 2) {
             Text(title)
                 .font(.caption2.bold())
                 .foregroundStyle(.white.opacity(0.62))
-            Text(value, format: .number)
+            Text(value)
                 .font(.title3.monospacedDigit().bold())
                 .foregroundStyle(.white)
         }
     }
 
     private func resultAccessibilityValue(_ result: RunResult) -> String {
+        if gameSession.renderSnapshot.gameMode == .cpuSprint {
+            return "Position \(gameSession.renderSnapshot.playerPlace ?? 1) of "
+                + "\(gameSession.renderSnapshot.fieldSize), time "
+                + gameSession.renderSnapshot.elapsedTime.formatted(
+                    .number.precision(.fractionLength(2))
+                ) + " seconds"
+        }
         let newBest = result.isNewBest ? ", new local best" : ""
         return "Final score \(result.score), local best \(result.localBest)\(newBest)"
     }

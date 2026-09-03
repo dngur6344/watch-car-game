@@ -526,7 +526,7 @@ final class GameScene: SKScene {
 
     private func buildLaneMarks() {
         let markCount = 12
-        for (separatorIndex, separatorX) in [-0.5, 0.5].enumerated() {
+        for (separatorIndex, separatorX) in [-1.0, 0.0, 1.0].enumerated() {
             for index in 0..<markCount {
                 let node = SKSpriteNode(
                     texture: mapTextures.lane,

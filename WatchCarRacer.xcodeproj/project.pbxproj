@@ -111,7 +111,6 @@
 		040000000000000000000066 /* asphalt_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000066 /* asphalt_normal.png */; };
 		040000000000000000000067 /* asphalt_roughness.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000067 /* asphalt_roughness.png */; };
 		040000000000000000000068 /* gt_racer.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000068 /* gt_racer.usdz */; };
-		040000000000000000000090 /* gt_racer_v5.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000090 /* gt_racer_v5.usdz */; };
 		040000000000000000000069 /* angular_racer.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000069 /* angular_racer.usdz */; };
 		04000000000000000000006A /* traffic_sedan_3d.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006A /* traffic_sedan_3d.usdz */; };
 		04000000000000000000006B /* track_barrier.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006B /* track_barrier.usdz */; };
@@ -119,13 +118,6 @@
 		04000000000000000000006D /* RacingEnvironmentLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006D /* RacingEnvironmentLayout.swift */; };
 		04000000000000000000006E /* RacingEnvironmentLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006E /* RacingEnvironmentLayoutTests.swift */; };
 		04000000000000000000006F /* RacingEnvironmentAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000006F /* RacingEnvironmentAssetTests.swift */; };
-		040000000000000000000080 /* RacingEnvironmentAssetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000080 /* RacingEnvironmentAssetLibrary.swift */; };
-		040000000000000000000081 /* RacingEnvironmentQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000081 /* RacingEnvironmentQuality.swift */; };
-		040000000000000000000082 /* RacingEnvironmentQualityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000082 /* RacingEnvironmentQualityTests.swift */; };
-		040000000000000000000083 /* RacingEnvironmentScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000083 /* RacingEnvironmentScene.swift */; };
-		040000000000000000000084 /* RacingEnvironmentSceneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000084 /* RacingEnvironmentSceneTests.swift */; };
-		040000000000000000000085 /* RacingEnvironmentWeather.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000085 /* RacingEnvironmentWeather.swift */; };
-		040000000000000000000086 /* RacingEnvironmentWeatherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000086 /* RacingEnvironmentWeatherTests.swift */; };
 		040000000000000000000070 /* RacingEnvironmentAssetManifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000070 /* RacingEnvironmentAssetManifest.json */; };
 		040000000000000000000071 /* ocean_environment_base.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000071 /* ocean_environment_base.usdz */; };
 		040000000000000000000072 /* ocean_environment_enhanced.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000072 /* ocean_environment_enhanced.usdz */; };
@@ -142,6 +134,17 @@
 		04000000000000000000007D /* desert_terrain_basecolor.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007D /* desert_terrain_basecolor.png */; };
 		04000000000000000000007E /* desert_terrain_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007E /* desert_terrain_normal.png */; };
 		04000000000000000000007F /* desert_terrain_roughness.png in Resources */ = {isa = PBXBuildFile; fileRef = 03000000000000000000007F /* desert_terrain_roughness.png */; };
+		040000000000000000000080 /* RacingEnvironmentAssetLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000080 /* RacingEnvironmentAssetLibrary.swift */; };
+		040000000000000000000081 /* RacingEnvironmentQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000081 /* RacingEnvironmentQuality.swift */; };
+		040000000000000000000082 /* RacingEnvironmentQualityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000082 /* RacingEnvironmentQualityTests.swift */; };
+		040000000000000000000083 /* RacingEnvironmentScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000083 /* RacingEnvironmentScene.swift */; };
+		040000000000000000000084 /* RacingEnvironmentSceneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000084 /* RacingEnvironmentSceneTests.swift */; };
+		040000000000000000000085 /* RacingEnvironmentWeather.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000085 /* RacingEnvironmentWeather.swift */; };
+		040000000000000000000086 /* RacingEnvironmentWeatherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000086 /* RacingEnvironmentWeatherTests.swift */; };
+		040000000000000000000090 /* gt_racer_v5.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000090 /* gt_racer_v5.usdz */; };
+		040000000000000000000091 /* rally_rs_v5.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000091 /* rally_rs_v5.usdz */; };
+		040000000000000000000092 /* rally-rs_hero_paint.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000092 /* rally-rs_hero_paint.png */; };
+		040000000000000000000093 /* rally-rs_hero_details_shadow.png in Resources */ = {isa = PBXBuildFile; fileRef = 030000000000000000000093 /* rally-rs_hero_details_shadow.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -285,7 +288,6 @@
 		030000000000000000000066 /* asphalt_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = asphalt_normal.png; sourceTree = "<group>"; };
 		030000000000000000000067 /* asphalt_roughness.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = asphalt_roughness.png; sourceTree = "<group>"; };
 		030000000000000000000068 /* gt_racer.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = gt_racer.usdz; sourceTree = "<group>"; };
-		030000000000000000000090 /* gt_racer_v5.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = gt_racer_v5.usdz; sourceTree = "<group>"; };
 		030000000000000000000069 /* angular_racer.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = angular_racer.usdz; sourceTree = "<group>"; };
 		03000000000000000000006A /* traffic_sedan_3d.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = traffic_sedan_3d.usdz; sourceTree = "<group>"; };
 		03000000000000000000006B /* track_barrier.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = track_barrier.usdz; sourceTree = "<group>"; };
@@ -293,13 +295,6 @@
 		03000000000000000000006D /* RacingEnvironmentLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentLayout.swift; sourceTree = "<group>"; };
 		03000000000000000000006E /* RacingEnvironmentLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentLayoutTests.swift; sourceTree = "<group>"; };
 		03000000000000000000006F /* RacingEnvironmentAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentAssetTests.swift; sourceTree = "<group>"; };
-		030000000000000000000080 /* RacingEnvironmentAssetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentAssetLibrary.swift; sourceTree = "<group>"; };
-		030000000000000000000081 /* RacingEnvironmentQuality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentQuality.swift; sourceTree = "<group>"; };
-		030000000000000000000082 /* RacingEnvironmentQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentQualityTests.swift; sourceTree = "<group>"; };
-		030000000000000000000083 /* RacingEnvironmentScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentScene.swift; sourceTree = "<group>"; };
-		030000000000000000000084 /* RacingEnvironmentSceneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentSceneTests.swift; sourceTree = "<group>"; };
-		030000000000000000000085 /* RacingEnvironmentWeather.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentWeather.swift; sourceTree = "<group>"; };
-		030000000000000000000086 /* RacingEnvironmentWeatherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentWeatherTests.swift; sourceTree = "<group>"; };
 		030000000000000000000070 /* RacingEnvironmentAssetManifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = RacingEnvironmentAssetManifest.json; sourceTree = "<group>"; };
 		030000000000000000000071 /* ocean_environment_base.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = ocean_environment_base.usdz; sourceTree = "<group>"; };
 		030000000000000000000072 /* ocean_environment_enhanced.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = ocean_environment_enhanced.usdz; sourceTree = "<group>"; };
@@ -316,6 +311,17 @@
 		03000000000000000000007D /* desert_terrain_basecolor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = desert_terrain_basecolor.png; sourceTree = "<group>"; };
 		03000000000000000000007E /* desert_terrain_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = desert_terrain_normal.png; sourceTree = "<group>"; };
 		03000000000000000000007F /* desert_terrain_roughness.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = desert_terrain_roughness.png; sourceTree = "<group>"; };
+		030000000000000000000080 /* RacingEnvironmentAssetLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentAssetLibrary.swift; sourceTree = "<group>"; };
+		030000000000000000000081 /* RacingEnvironmentQuality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentQuality.swift; sourceTree = "<group>"; };
+		030000000000000000000082 /* RacingEnvironmentQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentQualityTests.swift; sourceTree = "<group>"; };
+		030000000000000000000083 /* RacingEnvironmentScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentScene.swift; sourceTree = "<group>"; };
+		030000000000000000000084 /* RacingEnvironmentSceneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentSceneTests.swift; sourceTree = "<group>"; };
+		030000000000000000000085 /* RacingEnvironmentWeather.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentWeather.swift; sourceTree = "<group>"; };
+		030000000000000000000086 /* RacingEnvironmentWeatherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingEnvironmentWeatherTests.swift; sourceTree = "<group>"; };
+		030000000000000000000090 /* gt_racer_v5.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = gt_racer_v5.usdz; sourceTree = "<group>"; };
+		030000000000000000000091 /* rally_rs_v5.usdz */ = {isa = PBXFileReference; lastKnownFileType = file.usdz; path = rally_rs_v5.usdz; sourceTree = "<group>"; };
+		030000000000000000000092 /* rally-rs_hero_paint.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "rally-rs_hero_paint.png"; sourceTree = "<group>"; };
+		030000000000000000000093 /* rally-rs_hero_details_shadow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "rally-rs_hero_details_shadow.png"; sourceTree = "<group>"; };
 		0300000000000000000000F1 /* WatchCarRacer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F2 /* WatchCarRacerWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WatchCarRacerWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0300000000000000000000F3 /* WatchCarRacerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WatchCarRacerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -323,10 +329,34 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		050000000000000000000002 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		050000000000000000000012 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		050000000000000000000022 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		050000000000000000000032 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		050000000000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		050000000000000000000022 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		050000000000000000000032 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -568,44 +598,6 @@
 			path = Backgrounds;
 			sourceTree = "<group>";
 		};
-		020000000000000000000018 /* Racing3D */ = {
-			isa = PBXGroup;
-			children = (
-				030000000000000000000065 /* rally_racer.usdz */,
-				030000000000000000000068 /* gt_racer.usdz */,
-				030000000000000000000090 /* gt_racer_v5.usdz */,
-				030000000000000000000069 /* angular_racer.usdz */,
-				03000000000000000000006A /* traffic_sedan_3d.usdz */,
-				03000000000000000000006B /* track_barrier.usdz */,
-				030000000000000000000066 /* asphalt_normal.png */,
-				030000000000000000000067 /* asphalt_roughness.png */,
-			);
-			path = Racing3D;
-			sourceTree = "<group>";
-		};
-		020000000000000000000019 /* RacingEnvironment3D */ = {
-			isa = PBXGroup;
-			children = (
-				030000000000000000000070 /* RacingEnvironmentAssetManifest.json */,
-				030000000000000000000071 /* ocean_environment_base.usdz */,
-				030000000000000000000072 /* ocean_environment_enhanced.usdz */,
-				030000000000000000000073 /* alpine_environment_base.usdz */,
-				030000000000000000000074 /* alpine_environment_enhanced.usdz */,
-				030000000000000000000075 /* desert_environment_base.usdz */,
-				030000000000000000000076 /* desert_environment_enhanced.usdz */,
-				030000000000000000000077 /* ocean_terrain_basecolor.png */,
-				030000000000000000000078 /* ocean_terrain_normal.png */,
-				030000000000000000000079 /* ocean_terrain_roughness.png */,
-				03000000000000000000007A /* alpine_terrain_basecolor.png */,
-				03000000000000000000007B /* alpine_terrain_normal.png */,
-				03000000000000000000007C /* alpine_terrain_roughness.png */,
-				03000000000000000000007D /* desert_terrain_basecolor.png */,
-				03000000000000000000007E /* desert_terrain_normal.png */,
-				03000000000000000000007F /* desert_terrain_roughness.png */,
-			);
-			path = RacingEnvironment3D;
-			sourceTree = "<group>";
-		};
 		020000000000000000000014 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
@@ -625,6 +617,8 @@
 				03000000000000000000003D /* gt_hero_details_shadow.png */,
 				03000000000000000000003E /* angular_hero_paint.png */,
 				03000000000000000000003F /* angular_hero_details_shadow.png */,
+				030000000000000000000092 /* rally-rs_hero_paint.png */,
+				030000000000000000000093 /* rally-rs_hero_details_shadow.png */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -665,6 +659,45 @@
 			path = Audio;
 			sourceTree = "<group>";
 		};
+		020000000000000000000018 /* Racing3D */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000065 /* rally_racer.usdz */,
+				030000000000000000000068 /* gt_racer.usdz */,
+				030000000000000000000090 /* gt_racer_v5.usdz */,
+				030000000000000000000091 /* rally_rs_v5.usdz */,
+				030000000000000000000069 /* angular_racer.usdz */,
+				03000000000000000000006A /* traffic_sedan_3d.usdz */,
+				03000000000000000000006B /* track_barrier.usdz */,
+				030000000000000000000066 /* asphalt_normal.png */,
+				030000000000000000000067 /* asphalt_roughness.png */,
+			);
+			path = Racing3D;
+			sourceTree = "<group>";
+		};
+		020000000000000000000019 /* RacingEnvironment3D */ = {
+			isa = PBXGroup;
+			children = (
+				030000000000000000000070 /* RacingEnvironmentAssetManifest.json */,
+				030000000000000000000071 /* ocean_environment_base.usdz */,
+				030000000000000000000072 /* ocean_environment_enhanced.usdz */,
+				030000000000000000000073 /* alpine_environment_base.usdz */,
+				030000000000000000000074 /* alpine_environment_enhanced.usdz */,
+				030000000000000000000075 /* desert_environment_base.usdz */,
+				030000000000000000000076 /* desert_environment_enhanced.usdz */,
+				030000000000000000000077 /* ocean_terrain_basecolor.png */,
+				030000000000000000000078 /* ocean_terrain_normal.png */,
+				030000000000000000000079 /* ocean_terrain_roughness.png */,
+				03000000000000000000007A /* alpine_terrain_basecolor.png */,
+				03000000000000000000007B /* alpine_terrain_normal.png */,
+				03000000000000000000007C /* alpine_terrain_roughness.png */,
+				03000000000000000000007D /* desert_terrain_basecolor.png */,
+				03000000000000000000007E /* desert_terrain_normal.png */,
+				03000000000000000000007F /* desert_terrain_roughness.png */,
+			);
+			path = RacingEnvironment3D;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -677,7 +710,8 @@
 				050000000000000000000003 /* Resources */,
 				050000000000000000000004 /* Embed Watch Content */,
 			);
-			buildRules = ();
+			buildRules = (
+			);
 			dependencies = (
 				0A0000000000000000000001 /* PBXTargetDependency */,
 			);
@@ -694,8 +728,10 @@
 				050000000000000000000012 /* Frameworks */,
 				050000000000000000000013 /* Resources */,
 			);
-			buildRules = ();
-			dependencies = ();
+			buildRules = (
+			);
+			dependencies = (
+			);
 			name = WatchCarRacerWatchApp;
 			productName = WatchCarRacerWatchApp;
 			productReference = 0300000000000000000000F2 /* WatchCarRacerWatchApp.app */;
@@ -709,7 +745,8 @@
 				050000000000000000000022 /* Frameworks */,
 				050000000000000000000023 /* Resources */,
 			);
-			buildRules = ();
+			buildRules = (
+			);
 			dependencies = (
 				0A0000000000000000000002 /* PBXTargetDependency */,
 			);
@@ -726,7 +763,8 @@
 				050000000000000000000032 /* Frameworks */,
 				050000000000000000000033 /* Resources */,
 			);
-			buildRules = ();
+			buildRules = (
+			);
 			dependencies = (
 				0A0000000000000000000003 /* PBXTargetDependency */,
 			);
@@ -745,17 +783,30 @@
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
-					060000000000000000000001 = {CreatedOnToolsVersion = 26.4; };
-					060000000000000000000002 = {CreatedOnToolsVersion = 26.4; };
-					060000000000000000000003 = {CreatedOnToolsVersion = 26.4; TestTargetID = 060000000000000000000001; };
-					060000000000000000000004 = {CreatedOnToolsVersion = 26.4; TestTargetID = 060000000000000000000002; };
+					060000000000000000000001 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					060000000000000000000002 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					060000000000000000000003 = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 060000000000000000000001;
+					};
+					060000000000000000000004 = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 060000000000000000000002;
+					};
 				};
 			};
 			buildConfigurationList = 080000000000000000000001 /* Build configuration list for PBXProject "WatchCarRacer" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
-			knownRegions = (en, Base, );
+			knownRegions = (
+				en,
+				Base,
+			);
 			mainGroup = 020000000000000000000001;
 			productRefGroup = 02000000000000000000000A /* Products */;
 			projectDirPath = "";
@@ -793,6 +844,7 @@
 				040000000000000000000065 /* rally_racer.usdz in Resources */,
 				040000000000000000000068 /* gt_racer.usdz in Resources */,
 				040000000000000000000090 /* gt_racer_v5.usdz in Resources */,
+				040000000000000000000091 /* rally_rs_v5.usdz in Resources */,
 				040000000000000000000069 /* angular_racer.usdz in Resources */,
 				04000000000000000000006A /* traffic_sedan_3d.usdz in Resources */,
 				04000000000000000000006B /* track_barrier.usdz in Resources */,
@@ -813,6 +865,8 @@
 				04000000000000000000003D /* gt_hero_details_shadow.png in Resources */,
 				04000000000000000000003E /* angular_hero_paint.png in Resources */,
 				04000000000000000000003F /* angular_hero_details_shadow.png in Resources */,
+				040000000000000000000092 /* rally-rs_hero_paint.png in Resources */,
+				040000000000000000000093 /* rally-rs_hero_details_shadow.png in Resources */,
 				04000000000000000000004B /* AudioAssetManifest.json in Resources */,
 				04000000000000000000004C /* engine_idle_loop.wav in Resources */,
 				04000000000000000000004D /* engine_mid_loop.wav in Resources */,
@@ -832,9 +886,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		050000000000000000000013 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		050000000000000000000023 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		050000000000000000000033 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		050000000000000000000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		050000000000000000000023 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		050000000000000000000033 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -948,9 +1020,21 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		0A0000000000000000000001 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 060000000000000000000002 /* WatchCarRacerWatchApp */; targetProxy = 090000000000000000000001 /* PBXContainerItemProxy */; };
-		0A0000000000000000000002 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 060000000000000000000001 /* WatchCarRacer */; targetProxy = 090000000000000000000002 /* PBXContainerItemProxy */; };
-		0A0000000000000000000003 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = 060000000000000000000002 /* WatchCarRacerWatchApp */; targetProxy = 090000000000000000000003 /* PBXContainerItemProxy */; };
+		0A0000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 060000000000000000000002 /* WatchCarRacerWatchApp */;
+			targetProxy = 090000000000000000000001 /* PBXContainerItemProxy */;
+		};
+		0A0000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 060000000000000000000001 /* WatchCarRacer */;
+			targetProxy = 090000000000000000000002 /* PBXContainerItemProxy */;
+		};
+		0A0000000000000000000003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 060000000000000000000002 /* WatchCarRacerWatchApp */;
+			targetProxy = 090000000000000000000003 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -995,7 +1079,10 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)", );
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -1072,6 +1159,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V2ZP365CVC;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Watch Car Racer";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1079,7 +1167,10 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", );
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1097,6 +1188,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V2ZP365CVC;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Watch Car Racer";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1104,7 +1196,10 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", );
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1128,7 +1223,10 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.woohyuk.WatchCarRacer;
 				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", );
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacer.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1152,7 +1250,10 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.woohyuk.WatchCarRacer;
 				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", );
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.woohyuk.WatchCarRacer.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1236,11 +1337,51 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		080000000000000000000001 /* Build configuration list for PBXProject "WatchCarRacer" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000011 /* Debug */, 070000000000000000000012 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		080000000000000000000002 /* Build configuration list for PBXNativeTarget "WatchCarRacer" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000021 /* Debug */, 070000000000000000000022 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		080000000000000000000003 /* Build configuration list for PBXNativeTarget "WatchCarRacerWatchApp" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000031 /* Debug */, 070000000000000000000032 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		080000000000000000000004 /* Build configuration list for PBXNativeTarget "WatchCarRacerTests" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000041 /* Debug */, 070000000000000000000042 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		080000000000000000000005 /* Build configuration list for PBXNativeTarget "WatchCarRacerWatchTests" */ = {isa = XCConfigurationList; buildConfigurations = (070000000000000000000051 /* Debug */, 070000000000000000000052 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		080000000000000000000001 /* Build configuration list for PBXProject "WatchCarRacer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				070000000000000000000011 /* Debug */,
+				070000000000000000000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		080000000000000000000002 /* Build configuration list for PBXNativeTarget "WatchCarRacer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				070000000000000000000021 /* Debug */,
+				070000000000000000000022 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		080000000000000000000003 /* Build configuration list for PBXNativeTarget "WatchCarRacerWatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				070000000000000000000031 /* Debug */,
+				070000000000000000000032 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		080000000000000000000004 /* Build configuration list for PBXNativeTarget "WatchCarRacerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				070000000000000000000041 /* Debug */,
+				070000000000000000000042 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		080000000000000000000005 /* Build configuration list for PBXNativeTarget "WatchCarRacerWatchTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				070000000000000000000051 /* Debug */,
+				070000000000000000000052 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 	};
 	rootObject = 010000000000000000000001 /* Project object */;
